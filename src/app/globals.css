@@ -3,24 +3,94 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
-
-@theme inline {
+  --background-rgb: 255, 255, 255;
+  --foreground-rgb: 23, 23, 23;
+  --primary: #3b82f6;
+  --primary-rgb: 59, 130, 246;
+  --secondary: #9333ea;
+  --secondary-rgb: 147, 51, 234;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --background-rgb: 10, 10, 10;
+    --foreground-rgb: 237, 237, 237;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Custom animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+/* Typing cursor animation */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.typing-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+/* Gradient background for text */
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, var(--primary), var(--secondary));
+}
+
+/* Gradient radial for backgrounds */
+.bg-gradient-radial {
+  background-image: radial-gradient(circle at center, var(--from-color, rgba(59, 130, 246, 0.1)), var(--via-color, transparent), var(--to-color, rgba(147, 51, 234, 0.1)));
+}
+
+/* Modern glass effect */
+.glass-effect {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .glass-effect {
+  background: rgba(10, 10, 10, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Animated gradient backgrounds */
+@keyframes gradientAnimation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, 
+    rgba(var(--primary-rgb), 0.8),
+    rgba(var(--secondary-rgb), 0.8),
+    rgba(var(--primary-rgb), 0.4),
+    rgba(var(--secondary-rgb), 0.4));
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
 }

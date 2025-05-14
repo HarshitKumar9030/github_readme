@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#f9fafb" rx="10" />
+  
+  <!-- Window Frame -->
+  <rect x="20" y="20" width="760" height="560" rx="8" fill="#ffffff" stroke="#e5e7eb" stroke-width="2" />
+  
+  <!-- Header Bar -->
+  <rect x="20" y="20" width="760" height="40" rx="8" fill="#f3f4f6" stroke="#e5e7eb" stroke-width="2" />
+  
+  <!-- Window Controls -->
+  <circle cx="50" cy="40" r="8" fill="#ef4444" />
+  <circle cx="80" cy="40" r="8" fill="#fbbf24" />
+  <circle cx="110" cy="40" r="8" fill="#10b981" />
+  
+  <!-- Export Options Panel -->
+  <rect x="40" y="80" width="300" height="480" rx="6" fill="#f3f4f6" />
+  
+  <!-- Options Header -->
+  <rect x="60" y="100" width="260" height="40" rx="4" fill="#3b82f6" />
+  <text x="190" y="125" font-family="Arial" font-size="16" fill="#ffffff" text-anchor="middle">Export Options</text>
+  
+  <!-- GitHub Integration Option -->
+  <rect x="60" y="160" width="260" height="80" rx="4" fill="#ffffff" stroke="#d1d5db" stroke-width="1" />
+  <rect x="80" y="180" width="30" height="30" rx="15" fill="#dbeafe" />
+  <text x="130" y="200" font-family="Arial" font-size="16" fill="#111827">GitHub Integration</text>
+  <rect x="80" y="210" width="220" height="10" rx="2" fill="#e5e7eb" />
+  
+  <!-- Download Options -->
+  <rect x="60" y="260" width="260" height="140" rx="4" fill="#ffffff" stroke="#d1d5db" stroke-width="1" />
+  <text x="80" y="285" font-family="Arial" font-size="16" fill="#111827">Download As</text>
+  
+  <rect x="80" y="300" width="220" height="40" rx="4" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" />
+  <text x="190" y="325" font-family="Arial" font-size="14" fill="#374151" text-anchor="middle">Markdown (.md)</text>
+  
+  <rect x="80" y="350" width="220" height="40" rx="4" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" />
+  <text x="190" y="375" font-family="Arial" font-size="14" fill="#374151" text-anchor="middle">HTML (.html)</text>
+  
+  <!-- Share Options -->
+  <rect x="60" y="420" width="260" height="120" rx="4" fill="#ffffff" stroke="#d1d5db" stroke-width="1" />
+  <text x="80" y="445" font-family="Arial" font-size="16" fill="#111827">Share</text>
+  
+  <rect x="80" y="460" width="220" height="40" rx="4" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" />
+  <text x="190" y="485" font-family="Arial" font-size="14" fill="#374151" text-anchor="middle">Copy Link</text>
+  
+  <!-- Main Export Preview -->
+  <rect x="360" y="80" width="400" height="480" rx="6" fill="#ffffff" stroke="#e5e7eb" stroke-width="1" />
+  
+  <!-- Export Success Message -->
+  <rect x="380" y="100" width="360" height="60" rx="4" fill="#dcfce7" stroke="#86efac" stroke-width="1" />
+  <circle cx="410" cy="130" r="15" fill="#22c55e" />
+  <text x="440" y="135" font-family="Arial" font-size="16" fill="#166534">README Ready to Export</text>
+  
+  <!-- Repository Preview -->
+  <rect x="380" y="180" width="360" height="200" rx="4" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" />
+  <text x="400" y="210" font-family="Arial" font-size="16" fill="#111827">Repository Preview</text>
+  
+  <rect x="400" y="230" width="320" height="130" rx="4" fill="#ffffff" stroke="#d1d5db" stroke-width="1" />
+  <rect x="420" y="250" width="160" height="20" rx="2" fill="#111827" />
+  <rect x="420" y="280" width="280" height="10" rx="2" fill="#e5e7eb" />
+  <rect x="420" y="300" width="240" height="10" rx="2" fill="#e5e7eb" />
+  <rect x="420" y="320" width="200" height="10" rx="2" fill="#e5e7eb" />
+  <rect x="420" y="340" width="260" height="10" rx="2" fill="#e5e7eb" />
+  
+  <!-- Action Buttons -->
+  <rect x="380" y="400" width="360" height="140" rx="4" fill="#f9fafb" stroke="#e5e7eb" stroke-width="1" />
+  <text x="400" y="430" font-family="Arial" font-size="16" fill="#111827">Actions</text>
+  
+  <rect x="400" y="450" width="320" height="50" rx="25" fill="#3b82f6" />
+  <text x="560" y="480" font-family="Arial" font-size="16" fill="#ffffff" font-weight="bold" text-anchor="middle">Export to GitHub</text>
+  <circle cx="465" cy="475" r="15" fill="#ffffff" />
+  
+  <!-- Connection Lines -->
+  <line x1="300" y1="200" x2="380" y2="200" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="300" y1="320" x2="380" y2="320" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5" />
+  <line x1="300" y1="480" x2="380" y2="480" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5" />
+</svg>
