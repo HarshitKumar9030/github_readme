@@ -31,15 +31,15 @@ export default function AboutPage() {
     const mockUser: GitHubUser = {
       name: "Harshit Kumar",
       login: "harshitkumar9030",
-      avatar_url: "https://avatars.githubusercontent.com/u/76205735",
+      avatar_url: "https://avatars.githubusercontent.com/u/93194961",
       html_url: "https://github.com/harshitkumar9030",
       bio: "Full Stack Developer | ML Enthusiast | Open Source Contributor",
       public_repos: 34,
       followers: 86,
       following: 25,
-      company: "@dev-tech-community",
+      company: "@NxC3",
       location: "India",
-      blog: "https://harshitkumar.tech"
+      blog: "https://leoncyriac.me"
     };
 
     // Simulate API fetch delay
@@ -333,7 +333,7 @@ export default function AboutPage() {
                 </svg>
                 <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No Coding Required</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Our intuitive interface means you don't need to write any markdown or HTML.
+                  Our intuitive interface means you don&apos;t need to write any markdown or HTML.
                 </p>
               </motion.div>
               <motion.div 
