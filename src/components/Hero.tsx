@@ -26,7 +26,6 @@ const Hero = () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
-
   // Typing animation for the heading
   const headingText = "GitHub README Generator";
   const [displayedText, setDisplayedText] = useState('');
@@ -131,8 +130,7 @@ const Hero = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
-          >
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+          >            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
               <motion.span
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -140,7 +138,7 @@ const Hero = () => {
               >
                 ✨
               </motion.span>
-              New Features
+              Drag-Drop Builder & GitHub Widgets
             </span>
           </motion.div>          {/* Main heading with typing animation - minimal style */}
           <motion.div 
@@ -160,14 +158,13 @@ const Hero = () => {
             </motion.h1>
           </motion.div>
           
-          {/* Animated tagline */}
-          <motion.p 
-            className="text-xl md:text-2xl mb-6 max-w-2xl text-gray-700 dark:text-gray-300"
+          {/* Animated tagline */}          <motion.p 
+            className="text-xl md:text-2xl mb-6 max-w-3xl text-gray-700 dark:text-gray-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Create stunning GitHub profile README files with our intuitive generator
+            Create stunning GitHub profile README files with our intuitive drag-and-drop builder and integrated GitHub widgets
           </motion.p>
           
           {/* Stats section */}
@@ -239,24 +236,23 @@ const Hero = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.6 }}
-          >
-            {[
+          >            {[
               { 
                 icon: '/file.svg', 
-                title: 'Templates', 
-                description: 'Choose from dozens of ready-made templates',
+                title: 'Drag & Drop Builder', 
+                description: 'Easily build your README with our intuitive drag-drop interface',
                 color: 'from-blue-500/10 to-blue-600/5'
               },
               { 
                 icon: '/globe.svg', 
-                title: 'Customizable', 
-                description: 'Fully customize your README to match your style',
+                title: 'GitHub Widgets', 
+                description: 'Integrate dynamic stats cards, graphs and trophies',
                 color: 'from-purple-500/10 to-purple-600/5'
               },
               { 
                 icon: '/window.svg', 
-                title: 'Preview', 
-                description: 'See changes in real-time as you edit',
+                title: 'Live Preview', 
+                description: 'See changes in real-time exactly as they will appear',
                 color: 'from-indigo-500/10 to-indigo-600/5'
               }
             ].map((feature, index) => (              <motion.div
