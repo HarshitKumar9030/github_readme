@@ -8,7 +8,8 @@ import remarkGfm from 'remark-gfm';
 import IntegrationMenu, { Socials } from "./IntegrationMenu";
 import SocialStatsWidget from './SocialStatsWidget';
 import ConfigPanel, { WidgetConfig } from '@/components/ConfigPanel';
-import MarkdownEditor from '@/components/MarkdownEditor'; 
+import MarkdownEditor from '@/components/MarkdownEditor';
+import ReadmePreview from './README-Preview';
 import { LocalStorageService } from '@/services/LocalStorageService';
 
 // Block type definitions
@@ -103,9 +104,8 @@ export default function CreatePage() {
   // State for toast notifications
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  
-  // Tab state for sidebar
-  const [activeTab, setActiveTab] = useState<'blocks' | 'templates'>('blocks');
+    // Tab state for sidebar
+  const [activeTab, setActiveTab] = useState<'blocks' | 'templates' | 'social' | 'settings'>('blocks');
 
   // Find the currently selected block
   const selectedBlock = builderBlocks.find(block => block.id === selectedBlockId);
@@ -372,19 +372,99 @@ export default function CreatePage() {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
-
   // Generate markdown preview
   const generatePreview = (): string => {
     let markdown = '';
     
     // Add title
     markdown += `# ${projectName || 'My GitHub Profile'}\n\n`;
+
+    // Add CSS styles for grid layout if using widgets
+    if (builderBlocks.some(block => block.type === 'widget')) {
+      markdown += `<!-- GitHub README Grid Layout Styles -->\n`;
+      markdown += `<style>\n`;
+      markdown += `.grid-container {\n`;
+      markdown += `  display: grid;\n`;
+      markdown += `  grid-template-columns: repeat(2, 1fr);\n`;
+      markdown += `  gap: 16px;\n`;
+      markdown += `  margin: 16px 0;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item {\n`;
+      markdown += `  border-radius: 8px;\n`;
+      markdown += `  overflow: hidden;\n`;
+      markdown += `  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n`;
+      markdown += `  background-color: #ffffff;\n`;
+      markdown += `  display: flex;\n`;
+      markdown += `  flex-direction: column;\n`;
+      markdown += `  transition: transform 0.3s ease;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item:hover {\n`;
+      markdown += `  transform: translateY(-2px);\n`;
+      markdown += `  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item-header {\n`;
+      markdown += `  padding: 12px 16px;\n`;
+      markdown += `  border-bottom: 1px solid #e5e7eb;\n`;
+      markdown += `  display: flex;\n`;
+      markdown += `  align-items: center;\n`;
+      markdown += `  justify-content: space-between;\n`;
+      markdown += `  font-weight: 500;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item-body {\n`;
+      markdown += `  padding: 16px;\n`;
+      markdown += `  display: flex;\n`;
+      markdown += `  justify-content: center;\n`;
+      markdown += `  flex: 1;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item-footer {\n`;
+      markdown += `  padding: 8px 16px;\n`;
+      markdown += `  border-top: 1px solid #e5e7eb;\n`;
+      markdown += `  font-size: 12px;\n`;
+      markdown += `  color: #6b7280;\n`;
+      markdown += `  text-align: right;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item-trophy {\n`;
+      markdown += `  grid-column: 1 / -1;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `.grid-item-body img {\n`;
+      markdown += `  max-width: 100%;\n`;
+      markdown += `  height: auto;\n`;
+      markdown += `}\n\n`;
+      
+      markdown += `@media (max-width: 768px) {\n`;
+      markdown += `  .grid-container {\n`;
+      markdown += `    grid-template-columns: 1fr;\n`;
+      markdown += `  }\n`;
+      markdown += `}\n`;
+      markdown += `</style>\n\n`;
+    }
     
     // Process blocks
+    let isInsideGridContainer = false;
+    let hasProcessedGridItem = false;
+    
+    // Function to close grid container if open
+    const closeGridIfOpen = () => {
+      if (isInsideGridContainer) {
+        markdown += `</div><!-- End grid container -->\n\n`;
+        isInsideGridContainer = false;
+        hasProcessedGridItem = false;
+      }
+    };
+    
     builderBlocks.forEach(block => {
       switch (block.type) {
         case 'template':
           // Template blocks usually define the overall structure
+          closeGridIfOpen(); // Close any open grid containers
+          
           if (block.templateId === 'classic') {
             markdown += `## Hello there! 👋\n\n`;
             markdown += `I'm ${username || 'a developer'}, passionate about coding and building cool things.\n\n`;
@@ -395,54 +475,143 @@ export default function CreatePage() {
           break;
         
         case 'widget':
-          // GitHub widgets
+          // GitHub widgets - these should be displayed in a grid
+          
+          // Create a grid container if not already inside one
+          if (!isInsideGridContainer) {
+            // Add section heading
+            if (block.widgetId === 'github-stats') {
+              markdown += `## GitHub Stats\n\n`;
+            } else if (block.widgetId === 'top-languages') {
+              markdown += `## Top Languages\n\n`;
+            } else if (block.widgetId === 'social-stats') {
+              markdown += `## Social Media\n\n`;
+            }
+            
+            markdown += `<div class="grid-container">\n\n`;
+            isInsideGridContainer = true;
+          }
+          
           if (block.widgetId === 'github-stats') {
-            markdown += `## GitHub Stats\n\n`;
             if (username) {
               const themeParam = widgetConfig.theme || (theme === 'dark' ? 'radical' : 'default');
               const showIconsParam = widgetConfig.showIcons ? '&show_icons=true' : '';
               const privateParam = widgetConfig.includePrivate ? '&count_private=true' : '';
               const allCommitsParam = widgetConfig.includeAllCommits ? '&include_all_commits=true' : '';
               
-              markdown += `![${username}'s GitHub stats](https://github-readme-stats.vercel.app/api?username=${username}${showIconsParam}${privateParam}${allCommitsParam}&theme=${themeParam})\n\n`;
+              // GitHub Stats Widget
+              markdown += `<div class="grid-item">\n`;
+              markdown += `  <div class="grid-item-header">\n`;
+              markdown += `    <span>📊 GitHub Stats</span>\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-body">\n`;
+              markdown += `    <img src="https://github-readme-stats.vercel.app/api?username=${username}${showIconsParam}${privateParam}${allCommitsParam}&theme=${themeParam}" alt="${username}'s GitHub Stats">\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-footer">\n`;
+              markdown += `    GitHub ReadMe Stats\n`;
+              markdown += `  </div>\n`;
+              markdown += `</div>\n\n`;
+              
+              hasProcessedGridItem = true;
+              
               // Add GitHub Trophies if enabled
               if (widgetConfig.showTrophies) {
-                markdown += `## 🏆 GitHub Trophies\n\n`;
-                markdown += `![](https://github-profile-trophy.vercel.app/?username=${username}&theme=${themeParam}&no-frame=false&no-bg=false&margin-w=4)\n\n`;
+                // Trophies span full width
+                markdown += `<div class="grid-item grid-item-trophy">\n`;
+                markdown += `  <div class="grid-item-header">\n`;
+                markdown += `    <span>🏆 GitHub Trophies</span>\n`;
+                markdown += `  </div>\n`;
+                markdown += `  <div class="grid-item-body">\n`;
+                markdown += `    <img src="https://github-profile-trophy.vercel.app/?username=${username}&theme=${themeParam}&no-frame=false&no-bg=false&margin-w=4" alt="GitHub Trophies">\n`;
+                markdown += `  </div>\n`;
+                markdown += `  <div class="grid-item-footer">\n`;
+                markdown += `    GitHub Profile Trophy\n`;
+                markdown += `  </div>\n`;
+                markdown += `</div>\n\n`;
               }
+              
               // Add GitHub Streak Stats if enabled
               if (widgetConfig.showStreak) {
-                markdown += `## 🔥 Streak Stats\n\n`;
-                markdown += `![](https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${themeParam}&hide_border=false)\n\n`;
+                markdown += `<div class="grid-item">\n`;
+                markdown += `  <div class="grid-item-header">\n`;
+                markdown += `    <span>🔥 Streak Stats</span>\n`;
+                markdown += `  </div>\n`;
+                markdown += `  <div class="grid-item-body">\n`;
+                markdown += `    <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${themeParam}&hide_border=false" alt="GitHub Streak Stats">\n`;
+                markdown += `  </div>\n`;
+                markdown += `  <div class="grid-item-footer">\n`;
+                markdown += `    GitHub Streak Stats\n`;
+                markdown += `  </div>\n`;
+                markdown += `</div>\n\n`;
               }
             } else {
               markdown += `<!-- Add your GitHub username to see your stats -->\n\n`;
             }
           } else if (block.widgetId === 'top-languages') {
-            markdown += `## Top Languages\n\n`;
             if (username) {
               const themeParam = widgetConfig.theme || (theme === 'dark' ? 'radical' : 'default');
               const layoutParam = widgetConfig.layout || 'compact';
-              markdown += `![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=${layoutParam}&theme=${themeParam})\n\n`;
+              
+              markdown += `<div class="grid-item">\n`;
+              markdown += `  <div class="grid-item-header">\n`;
+              markdown += `    <span>💻 Most Used Languages</span>\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-body">\n`;
+              markdown += `    <img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=${layoutParam}&theme=${themeParam}" alt="Top Languages">\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-footer">\n`;
+              markdown += `    GitHub ReadMe Stats\n`;
+              markdown += `  </div>\n`;
+              markdown += `</div>\n\n`;
+              
+              hasProcessedGridItem = true;
             } else {
               markdown += `<!-- Add your GitHub username to see your top languages -->\n\n`;
             }
-          } else if (block.widgetId === 'social-stats') {            markdown += `## Social Media\n\n`;
-            
+          } else if (block.widgetId === 'social-stats') {            
             // First, add GitHub trophies and streaks if GitHub is configured
             if (socials.github && widgetConfig.showTrophies) {
               const themeParam = widgetConfig.theme || (theme === 'dark' ? 'radical' : 'default');
-              markdown += `### GitHub Profile Trophy\n\n`;
-              markdown += `![](https://github-profile-trophy.vercel.app/?username=${socials.github}&theme=${themeParam}&no-frame=false&no-bg=false&margin-w=4)\n\n`;
+              
+              markdown += `<div class="grid-item grid-item-trophy">\n`;
+              markdown += `  <div class="grid-item-header">\n`;
+              markdown += `    <span>🏆 GitHub Profile Trophy</span>\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-body">\n`;
+              markdown += `    <img src="https://github-profile-trophy.vercel.app/?username=${socials.github}&theme=${themeParam}&no-frame=false&no-bg=false&margin-w=4" alt="GitHub Trophies">\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-footer">\n`;
+              markdown += `    GitHub Profile Trophy\n`;
+              markdown += `  </div>\n`;
+              markdown += `</div>\n\n`;
+              
+              hasProcessedGridItem = true;
             }
             
             if (socials.github && widgetConfig.showStreak) {
               const themeParam = widgetConfig.theme || (theme === 'dark' ? 'radical' : 'default');
-              markdown += `### GitHub Streak Stats\n\n`;
-              markdown += `![](https://github-readme-streak-stats.herokuapp.com/?user=${socials.github}&theme=${themeParam}&hide_border=false)\n\n`;
+              
+              markdown += `<div class="grid-item">\n`;
+              markdown += `  <div class="grid-item-header">\n`;
+              markdown += `    <span>🔥 Streak Stats</span>\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-body">\n`;
+              markdown += `    <img src="https://github-readme-streak-stats.herokuapp.com/?user=${socials.github}&theme=${themeParam}&hide_border=false" alt="GitHub Streak Stats">\n`;
+              markdown += `  </div>\n`;
+              markdown += `  <div class="grid-item-footer">\n`;
+              markdown += `    GitHub Streak Stats\n`;
+              markdown += `  </div>\n`;
+              markdown += `</div>\n\n`;
+              
+              hasProcessedGridItem = true;
             }
             
-            // Then add social media links
+            // Close the grid container if we've added widget items
+            if (hasProcessedGridItem) {
+              closeGridIfOpen();
+            }
+            
+            // Then add social media links (outside of grid)
             markdown += `### Connect With Me\n\n`;
             if (socials.github) {
               markdown += `- GitHub: [@${socials.github}](https://github.com/${socials.github})\n`;
@@ -464,7 +633,10 @@ export default function CreatePage() {
           break;
         
         case 'content':
-          // Content blocks
+          // Content blocks - close any open grid container
+          closeGridIfOpen();
+          
+          // Add content
           if (block.label === 'About Me') {
             markdown += `## About Me\n\n${block.content || 'Add some information about yourself here.'}\n\n`;
           } else if (block.label === 'Skills') {
@@ -477,6 +649,9 @@ export default function CreatePage() {
           break;
       }
     });
+    
+    // Close any open grid container at the end
+    closeGridIfOpen();
     
     // Add footer
     markdown += `---\n\n`;
@@ -1403,134 +1578,21 @@ export default function CreatePage() {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Preview Modal */}
+        </div>        {/* Preview Modal */}
         {showPreview && (
-          <div className="fixed inset-0 bg-gray-800/50 dark:bg-black/70 flex items-center justify-center z-50 overflow-y-auto">
-            <motion.div 
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full mx-4 my-8"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">README Preview</h3>
-                <button 
-                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700" 
-                  onClick={() => setShowPreview(false)}
-                >
-                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="flex h-[70vh]">
-                {/* Markdown Preview */}
-                <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 overflow-auto p-6">
-                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Markdown</h4>
-                  <pre className="text-xs bg-gray-50 dark:bg-gray-900 p-4 rounded-md overflow-auto h-full font-mono whitespace-pre-wrap">
-                    {generatePreview()}
-                  </pre>
-                </div>
-                
-                {/* Rendered Preview */}
-                <div className="w-1/2 overflow-auto p-6">
-                  <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Rendered</h4>
-                  <div className="prose dark:prose-invert prose-sm max-w-none">                    {/* Use the ReactMarkdown component to render the markdown */}
-                    <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-md h-full min-h-[400px] overflow-auto">
-                      <div className="prose dark:prose-invert prose-sm max-w-none">
-                        <ReactMarkdown 
-                          remarkPlugins={[remarkGfm]}
-                        >
-                          {generatePreview()}
-                        </ReactMarkdown>
-                      </div>
-                        {/* GitHub Stats Widget Preview (if applicable) */}
-                      {username && builderBlocks.some(b => b.type === 'widget' && b.widgetId === 'github-stats') && (
-                        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-md my-4">
-                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">GitHub Stats for @{username}</h4>
-                          
-                          <div className="space-y-4">
-                            <div className="h-[150px] bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                              <span className="text-sm text-gray-500 dark:text-gray-400">Stats Widget Preview</span>
-                            </div>
-                            
-                            {widgetConfig.showTrophies && (
-                              <div className="mt-4">
-                                <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">🏆 GitHub Trophies</h5>
-                                <div className="h-[100px] bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                                  <span className="text-sm text-gray-500 dark:text-gray-400">Trophies Widget Preview</span>
-                                </div>
-                              </div>
-                            )}
-                            
-                            {widgetConfig.showStreak && (
-                              <div className="mt-4">
-                                <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">🔥 GitHub Streak Stats</h5>
-                                <div className="h-[100px] bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center">
-                                  <span className="text-sm text-gray-500 dark:text-gray-400">Streak Stats Widget Preview</span>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}                      {/* Social Stats Widget Preview (if applicable) */}
-                      {builderBlocks.some(b => b.type === 'widget' && b.widgetId === 'social-stats') && (
-                        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-md my-4">
-                          <div className="flex justify-between items-center mb-3">
-                            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Social Media Stats Preview</h4>
-                            <div className="flex gap-2">
-                              {widgetConfig.showTrophies && (
-                                <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded">Trophies</span>
-                              )}
-                              {widgetConfig.showStreak && (
-                                <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded">Streak</span>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <SocialStatsWidget 
-                            socials={socials} 
-                            theme={widgetConfig.theme || (theme === 'dark' ? 'dark' : 'light')} 
-                            config={{
-                              showTrophies: widgetConfig.showTrophies,
-                              showStreak: widgetConfig.showStreak
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-between">
-                <button 
-                  className="px-4 py-2 text-sm rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                  onClick={() => setShowPreview(false)}
-                >
-                  Close
-                </button>
-                <button 
-                  className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white"
-                  onClick={() => {
-                    // Copy markdown to clipboard
-                    navigator.clipboard.writeText(generatePreview())
-                      .then(() => {
-                        alert('Markdown copied to clipboard!');
-                      })
-                      .catch(err => {
-                        console.error('Failed to copy: ', err);
-                      });
-                  }}
-                >
-                  Copy Markdown
-                </button>
-              </div>
-            </motion.div>
-          </div>
+          <ReadmePreview 
+            content={generatePreview()}
+            onClose={() => setShowPreview(false)}
+            onCopy={() => {
+              navigator.clipboard.writeText(generatePreview())
+                .then(() => {
+                  alert('Markdown copied to clipboard!');
+                })
+                .catch(err => {
+                  console.error('Failed to copy: ', err);
+                });
+            }}
+          />
         )}
       </div>
     </div>

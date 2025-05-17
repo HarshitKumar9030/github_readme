@@ -1,0 +1,149 @@
+/* GitHub Markdown Grid Layout Styles */
+.grid-widget-layout {
+  /* Grid container styles */
+  display: block; /* Will be overridden with grid when widgets are detected */
+}
+
+/* Apply grid layout when widget elements are present */
+.grid-widget-layout:has(.widget-stats),
+.grid-widget-layout:has(.widget-languages),
+.grid-widget-layout:has(.widget-trophy),
+.grid-widget-layout:has(.widget-streak) {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+/* Widget specific styles */
+.widget-stats,
+.widget-languages,
+.widget-trophy,
+.widget-streak {
+  break-inside: avoid;
+  page-break-inside: avoid;
+  transition: all 0.3s ease;
+}
+
+/* Hover effects for widgets */
+.widget-stats:hover,
+.widget-languages:hover,
+.widget-trophy:hover,
+.widget-streak:hover {
+  transform: translateY(-2px);
+}
+
+/* Widget specific styling */
+.widget-stats img,
+.widget-languages img,
+.widget-trophy img,
+.widget-streak img {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+}
+
+/* Special cases - trophies and streaks may need full width */
+.widget-trophy {
+  grid-column: 1 / -1; /* Make trophies span all columns by default */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid-widget-layout:has(.widget-stats),
+  .grid-widget-layout:has(.widget-languages),
+  .grid-widget-layout:has(.widget-trophy),
+  .grid-widget-layout:has(.widget-streak) {
+    grid-template-columns: 1fr; /* Single column on mobile */
+  }
+}
+
+/* Beautiful card styles for widgets */
+.widget-card {
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.dark .widget-card {
+  background: #1f2937;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+}
+
+.widget-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Widget headers */
+.widget-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.dark .widget-header {
+  border-color: #374151;
+}
+
+.widget-header h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.dark .widget-header h3 {
+  color: #d1d5db;
+}
+
+/* Widget body */
+.widget-body {
+  padding: 1rem;
+}
+
+/* Widget footer */
+.widget-footer {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+.dark .widget-footer {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+/* Special layout modifiers */
+.widget-larger {
+  grid-column: span 2;
+}
+
+/* Compact mode for multi-widget display */
+.widget-compact img {
+  max-height: 200px;
+  object-fit: contain;
+}
+
+/* Equal height for widgets in a row */
+.grid-equal-height {
+  align-items: stretch;
+}
+
+.grid-equal-height .widget-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-equal-height .widget-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

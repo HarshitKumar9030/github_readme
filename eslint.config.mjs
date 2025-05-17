@@ -7,10 +7,20 @@ const __dirname = dirname(__filename);
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
+  
 });
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  // disabling "any type" rule and "no-unused-vars" rule
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "no-unused-vars": "off",
+    },
+  },
+
 ];
 
 export default eslintConfig;

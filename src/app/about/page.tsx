@@ -148,6 +148,7 @@ export default function AboutPage() {
               </text>
               
               {/* Code lines */}
+              
               <motion.g
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

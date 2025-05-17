@@ -80,6 +80,8 @@ const Features = () => {  // Feature tabs data
   // Get the currently active feature
   const activeFeature = featureTabs.find(tab => tab.id === activeTab) || featureTabs[0];
 
+  // test test test
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
