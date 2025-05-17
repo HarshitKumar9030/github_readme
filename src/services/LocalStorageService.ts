@@ -23,6 +23,7 @@ export class LocalStorageService {
    * @param data The data to store
    * @returns true if successful, false otherwise
    */
+
   static save<T>(key: StorageKey, data: T): boolean {
     try {
       if (!this.isAvailable()) return false;
@@ -40,6 +41,7 @@ export class LocalStorageService {
    * @param defaultValue Default value if key doesn't exist
    * @returns The stored data, or defaultValue if not found
    */
+
   static load<T>(key: StorageKey, defaultValue: T): T {
     try {
       if (!this.isAvailable()) return defaultValue;
@@ -57,6 +59,7 @@ export class LocalStorageService {
    * @param key The key to remove
    * @returns true if successful, false otherwise
    */
+
   static remove(key: StorageKey): boolean {
     try {
       if (!this.isAvailable()) return false;
@@ -72,6 +75,7 @@ export class LocalStorageService {
    * Clear all data from localStorage
    * @returns true if successful, false otherwise
    */
+
   static clear(): boolean {
     try {
       if (!this.isAvailable()) return false;
@@ -88,6 +92,7 @@ export class LocalStorageService {
    * @param key The key to check
    * @returns true if exists, false otherwise
    */
+
   static exists(key: StorageKey): boolean {
     try {
       if (!this.isAvailable()) return false;
@@ -102,6 +107,7 @@ export class LocalStorageService {
    * Get the number of items in localStorage
    * @returns The number of items
    */
+
   static size(): number {
     try {
       if (!this.isAvailable()) return 0;
@@ -116,6 +122,7 @@ export class LocalStorageService {
    * Get all keys in localStorage
    * @returns Array of keys
    */
+
   static getAllKeys(): string[] {
     try {
       if (!this.isAvailable()) return [];
@@ -137,6 +144,7 @@ export class LocalStorageService {
    * @param data The data to monitor and store
    * @param debounceMs Debounce time in milliseconds (default 2000ms)
    */
+  
   static setupAutoSave<T>(key: StorageKey, data: T, debounceMs: number = 2000): () => void {
     let timeoutId: NodeJS.Timeout;
     const save = () => {

@@ -14,7 +14,6 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
   config,
   onChange
 }) => {
-  // Helper to determine if widgets should be shown
   const showGithubTrophies = () => {
     return config.showTrophies !== false;
   };
@@ -76,7 +75,7 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
                 checked={config.includePrivate === true}
                 onChange={(e) => updateConfig('includePrivate', e.target.checked)}
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Include Private Repositories</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Include Private Repos</span>
             </label>
           </div>
           
