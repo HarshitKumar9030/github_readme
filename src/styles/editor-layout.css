@@ -1,0 +1,79 @@
+/* Desktop optimizations for the content editor */
+.markdown-editor-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .markdown-editor-container {
+    min-width: 680px;
+    max-width: 1200px;
+  }
+
+  /* Improve the GitHub stats card display */
+  .github-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* Enhanced markdown editor height */
+  .CodeMirror {
+    min-height: 500px !important;
+  }
+}
+
+/* Better preview mode with increased width */
+.markdown-preview-container {
+  max-width: 100%;
+  width: 100%;
+  padding: 24px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1280px) {
+  .markdown-preview-container {
+    max-width: 1000px;
+  }
+}
+
+/* Ensure mobile users get appropriate styling */
+@media (max-width: 768px) {
+  .markdown-editor-container {
+    min-width: 100%;
+    padding: 8px !important;
+  }
+  
+  .editor-mobile-warning {
+    display: block;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-radius: 8px;
+    background-color: #FEF9C3;
+    color: #92400E;
+    font-size: 14px;
+    text-align: center;
+  }
+  
+  .github-stats-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Force single column layout on mobile */
+  .prose div[align="center"] {
+    flex-direction: column !important;
+  }
+  
+  .prose div[align="center"] > div {
+    width: 100% !important;
+    margin: 8px 0 !important;
+  }
+}
+
+/* Dark mode support */
+.dark .editor-mobile-warning {
+  background-color: rgba(254, 249, 195, 0.2);
+  color: #FCD34D;
+}

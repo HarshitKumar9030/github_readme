@@ -10,6 +10,9 @@ import SocialStatsWidget from './SocialStatsWidget';
 import ConfigPanel, { WidgetConfig } from '@/components/ConfigPanel';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import ReadmePreview from './README-Preview';
+import ContentBlockEditor from './ContentBlockEditor';
+import GitHubStatsLayout from './GitHubStatsLayout';
+import MobileWarning from '@/components/MobileWarning';
 import { LocalStorageService } from '@/services/LocalStorageService';
 
 // Block type definitions
@@ -37,6 +40,7 @@ export interface WidgetBlock extends BlockBase {
 export interface ContentBlock extends BlockBase {
   type: "content";
   content: string;
+  layout?: "flow" | "inline" | "grid";
 }
 
 export type Block = TemplateBlock | WidgetBlock | ContentBlock;
@@ -100,11 +104,12 @@ export default function CreatePage() {
     showTrophies: true,
     showStreak: true
   });
-
   // State for toast notifications
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-    // Tab state for sidebar
+  // State to control mobile warning display
+  const [showMobileWarning, setShowMobileWarning] = useState(true);
+  // Tab state for sidebar
   const [activeTab, setActiveTab] = useState<'blocks' | 'templates' | 'social' | 'settings'>('blocks');
 
   // Find the currently selected block
@@ -150,6 +155,16 @@ export default function CreatePage() {
       blocks.map(block => 
         block.id === id && block.type === 'content' 
           ? { ...block, content } 
+          : block
+      )
+    );
+  };
+  
+  const updateBlockLayout = (id: string, layout: 'flow' | 'inline' | 'grid') => {
+    setBuilderBlocks(blocks => 
+      blocks.map(block => 
+        block.id === id && block.type === 'content' 
+          ? { ...block, layout } 
           : block
       )
     );
@@ -230,6 +245,9 @@ export default function CreatePage() {
   const loadTemplate = (templateType: string) => {
     // Create template-based blocks based on the template type
     let newBlocks: Block[] = [];
+    
+    // Use the global widgetConfig state in the template
+    const themeParam = widgetConfig?.theme || 'light';
 
     switch(templateType) {
       case 'personal':
@@ -246,7 +264,7 @@ export default function CreatePage() {
             type: "widget", 
             label: "GitHub Stats", 
             widgetId: "github-stats",
-            theme: widgetConfig.theme
+            theme: themeParam
           },
           { 
             id: `content-${Date.now()}-2`, 
@@ -784,7 +802,10 @@ export default function CreatePage() {
     }
   };  return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+      {/* Mobile warning popup */}
+      {showMobileWarning && <MobileWarning onDismiss={() => setShowMobileWarning(false)} />}
+      
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 py-12">
         <div className="mb-8 text-center">
           <Link 
             href="/"
@@ -866,7 +887,7 @@ export default function CreatePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[600px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[700px]">
             {/* Left sidebar with modern tabs */}
             <div className="lg:col-span-3 flex flex-col border-r border-gray-200 dark:border-gray-700 h-full">
               {/* Modern Tabs */}
@@ -1519,8 +1540,7 @@ export default function CreatePage() {
                         </div>
                       </div>
                     )}
-                    
-                    {/* Content Block Properties */}
+                      {/* Content Block Properties */}
                     {selectedBlock.type === 'content' && (
                       <div className="space-y-4">
                         <div>
@@ -1534,13 +1554,12 @@ export default function CreatePage() {
                               Preview
                             </button>
                           </label>
-                          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-sm">
-                            <MarkdownEditor
-                              initialValue={(selectedBlock as ContentBlock).content}
+                          <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden shadow-sm">                            <ContentBlockEditor
+                              initialContent={(selectedBlock as ContentBlock).content}
                               onChange={(value) => updateBlockContent(selectedBlock.id, value)}
-                              height="400px"
-                              showPreview={true}
-                              placeholder="Enter your markdown content here..."
+                              layout={(selectedBlock as ContentBlock).layout || 'flow'}
+                              onLayoutChange={(layout) => updateBlockLayout(selectedBlock.id, layout)}
+                              username={username}
                             />
                           </div>
                           <div className="flex items-center mt-2 text-xs text-gray-500 dark:text-gray-400">

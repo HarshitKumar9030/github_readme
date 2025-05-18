@@ -104,8 +104,7 @@ export default function SocialStatsWidget({
         linkedin: undefined,
       }));
     }
-  }, [socials.linkedin]);
-  const fetchGitHubStats = async (username: string) => {
+  }, [socials.linkedin]);  const fetchGitHubStats = async (username: string) => {
     setLoading((prev) => ({ ...prev, github: true }));
     setError((prev) => ({ ...prev, github: false }));
 
@@ -115,35 +114,21 @@ export default function SocialStatsWidget({
       if (!GithubData) {
         throw new Error("No data received from GitHub API");
       }
-      // Mock GitHub data
-      const mockGithubData = {
-        followers: GithubData.followers,
-        following: GithubData.following,
-        repositories: GithubData.public_repos,
-        avatar: GithubData.avatar_url,
-        trophies: `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${theme}`,
-        streak: `https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}`,
-      };
-      // Set GitHub data
-      setStats((prevStats) => ({
-        ...prevStats,
-        github: mockGithubData,
-      }));
-
-      // Set error to false if data is fetched successfully
-      setError((prev) => ({ ...prev, github: false }));
-      // Set GitHub data
-
+      
+      // Set GitHub data with proper stats widgets
       setStats((prevStats) => ({
         ...prevStats,
         github: {
-          ...prevStats.github,
           followers: GithubData.followers,
           following: GithubData.following,
           repositories: GithubData.public_repos,
           avatar: GithubData.avatar_url,
+          trophies: `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${theme}`,
+          streak: `https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}`,
         },
       }));
+      
+      setError((prev) => ({ ...prev, github: false }));
     } catch (err) {
       console.error("Error fetching GitHub stats:", err);
       setError((prev) => ({ ...prev, github: true }));

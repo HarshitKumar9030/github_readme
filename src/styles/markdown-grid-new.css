@@ -1,0 +1,322 @@
+/* GitHub Markdown Grid Layout Styles */
+/* 
+ * These styles are only applied in the preview editor
+ * The actual GitHub README will use standard markdown
+ * using tables and allowed HTML elements like <div align="center">
+ * GitHub allows certain HTML elements but sanitizes attributes
+ */
+
+/* Preview table styles to make tables look like a grid of widgets */
+/* This simulates how GitHub will render the tables */
+.prose table {
+  width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0.5rem !important;
+  margin: 1.5rem 0;
+  border: none !important;
+}
+
+.prose table td {
+  padding: 0.5rem !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  vertical-align: top;
+  text-align: left;
+}
+
+.dark .prose table td {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.prose table tr {
+  border: none !important;
+  background-color: transparent !important;
+}
+
+.prose table th {
+  padding: 0.5rem !important;
+  background-color: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  font-weight: 600;
+  text-align: center;
+}
+
+.dark .prose table th {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Enhance inline HTML layout for side-by-side content */
+.prose div[align="center"] {
+  text-align: center;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.prose div[align="center"] > div {
+  min-width: 200px;
+  flex: 1;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+}
+
+.dark .prose div[align="center"] > div {
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* GitHub Stats card layouts */
+.prose div[align="center"] img[src*="github-readme-stats"],
+.prose div[align="center"] img[src*="github-profile-trophy"],
+.prose div[align="center"] img[src*="github-readme-streak-stats"] {
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  margin: 0.5rem !important;
+  max-width: 100%;
+}
+
+.dark .prose div[align="center"] img[src*="github-readme-stats"],
+.dark .prose div[align="center"] img[src*="github-profile-trophy"],
+.dark .prose div[align="center"] img[src*="github-readme-streak-stats"] {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Hover effects for GitHub stat cards */
+.prose div[align="center"] img:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.dark .prose div[align="center"] img:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
+}
+
+/* GitHub Markdown table-based layout for stats */
+.prose div[align="center"] table {
+  border-spacing: 8px !important;
+  border-collapse: separate !important;
+  margin: 0 auto;
+  width: auto !important;
+}
+
+.prose div[align="center"] table td {
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  vertical-align: top;
+  text-align: center;
+}
+
+/* Legacy preview grid layout container */
+.grid-widget-layout {
+  display: block;
+  margin: 1.5rem 0;
+}
+
+/* Apply CSS grid layout when widgets are present */
+.grid-widget-layout:has(.widget-item) {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
+  gap: 1.25rem;
+}
+
+/* Widget items */
+.widget-item {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Special styling for GitHub Stats images in tables */
+.prose table img {
+  width: 100%;
+  border-radius: 0.5rem;
+  margin: 0 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.dark .prose table img {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hover effects for widget images */
+.prose table img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.dark .prose table img:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Legacy widget specific styling in preview */
+.widget-stats img,
+.widget-languages img,
+.widget-trophy img,
+.widget-streak img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Special cases - trophies and streaks span full width */
+.widget-trophy {
+  grid-column: 1 / -1; 
+}
+
+/* Responsive adjustments for preview */
+@media (max-width: 768px) {
+  .grid-widget-layout:has(.widget-item) {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  /* Ensure mobile view is more compact */
+  .prose div[align="center"] {
+    flex-direction: column;
+  }
+  
+  .prose div[align="center"] > div {
+    width: 100% !important;
+  }
+
+  /* Make GitHub stats cards stack on mobile */
+  .prose div[align="center"] table td {
+    display: block;
+    width: 100% !important;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 1024px) {
+  /* Increase the width of content editors on desktop */
+  .markdown-editor-container {
+    min-width: 680px;
+    max-width: 1200px;
+  }
+  
+  .prose table td {
+    padding: 0.75rem !important;
+  }
+  
+  /* Improved GitHub stats cards spacing on desktop */
+  .prose div[align="center"] img[src*="github-readme-stats"],
+  .prose div[align="center"] img[src*="github-profile-trophy"],
+  .prose div[align="center"] img[src*="github-readme-streak-stats"] {
+    margin: 0.75rem !important;
+  }
+}
+
+/* Preview card styles for widgets to look nice in the app */
+.widget-card {
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dark .widget-card {
+  background: #1f2937;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Widget headers in preview */
+.widget-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+.dark .widget-header {
+  border-color: #374151;
+}
+
+.widget-header h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.dark .widget-header h3 {
+  color: #d1d5db;
+}
+
+/* Widget body in preview */
+.widget-body {
+  padding: 1rem;
+}
+
+/* Widget footer in preview */
+.widget-footer {
+  padding: 0.5rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: right;
+}
+
+.dark .widget-footer {
+  border-color: #374151;
+  color: #9ca3af;
+}
+
+/* Preview-only styles that will be converted to pure markdown on GitHub */
+.markdown-table-grid {
+  display: table;
+  width: 100%;
+  margin: 1.5rem 0;
+  border-collapse: separate;
+  border-spacing: 1rem;
+}
+
+.markdown-table-row {
+  display: table-row;
+}
+
+.markdown-table-cell {
+  display: table-cell;
+  vertical-align: top;
+  text-align: center;
+}
+
+/* GitHub-compatible alignment classes */
+.align-center {
+  text-align: center;
+}
+
+.align-right {
+  text-align: right;
+}
+
+.align-left {
+  text-align: left;
+}
+
+/* Make markdown tables look good in preview */
+.markdown-body table {
+  border-spacing: 0;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.markdown-body table th,
+.markdown-body table td {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+}
+
+.dark .markdown-body table th,
+.dark .markdown-body table td {
+  border-color: #444;
+}

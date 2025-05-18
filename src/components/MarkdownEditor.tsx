@@ -11,6 +11,7 @@ interface MarkdownEditorProps {
   height?: string;
   showPreview?: boolean;
   placeholder?: string;
+  className?: string;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -18,14 +19,27 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onChange,
   height = '300px',
   showPreview = true,
-  placeholder = 'Enter markdown here...'
+  placeholder = 'Enter markdown here...',
+  className = ''
 }) => {
   const [value, setValue] = useState(initialValue);
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
-  
-  useEffect(() => {
+  const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
     setValue(initialValue);
   }, [initialValue]);
+  
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
@@ -75,6 +89,71 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const formatNumberedList = () => insertFormatting('\n1. ', '', 'list item');
   const formatQuote = () => insertFormatting('\n> ', '', 'quote');
   const formatHorizontalRule = () => insertFormatting('\n\n---\n\n', '', '');
+  
+  const GitHubCompatibilityInfo = () => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+      <div className="mb-4">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-sm flex items-center text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          <svg 
+            className="w-4 h-4 mr-1" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+            />
+          </svg>
+          GitHub Markdown Compatibility Info
+        </button>
+        
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 text-sm rounded-md"
+          >            <h4 className="font-medium mb-1">GitHub Markdown Compatibility:</h4>            <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+              <li>GitHub selectively sanitizes HTML in markdown files for security reasons</li>
+              <li><strong>Allowed HTML elements:</strong> <code>&lt;div&gt;</code>, <code>&lt;img&gt;</code>, <code>&lt;details&gt;</code>, <code>&lt;summary&gt;</code>, and more</li>
+              <li><strong>Removed attributes:</strong> <code>style</code>, <code>class</code>, and <code>id</code> attributes are stripped out</li>
+              <li><strong>Allowed attributes:</strong> <code>align</code>, <code>src</code>, <code>alt</code>, <code>href</code>, etc. are preserved</li>
+              <li><strong>No inline styles:</strong> Custom styling via HTML is not supported</li>
+              <li>Our generator creates layouts using both markdown tables and allowed HTML elements</li>
+              <li>Trophy widgets and wider elements automatically span full width</li>
+            </ul>
+            <div className="mt-2 font-medium">
+              Side-by-side layout in GitHub READMEs uses markdown tables:
+            </div>
+            <div className="mt-1 text-gray-700 dark:text-gray-300 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded font-mono overflow-auto">
+              | GitHub Stats | Top Languages |<br/>
+              |:------------:|:-------------:|<br/>
+              | ![Stats](url) | ![Languages](url) |<br/>
+              | **User Stats** | **Language Distribution** |
+            </div>
+            <div className="mt-2 font-medium">
+              Centered content can also use the <code>align</code> attribute:
+            </div>
+            <div className="mt-1 text-gray-700 dark:text-gray-300 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded font-mono overflow-auto">
+              &lt;div align="center"&gt;<br/>
+              &nbsp;&nbsp;![Stats](url)<br/>
+              &lt;/div&gt;
+            </div>
+          </motion.div>
+        )}
+      </div>
+    );
+  };
   
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
@@ -271,6 +350,9 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
           {value.split(/\s+/).filter(Boolean).length} words
         </div>
       </div>
+
+      {/* GitHub Compatibility Info */}
+      <GitHubCompatibilityInfo />
     </div>
   );
 };

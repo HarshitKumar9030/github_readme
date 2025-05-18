@@ -13,11 +13,11 @@ export default function ReadmePreview({ content, onClose, onCopy }: ReadmePrevie
   return (
     <div className="fixed inset-0 bg-gray-800/50 dark:bg-black/70 flex items-center justify-center z-50">
       <motion.div 
-        className="bg-white dark:bg-gray-800 h-full w-full max-w-[100vw] max-h-[100vh] overflow-hidden relative"
+        className="bg-white dark:bg-gray-800 h-full w-full max-w-[100vw] max-h-[100vh] overflow-hidden relative markdown-preview-container"
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.2 }}
-      >        {/* GitHub-style Markdown Renderer */}
+      >{/* GitHub-style Markdown Renderer */}
         <MarkdownRenderer 
           content={content} 
           fullScreen={true}

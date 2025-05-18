@@ -3,19 +3,27 @@
 import React, { useState } from 'react';
 import MarkdownEditor from '@/components/MarkdownEditor';
 import { motion } from 'framer-motion';
+import InlineLayoutSelector from './InlineLayoutSelector';
+import GitHubStatsLayout from './GitHubStatsLayout';
 
 interface ContentBlockEditorProps {
   initialContent: string;
   onChange: (content: string) => void;
+  layout?: 'flow' | 'inline' | 'grid';
+  onLayoutChange?: (layout: 'flow' | 'inline' | 'grid') => void;
+  username?: string;
 }
 
 const ContentBlockEditor: React.FC<ContentBlockEditorProps> = ({
   initialContent,
-  onChange
-}) => {
+  onChange,
+  layout = 'flow',
+  onLayoutChange,
+  username = 'yourusername'
+})=> {
   const [content, setContent] = useState(initialContent);
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
-
+  const [currentLayout, setCurrentLayout] = useState<'flow' | 'inline' | 'grid'>(layout);
   const markdownTemplates = [
     {
       id: 'intro',
@@ -39,6 +47,93 @@ A brief description of your project, what it does, and why it's useful.`
 - **Feature 2**: Description of feature 2
 - **Feature 3**: Description of feature 3
 - **Feature 4**: Description of feature 4`
+    },
+    {
+      id: 'side-by-side',
+      name: 'Side by Side',
+      description: 'Two column layout with content',
+      template: `<div align="center">
+
+<div align="left" width="48%" style="display: inline-block; vertical-align: top;">
+
+## Left Column
+
+Content for the left side. You can add:
+
+- List items
+- **Bold text**
+- [Links](https://github.com)
+- And more...
+
+</div>
+
+<div align="left" width="48%" style="display: inline-block; vertical-align: top;">
+
+## Right Column 
+
+Content for the right side:
+
+1. First item
+2. Second item
+3. Third item
+
+> You can also add blockquotes and other markdown elements
+
+</div>
+
+</div>`
+    },
+    {
+      id: 'github-stats-basic',
+      name: 'GitHub Stats Cards',
+      description: 'Side-by-side GitHub stats cards',
+      template: `<div align="center">
+
+| ![GitHub Stats](https://github-readme-stats.vercel.app/api?username=yourusername&show_icons=true&theme=tokyonight&hide_border=true) | ![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=yourusername&layout=compact&theme=tokyonight&hide_border=true) |
+|----------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| **My GitHub Statistics** | **My Top Languages** |
+
+</div>`
+    },
+    {
+      id: 'github-stats-full',
+      name: 'GitHub Stats Complete',
+      description: 'Complete profile stats layout',
+      template: `<div align="center">
+
+![Trophy](https://github-profile-trophy.vercel.app/?username=yourusername&theme=tokyonight&no-frame=true&margin-w=4)
+
+| ![GitHub Stats](https://github-readme-stats.vercel.app/api?username=yourusername&show_icons=true&theme=tokyonight&hide_border=true) | ![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=yourusername&layout=compact&theme=tokyonight&hide_border=true) |
+|----------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| ![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=yourusername&theme=tokyonight&hide_border=true) | ![Contributions](https://activity-graph.herokuapp.com/graph?username=yourusername&theme=tokyonight&hide_border=true) |
+
+</div>`
+    },
+    {
+      id: 'tech-badges',
+      name: 'Tech Stack Badges',
+      description: 'Display tech stack with badges',
+      template: `<div align="center">
+
+## 🛠️ My Tech Stack
+
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+
+### Backend & Databases
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+
+### Tools & Platforms
+[![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)](https://git-scm.com/)
+[![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)](https://aws.amazon.com/)
+
+</div>`
     },
     {
       id: 'installation',
@@ -97,21 +192,74 @@ Contributions are what make the open source community such an amazing place to l
     setContent(newContent);
     onChange(newContent);
   };
+    const handleLayoutChange = (newLayout: 'flow' | 'inline' | 'grid') => {
+    setCurrentLayout(newLayout);
+    if (onLayoutChange) {
+      onLayoutChange(newLayout);
+    }
+    
+    // Apply layout formatting to selected content if layout is changed
+    if (newLayout === 'inline' && content) {
+      // Only apply layout if content doesn't already have HTML layout formatting
+      if (!content.includes('<div align=')) {
+        // Split content by double newlines to get paragraphs
+        const paragraphs = content.split('\n\n').filter(p => p.trim());
+        if (paragraphs.length > 1) {
+          // Format first two paragraphs as side-by-side
+          const sideByContent = `<div align="center">
+
+<div align="left" style="display: inline-block; width: 48%;">
+
+${paragraphs[0]}
+
+</div>
+
+<div align="left" style="display: inline-block; width: 48%;">
+
+${paragraphs[1]}
+
+</div>
+
+</div>
+
+${paragraphs.slice(2).join('\n\n')}`;
+          
+          handleChange(sideByContent);
+        }
+      }
+    }
+  };
 
   const insertTemplate = (template: string) => {
     // Append the template to existing content with a line break
     const newContent = content ? `${content}\n\n${template}` : template;
     handleChange(newContent);
   };
-
   return (
     <motion.div 
-      className="space-y-4"
+      className="space-y-4 markdown-editor-container"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Template selector */}
+      {/* Template selector */}      {/* Layout selector */}      <InlineLayoutSelector 
+        onChange={handleLayoutChange}
+        currentLayout={currentLayout}
+      />
+      
+      {/* GitHub Stats Layout Generator - only show when inline layout is selected */}
+      {currentLayout === 'inline' && (
+        <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="text-sm font-medium mb-3 text-gray-700 dark:text-gray-300">Add GitHub Stats Layout</h3>          <GitHubStatsLayout 
+            username={username} 
+            onGenerateMarkdown={(markdown) => {
+              const newContent = content ? `${content}\n\n${markdown}` : markdown;
+              handleChange(newContent);
+            }}
+          />
+        </div>
+      )}
+      
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Templates
@@ -133,13 +281,13 @@ Contributions are what make the open source community such an amazing place to l
         </div>
       </div>
 
-      {/* Enhanced Markdown Editor */}
-      <MarkdownEditor
+      {/* Enhanced Markdown Editor */}      <MarkdownEditor
         initialValue={content}
         onChange={handleChange}
-        height="400px"
+        height="500px"
         showPreview={true}
         placeholder="Enter your markdown content here..."
+        className="shadow-lg border border-gray-200 dark:border-gray-600 rounded-lg"
       />
       
       {/* Markdown Tips */}

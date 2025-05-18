@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import "../styles/editor-layout.css";
 
 const geistSans = Inter({
   variable: "--font-geist-sans",
