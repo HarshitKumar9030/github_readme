@@ -63,7 +63,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
     let markdown = '';
     
     switch (arrangement) {
-      case 'sideBySide':        // Stats and Languages side by side using HTML table for better compatibility
+      case 'sideBySide':        
         markdown = `<div align="center">
 
 <table>
@@ -119,7 +119,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 </div>`;
         break;
       
-      case 'trophiesStats':        // Trophies, then stats and languages side by side
+      case 'trophiesStats':        
         markdown = `<div align="center">
 
 ![Trophy](${generateTrophyUrl()})
