@@ -20,13 +20,9 @@ export default function ReadmePreview({ content, onClose, onCopy }: ReadmePrevie
       >{/* GitHub-style Markdown Renderer */}
         <MarkdownRenderer 
           content={content} 
-          fullScreen={true}
-          className="w-full h-full"
-          defaultLayout="grid"
-          defaultGridColumns={2}
+          className="w-full h-full overflow-auto"
         />
         
-        {/* Fixed position controls */}
         <div className="absolute top-14 z-100 right-6 flex gap-2">
           <button 
             className="p-2 rounded-full bg-gray-800/80 hover:bg-gray-700/90 text-white shadow-lg"

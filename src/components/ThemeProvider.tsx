@@ -2,6 +2,7 @@
 
 import { ThemeProvider as NextThemeProvider } from 'next-themes';
 import { ReactNode } from 'react';
+import type { Attribute } from 'next-themes';
 
 export function ThemeProvider({ 
   children,
@@ -10,7 +11,7 @@ export function ThemeProvider({
   enableSystem = true
 }: { 
   children: ReactNode;
-  attribute?: string;
+  attribute?: Attribute;
   defaultTheme?: string;
   enableSystem?: boolean;
 }) {

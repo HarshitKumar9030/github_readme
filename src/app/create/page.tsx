@@ -257,7 +257,7 @@ export default function CreatePage() {
         }
       }
     }
-  }, []);
+  }, [setTheme]);
 
   // Function to load template presets
   const loadTemplate = (templateType: string) => {
@@ -719,7 +719,7 @@ export default function CreatePage() {
         blocks: builderBlocks,
         settings: {
           username,
-          theme,
+          theme: (theme as 'light' | 'dark' | 'auto') || 'light',
         }
       };
       
@@ -756,7 +756,7 @@ export default function CreatePage() {
         blocks: builderBlocks,
         settings: {
           username,
-          theme,
+          theme: (theme as 'light' | 'dark' | 'auto') || 'light',
         }
       };
       
@@ -1560,7 +1560,7 @@ export default function CreatePage() {
                     {selectedBlock.type === 'content' && (
                       <div className="space-y-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center justify-between">
+                          <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center justify-between">
                             <span>Content Editor</span>
                             <button
                               type="button"
