@@ -2,46 +2,48 @@
 
 import React from 'react';
 
-interface InlineLayoutSelectorProps {
-  onChange: (layout: 'flow' | 'inline' | 'grid') => void;
-  currentLayout: 'flow' | 'inline' | 'grid';
+interface BlockLayoutSelectorProps {
+  onChange: (layout: 'default' | 'side-by-side' | 'grid') => void;
+  currentLayout: 'default' | 'side-by-side' | 'grid';
+  blockType?: 'content' | 'widget'; // Optional - to show specific help text based on block type
 }
 
-const InlineLayoutSelector: React.FC<InlineLayoutSelectorProps> = ({ 
+const BlockLayoutSelector: React.FC<BlockLayoutSelectorProps> = ({ 
   onChange, 
-  currentLayout 
+  currentLayout,
+  blockType = 'content'
 }) => {
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        Content Layout
+        Block Layout
       </label>
       <div className="flex space-x-2">
         <button
-          onClick={() => onChange('flow')}
+          onClick={() => onChange('default')}
           className={`flex items-center justify-center px-3 py-2 rounded-md text-sm ${
-            currentLayout === 'flow'
+            currentLayout === 'default'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
-          title="Standard vertical flow (default)"
+          title="Standard full-width layout"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
-          Flow
+          Full Width
         </button>
         <button
-          onClick={() => onChange('inline')}
+          onClick={() => onChange('side-by-side')}
           className={`flex items-center justify-center px-3 py-2 rounded-md text-sm ${
-            currentLayout === 'inline'
+            currentLayout === 'side-by-side'
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
-          title="Side-by-side layout (elements arranged horizontally)"
+          title="Side-by-side arrangement with another block"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
           Side-by-Side
         </button>
@@ -52,7 +54,7 @@ const InlineLayoutSelector: React.FC<InlineLayoutSelectorProps> = ({
               ? 'bg-blue-600 text-white'
               : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
-          title="Grid layout (for GitHub widgets and stats)"
+          title="Grid layout with multiple blocks"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zm10 0a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -62,39 +64,24 @@ const InlineLayoutSelector: React.FC<InlineLayoutSelectorProps> = ({
       </div>
       
       <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        {currentLayout === 'inline' && (
+        {currentLayout === 'side-by-side' && (
           <div>
             <p>
-              Side-by-side layout uses GitHub-compatible HTML to arrange elements horizontally. 
-              Perfect for placing stats side-by-side or creating multi-column sections.
+              Side-by-side layout places this block alongside the next block. Perfect for widgets like GitHub stats or related content sections.
             </p>
-            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs">
-              <code>
-                &lt;div align=&quot;center&quot;&gt;<br/>
-                &nbsp;&nbsp;&lt;div align=&quot;left&quot; width=&quot;48%&quot;&gt;Content 1&lt;/div&gt;<br/>
-                &nbsp;&nbsp;&lt;div align=&quot;left&quot; width=&quot;48%&quot;&gt;Content 2&lt;/div&gt;<br/>
-                &lt;/div&gt;
-              </code>
-            </div>
           </div>
         )}
         {currentLayout === 'grid' && (
           <div>
             <p>
-              Grid layout works best for GitHub stats widgets and creates a responsive grid.
+              Grid layout places this block in a responsive grid with other blocks marked as grid items.
+              {blockType === 'widget' && ' Ideal for presenting multiple GitHub stat widgets together.'}
             </p>
-            <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-xs">
-              <code>
-                | Column 1 | Column 2 |<br/>
-                |:---:|:---:|<br/>
-                | Content 1 | Content 2 |
-              </code>
-            </div>
           </div>
         )}
-        {currentLayout === 'flow' && (
+        {currentLayout === 'default' && (
           <p>
-            Standard layout arranges elements vertically in a flowing sequence.
+            Standard layout displays this block at full width.
           </p>
         )}
       </div>
@@ -102,4 +89,4 @@ const InlineLayoutSelector: React.FC<InlineLayoutSelectorProps> = ({
   );
 };
 
-export default InlineLayoutSelector;
+export default BlockLayoutSelector;

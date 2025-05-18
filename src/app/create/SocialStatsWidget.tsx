@@ -14,6 +14,7 @@ export interface SocialStats {
     repositories: number;
     avatar?: string;
     trophies?: string;
+    languages?: string;
     streak?: string;
   };
   twitter?: {
@@ -123,8 +124,11 @@ export default function SocialStatsWidget({
           following: GithubData.following,
           repositories: GithubData.public_repos,
           avatar: GithubData.avatar_url,
-          trophies: `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${theme}`,
-          streak: `https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}`,
+          // Add hide_border=true for cleaner look in side-by-side layouts
+          trophies: `https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${theme}&hide_border=true`,
+          // Add top languages card
+          languages: `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${theme}&hide_border=true`,
+          streak: `https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}&hide_border=true`,
         },
       }));
       
@@ -295,24 +299,55 @@ export default function SocialStatsWidget({
                         Following
                       </div>
                     </div>
-                  </div>
-
-                  {/* GitHub Trophies */}
-                  {stats.github.trophies && config?.showTrophies && (
-                    <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
-                      <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center">
-                        <span className="mr-1">🏆</span> GitHub Trophies
+                  </div>                  {/* GitHub Stats Cards - Side by Side */}
+                  <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-3">
+                    <div className="flex flex-wrap justify-between gap-2 mb-1">
+                      <h5 className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center">
+                        <span className="mr-1">📊</span> GitHub Statistics
                       </h5>
-                      <Image
-                        src={stats.github.trophies}
-                        alt="GitHub Trophies"
-                        width={400}
-                        height={100}
-                        className="w-full rounded-md"
-                        unoptimized={true}
-                      />
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full px-2 py-0.5">
+                          Side-by-Side Layout
+                        </span>
+                      </div>
                     </div>
-                  )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* GitHub Stats */}
+                      {stats.github.trophies && config?.showTrophies && (
+                        <div className="border border-gray-100 dark:border-gray-800 rounded-md p-2">
+                          <h6 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 text-center">
+                            GitHub Stats
+                          </h6>
+                          <Image
+                            src={stats.github.trophies}
+                            alt="GitHub Stats"
+                            width={400}
+                            height={150}
+                            className="w-full rounded-md"
+                            unoptimized={true}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Top Languages */}
+                      {stats.github.languages && (
+                        <div className="border border-gray-100 dark:border-gray-800 rounded-md p-2">
+                          <h6 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 text-center">
+                            Top Languages
+                          </h6>
+                          <Image
+                            src={stats.github.languages}
+                            alt="Top Languages"
+                            width={400}
+                            height={150}
+                            className="w-full rounded-md"
+                            unoptimized={true}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
                   {/* GitHub Streak */}
                   {stats.github.streak && config?.showStreak && (

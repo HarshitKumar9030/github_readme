@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { ThemeToggle } from './ThemeToggle'
 
 const Hero = () => {
   const router = useRouter();
@@ -123,24 +124,34 @@ const Hero = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="flex flex-col items-center justify-center text-center">
-          {/* Animated badge above heading */}
-          <motion.div
-            className="mb-6"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-              <motion.span
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="mr-1.5"
-              >
-                ✨
-              </motion.span>
-              Drag-Drop Builder & GitHub Widgets
-            </span>
-          </motion.div>          {/* Main heading with typing animation - minimal style */}
+        <div className="flex flex-col items-center justify-center text-center">          {/* Header with theme toggle and badge */}
+          <div className="flex justify-between items-center w-full max-w-xl mx-auto mb-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                <motion.span
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="mr-1.5"
+                >
+                  ✨
+                </motion.span>
+                Drag-Drop Builder & GitHub Widgets
+              </span>
+            </motion.div>
+            
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+              className="relative"
+            >
+              <ThemeToggle variant="buttons" className="rounded-lg shadow-sm" />
+            </motion.div>
+          </div>{/* Main heading with typing animation - minimal style */}
           <motion.div 
             className="relative mb-6"
           >            <motion.h1 

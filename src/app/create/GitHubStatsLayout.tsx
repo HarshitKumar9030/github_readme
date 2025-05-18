@@ -63,50 +63,116 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
     let markdown = '';
     
     switch (arrangement) {
-      case 'sideBySide':
-        // Stats and Languages side by side
-        markdown = `<div align="center" class="github-stats-grid">
+      case 'sideBySide':        // Stats and Languages side by side using HTML table for better compatibility
+        markdown = `<div align="center">
 
-| ![Github Stats](${generateStatsUrl()}) | ![Top Languages](${generateLanguagesUrl()}) |
-|----------------------------------------|--------------------------------------------|
-| **My GitHub Statistics** | **My Top Languages** |
+<table>
+<tr>
+<td>
+
+![Github Stats](${generateStatsUrl()})
+
+</td>
+<td>
+
+![Top Languages](${generateLanguagesUrl()})
+
+</td>
+</tr>
+<tr>
+<td align="center">
+
+**My GitHub Statistics**
+
+</td>
+<td align="center">
+
+**My Top Languages**
+
+</td>
+</tr>
+</table>
 
 </div>`;
         break;
       
-      case 'statsLanguages':
-        // Stat card on top, languages below with streak stats
+      case 'statsLanguages':        // Stat card on top, languages below with streak stats in a table layout
         markdown = `<div align="center">
 
 ![GitHub Stats](${generateStatsUrl()})
 
-| ![Most Used Languages](${generateLanguagesUrl()}) | ![GitHub Streak](${generateStreakUrl()}) |
-|--------------------------------------------------|------------------------------------------|
+<table>
+<tr>
+<td>
+
+![Most Used Languages](${generateLanguagesUrl()})
+
+</td>
+<td>
+
+![GitHub Streak](${generateStreakUrl()})
+
+</td>
+</tr>
+</table>
 
 </div>`;
         break;
       
-      case 'trophiesStats':
-        // Trophies, then stats and languages side by side
+      case 'trophiesStats':        // Trophies, then stats and languages side by side
         markdown = `<div align="center">
 
 ![Trophy](${generateTrophyUrl()})
 
-| ![GitHub Stats](${generateStatsUrl()}) | ![Top Languages](${generateLanguagesUrl()}) |
-|----------------------------------------|--------------------------------------------|
+<table>
+<tr>
+<td>
+
+![GitHub Stats](${generateStatsUrl()})
+
+</td>
+<td>
+
+![Top Languages](${generateLanguagesUrl()})
+
+</td>
+</tr>
+</table>
 
 </div>`;
         break;
       
-      case 'allWidgets':
-        // Full showcase with all widgets
+      case 'allWidgets':        // Full showcase with all widgets using HTML table layout for better compatibility
         markdown = `<div align="center">
 
 ![Trophy](${generateTrophyUrl()})
 
-| ![GitHub Stats](${generateStatsUrl()}) | ![Top Languages](${generateLanguagesUrl()}) |
-|----------------------------------------|--------------------------------------------|
-| ![GitHub Streak](${generateStreakUrl()}) | ![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme}) |
+<table>
+<tr>
+<td>
+
+![GitHub Stats](${generateStatsUrl()})
+
+</td>
+<td>
+
+![Top Languages](${generateLanguagesUrl()})
+
+</td>
+</tr>
+<tr>
+<td>
+
+![GitHub Streak](${generateStreakUrl()})
+
+</td>
+<td>
+
+![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme})
+
+</td>
+</tr>
+</table>
 
 </div>`;
         break;

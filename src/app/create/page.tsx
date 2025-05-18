@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTheme } from 'next-themes';
 import IntegrationMenu, { Socials } from "./IntegrationMenu";
 import SocialStatsWidget from './SocialStatsWidget';
 import ConfigPanel, { WidgetConfig } from '@/components/ConfigPanel';
@@ -12,7 +13,9 @@ import MarkdownEditor from '@/components/MarkdownEditor';
 import ReadmePreview from './README-Preview';
 import ContentBlockEditor from './ContentBlockEditor';
 import GitHubStatsLayout from './GitHubStatsLayout';
+import BlockLayoutSelector from './BlockLayoutSelector';
 import MobileWarning from '@/components/MobileWarning';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { LocalStorageService } from '@/services/LocalStorageService';
 
 // Block type definitions
@@ -22,6 +25,7 @@ export interface BlockBase {
   id: string;
   type: BlockType;
   label: string;
+  blockLayout?: "default" | "side-by-side" | "grid";
 }
 
 export interface TemplateBlock extends BlockBase {
@@ -159,12 +163,21 @@ export default function CreatePage() {
       )
     );
   };
-  
-  const updateBlockLayout = (id: string, layout: 'flow' | 'inline' | 'grid') => {
+    const updateBlockLayout = (id: string, layout: 'flow' | 'inline' | 'grid') => {
     setBuilderBlocks(blocks => 
       blocks.map(block => 
         block.id === id && block.type === 'content' 
           ? { ...block, layout } 
+          : block
+      )
+    );
+  };
+  
+  const updateBlockContainerLayout = (id: string, blockLayout: 'default' | 'side-by-side' | 'grid') => {
+    setBuilderBlocks(blocks => 
+      blocks.map(block => 
+        block.id === id
+          ? { ...block, blockLayout } 
           : block
       )
     );
@@ -189,11 +202,10 @@ export default function CreatePage() {
       )
     );
   };
-
   // Import/Export state
   const [projectName, setProjectName] = useState<string>('My README');
   const [username, setUsername] = useState<string>('');
-  const [theme, setTheme] = useState<'light' | 'dark' | 'auto'>('light');
+  const { theme, setTheme } = useTheme();
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [projects, setProjects] = useState<ReadmeProject[]>([]);
@@ -202,19 +214,18 @@ export default function CreatePage() {
   // Auto-save project data
   useEffect(() => {
     if (builderBlocks.length === 0) return;
-    
-    const projectData: AutoSaveData = {
+      const projectData: AutoSaveData = {
       blocks: builderBlocks,
       settings: {
         username,
-        theme,
+        theme: theme as 'light' | 'dark' | 'auto', // Cast for storage compatibility
         socials,
         widgetConfig
       }
     };
     
     LocalStorageService.save('github-readme-autosave', projectData);
-  }, [builderBlocks, username, theme, socials, widgetConfig]);
+  }, [builderBlocks, username, theme, socials, widgetConfig, setTheme]);
 
   // Sync GitHub username with socials.github
   useEffect(() => {
@@ -226,11 +237,18 @@ export default function CreatePage() {
   // Load autosaved data
   useEffect(() => {
     const savedData = LocalStorageService.load<AutoSaveData | null>('github-readme-autosave', null);
-    if (savedData) {
-      setBuilderBlocks(savedData.blocks || []);
+    if (savedData) {      setBuilderBlocks(savedData.blocks || []);
       if (savedData.settings) {
         setUsername(savedData.settings.username || '');
-        setTheme(savedData.settings.theme || 'light');
+        
+        // Apply theme if saved, but allow system settings to override
+        const savedTheme = savedData.settings.theme;
+        if (savedTheme && savedTheme !== 'auto') {
+          setTheme(savedTheme);
+        } else if (savedTheme === 'auto') {
+          setTheme('system'); // Convert 'auto' to 'system' for next-themes
+        }
+        
         if (savedData.settings.socials) {
           setSocials(savedData.settings.socials);
         }
@@ -871,18 +889,8 @@ export default function CreatePage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <select
-                  className="rounded-md border-0 py-2 pl-3 pr-8 text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-gray-700 focus:ring-2 focus:ring-inset focus:ring-blue-500 dark:bg-gray-700 sm:text-sm"
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value as 'light' | 'dark' | 'auto')}
-                >
-                  <option value="light">Light</option>
-                  <option value="dark">Dark</option>
-                  <option value="auto">Auto</option>
-                </select>
+              </div>              <div className="flex items-center space-x-2">
+                <ThemeToggle variant="select" className="ring-1 ring-inset ring-gray-300 dark:ring-gray-700 dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
             </div>
           </div>
@@ -1454,8 +1462,7 @@ export default function CreatePage() {
                   </div>
                 ) : (
                   <div className="space-y-6">
-                    {/* Block Type Indicator */}
-                    <div className="flex items-center gap-2 mb-4">
+                    {/* Block Type Indicator */}                    <div className="flex items-center gap-2 mb-4">
                       {selectedBlock.type === 'content' ? (
                         <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
                           <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1479,6 +1486,15 @@ export default function CreatePage() {
                         <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">{selectedBlock.label}</h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Edit properties below</p>
                       </div>
+                    </div>
+
+                    {/* Block Layout Controls */}
+                    <div className="space-y-4 pt-2 pb-4 border-b border-gray-200 dark:border-gray-700">
+                      <BlockLayoutSelector 
+                        currentLayout={selectedBlock.blockLayout || 'default'} 
+                        onChange={(blockLayout) => updateBlockContainerLayout(selectedBlock.id, blockLayout)}
+                        blockType={selectedBlock.type === 'widget' ? 'widget' : 'content'}
+                      />
                     </div>
                     
                     {/* Template Block Properties */}
