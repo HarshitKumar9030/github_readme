@@ -19,7 +19,7 @@
  */
 
 // Widget types for stats display
-export type WidgetType = 'stats' | 'languages' | 'trophy' | 'streak' | 'contributions';
+export type WidgetType = 'stats' | 'languages' | 'contributions';
 
 // Theme options for widgets
 export type WidgetTheme = 'light' | 'dark' | 'radical' | 'merko' | 'gruvbox' | 'tokyonight' | 'onedark' | 'cobalt' | 'synthwave' | 'highcontrast' | 'dracula';
@@ -46,28 +46,6 @@ export interface LanguageStatsConfig {
   layout?: 'compact' | 'normal';
   cardWidth?: number;
   langs_count?: number;
-  hideBorder?: boolean;
-}
-
-/**
- * Trophy Widget configuration
- */
-export interface TrophyConfig {
-  username: string;
-  theme?: WidgetTheme;
-  column?: number;
-  row?: number;
-  noFrame?: boolean;
-  margin?: 0 | 5 | 10 | 15 | 20;
-}
-
-/**
- * Streak Stats Widget configuration
- */
-export interface StreakStatsConfig {
-  username: string;
-  theme?: WidgetTheme;
-  hideTitle?: boolean;
   hideBorder?: boolean;
 }
 
@@ -109,7 +87,7 @@ export function convertToGitHubCompatible(markdown: string): string {
 
 /**
  * Generate Markdown for a widget card with GitHub-compatible markup
- * @param type Widget type (stats, languages, trophy, streak)
+ * @param type Widget type (stats, languages)
  * @param title Widget title
  * @param imageSrc Image source URL
  * @param altText Image alt text
@@ -117,28 +95,13 @@ export function convertToGitHubCompatible(markdown: string): string {
  * @returns Markdown string with GitHub-compatible formatting
  */
 export function generateWidgetCardMarkdown(
-  type: 'stats' | 'languages' | 'trophy' | 'streak',
+  type: 'stats' | 'languages',
   title: string,
   imageSrc: string,
   altText: string,
   footerText: string
 ): string {
-  // For trophy widget, we need a different approach since they're wider
-  const isFullWidth = type === 'trophy';
-  
-  if (isFullWidth) {
-    // Use pure markdown with extra spacing for visual separation
-    return `
-## ${title}
-
-![${altText}](${imageSrc})
-
-${footerText}
-
-`;
-  }
-  
-  // For other widgets, use pure markdown
+  // Use pure markdown
   return `### ${title}
 
 ![${altText}](${imageSrc})
@@ -154,7 +117,7 @@ ${footerText}`;
  */
 export function generateGridLayout(
   widgets: Array<{
-    type: 'stats' | 'languages' | 'trophy' | 'streak';
+    type: 'stats' | 'languages';
     title: string;
     imageSrc: string;
     altText: string;
@@ -182,18 +145,7 @@ export function generateGridLayout(
     // For multiple columns, use markdown tables
     const widgetsToProcess = [...widgets]; // Copy array to avoid modifying the original
     
-    while (widgetsToProcess.length > 0) {      // Handle trophy widgets separately (full width)
-      if (widgetsToProcess[0]?.type === 'trophy') {
-        const widget = widgetsToProcess.shift()!; // Remove and get the first widget
-        
-        // Add trophy widget using pure markdown - we'll use a full-width approach with markdown table
-        markdown += `\n\n## ${widget.title}\n\n`;
-        markdown += `![${widget.altText}](${widget.imageSrc})\n\n`;
-        markdown += `${widget.footerText}\n\n`;
-        
-        continue;
-      }
-      
+    while (widgetsToProcess.length > 0) {
       // Process regular widgets in rows of 'columns'
       const rowWidgets = widgetsToProcess.splice(0, columns);
       
@@ -296,38 +248,6 @@ export function generateLanguageStatsUrl(config: LanguageStatsConfig): string {
 }
 
 /**
- * Generate trophy widget URL
- * @param config Trophy configuration
- * @returns URL string for the trophy image
- */
-export function generateTrophyUrl(config: TrophyConfig): string {
-  const params = new URLSearchParams();
-  
-  if (config.theme) params.append('theme', config.theme);
-  if (config.column) params.append('column', config.column.toString());
-  if (config.row) params.append('row', config.row.toString());
-  if (config.noFrame !== undefined) params.append('no-frame', config.noFrame.toString());
-  if (config.margin !== undefined) params.append('margin-w', config.margin.toString());
-  
-  return `https://github-profile-trophy.vercel.app/?username=${config.username}&${params.toString()}`;
-}
-
-/**
- * Generate streak stats widget URL
- * @param config Streak stats configuration
- * @returns URL string for the streak stats image
- */
-export function generateStreakStatsUrl(config: StreakStatsConfig): string {
-  const params = new URLSearchParams();
-  
-  if (config.theme) params.append('theme', config.theme);
-  if (config.hideTitle !== undefined) params.append('hide_title', config.hideTitle.toString());
-  if (config.hideBorder !== undefined) params.append('hide_border', config.hideBorder.toString());
-  
-  return `https://github-readme-streak-stats.herokuapp.com/?user=${config.username}&${params.toString()}`;
-}
-
-/**
  * Generate GitHub-compatible badges for your profile
  * @param badges Array of badge configurations
  * @returns Markdown string with aligned badges
@@ -348,7 +268,6 @@ export function generateBadgeRow(
   
   // Add alignment hint for center or right alignment using a table
   if (alignment === 'center' || alignment === 'right') {
-    const alignChar = alignment === 'center' ? ':---:' : '---:';
     result += `<div align="${alignment}">\n\n`;
   }
   
@@ -406,110 +325,32 @@ export function generateProfileHeader(
 }
 
 /**
- * Creates a GitHub-compatible side-by-side layout using HTML divs with align attributes
+ * Creates GitHub-compatible side-by-side layout using HTML divs with align attributes
  * @param columns Array of content blocks to display side-by-side
- * @param width Optional width value for each column (e.g., '48%')
  * @returns Markdown string with GitHub-compatible HTML markup
  */
 export function generateSideBySideLayout(
   columns: Array<{
     content: string;
     align?: 'left' | 'center' | 'right';
-  }>,
-  width?: string
+  }>
 ): string {
-  // Width attribute will be ignored by GitHub but makes the preview look better
-  const widthAttr = width ? ` width="${width}"` : ` width="48%"`;
+  // Using simple GitHub-compatible table format
+  if (columns.length === 2) {
+    return `| | |\n|---|---|\n| ${columns[0].content} | ${columns[1].content} |`;
+  }
   
-  // GitHub allows the align attribute and will ignore width, but preserves the structure
-  // Using inline-block in style will be stripped by GitHub but makes preview better
+  // For other numbers of columns, use div with align attributes (no CSS)
   return `
 <div align="center">
 
 ${columns.map(column => {
   const alignment = column.align || 'left';
-  return `<div align="${alignment}"${widthAttr} style="display: inline-block; vertical-align: top; margin: 0 4px;">\n\n${column.content}\n\n</div>`;
+  return `<div align="${alignment}">\n\n${column.content}\n\n</div>`;
 }).join('\n\n')}
 
 </div>
 `;
-}
-
-/**
- * Creates GitHub-compatible side-by-side layout for widgets or content using inline-block style divs
- * @param items Array of content items to display side-by-side
- * @returns Markdown string with GitHub-compatible HTML 
- */
-export function generateInlineLayout(
-  items: Array<{
-    content: string; 
-    width?: string;  // e.g., '45%'
-    align?: 'left' | 'center' | 'right';
-    isWidget?: boolean; // Flag to indicate if this is a GitHub widget (stat card)
-  }>
-): string {
-  // For GitHub README, we have two good options:
-  // 1. Using HTML with align attributes (works in most cases)
-  // 2. Using markdown tables (better for widgets and stats)
-  
-  // Check if we have any widget content (like GitHub stat cards)
-  const hasWidgets = items.some(item => 
-    item.isWidget || 
-    item.content.includes('github-readme-stats') || 
-    item.content.includes('github-profile-trophy')
-  );
-  
-  // For widgets, a table layout works better in GitHub
-  if ((items.length >= 2 && items.length <= 4) && hasWidgets) {
-    // Create a markdown table for side-by-side layout
-    let markdown = `<div align="center">\n\n`;
-    
-    // Calculate rows and columns - arrange in 2 columns if more than 2 items
-    const useDoubleRow = items.length > 2;
-    const firstRow = useDoubleRow ? items.slice(0, 2) : items;
-    const secondRow = useDoubleRow ? items.slice(2) : [];
-    
-    // First row
-    markdown += '| ' + firstRow.map(() => ' ').join(' | ') + ' |\n';
-    markdown += '|' + firstRow.map(() => ':---:').join('|') + '|\n';
-    markdown += '| ' + firstRow.map(item => item.content).join(' | ') + ' |\n\n';
-    
-    // Second row if needed
-    if (useDoubleRow && secondRow.length > 0) {
-      // Add appropriate columns based on second row length
-      markdown += '| ' + secondRow.map(() => ' ').join(' | ');
-      if (secondRow.length === 1) markdown += ' | '; // Balance for single item
-      markdown += ' |\n';
-      
-      markdown += '|' + secondRow.map(() => ':---:').join('|');
-      if (secondRow.length === 1) markdown += '|'; // Balance for single item
-      markdown += '|\n';
-      
-      // Add content row
-      markdown += '| ' + secondRow.map(item => item.content).join(' | ');
-      if (secondRow.length === 1) markdown += ' | '; // Balance for single item
-      markdown += ' |\n\n';
-    }
-    
-    markdown += '</div>\n\n';
-    return markdown;
-  }
-  
-  // For non-widget content or more complex layouts, use div-based approach
-  // Create a container with GitHub-compatible alignment
-  let markdown = `<div align="center">\n\n`;
-  
-  // Add each item with its own alignment as needed
-  items.forEach((item) => {
-    const alignment = item.align || 'center';
-    const width = item.width || '48%';
-    // Use simple div with align attribute - GitHub will ignore style but preserve structure
-    markdown += `<div align="${alignment}" width="${width}" style="display: inline-block; vertical-align: top; margin: 0 4px;">\n\n${item.content}\n\n</div>\n\n`;
-  });
-    // Close the container
-  markdown += `</div>`;
-  
-  return markdown;
 }
 
 /**
@@ -521,7 +362,7 @@ export function generateGitHubStatsLayout(
   config: {
     username: string;
     theme?: WidgetTheme;
-    layout?: 'side-by-side' | 'stats-languages' | 'trophies-stats' | 'all-widgets';
+    layout?: 'side-by-side' | 'stats-languages' | 'all-widgets';
     showPrivate?: boolean;
     showIcons?: boolean;
     compactLanguages?: boolean;
@@ -546,8 +387,6 @@ export function generateGitHubStatsLayout(
   
   const statsUrl = `https://github-readme-stats.vercel.app/api?username=${username}&${statsParams.toString()}`;
   const languagesUrl = `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&${languagesParams.toString()}`;
-  const trophyUrl = `https://github-profile-trophy.vercel.app/?username=${username}&theme=${theme}&no-frame=true&margin-w=4`;
-  const streakUrl = `https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}&hide_border=true`;
   
   let markdown = '';
   
@@ -564,38 +403,24 @@ export function generateGitHubStatsLayout(
       break;
     
     case 'stats-languages':
-      // Stat card on top, languages below with streak stats
+      // Stat card on top, languages below
       markdown = `<div align="center">
 
 ![GitHub Stats](${statsUrl})
 
-| ![Most Used Languages](${languagesUrl}) | ![GitHub Streak](${streakUrl}) |
+| ![Most Used Languages](${languagesUrl}) | ![GitHub Stats Details](${statsUrl}&include_all_commits=true&count_private=true) |
 |--------------------------------------------------|------------------------------------------|
 
 </div>`;
       break;
     
-    case 'trophies-stats':
-      // Trophies, then stats and languages side by side
-      markdown = `<div align="center">
-
-![Trophy](${trophyUrl})
-
-| ![GitHub Stats](${statsUrl}) | ![Top Languages](${languagesUrl}) |
-|----------------------------------------|--------------------------------------------|
-
-</div>`;
-      break;
-    
     case 'all-widgets':
-      // Full showcase with all widgets
+      // Stats, languages, and contribution graph
       markdown = `<div align="center">
-
-![Trophy](${trophyUrl})
 
 | ![GitHub Stats](${statsUrl}) | ![Top Languages](${languagesUrl}) |
 |----------------------------------------|--------------------------------------------|
-| ![GitHub Streak](${streakUrl}) | ![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme}) |
+| ![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme}) |
 
 </div>`;
       break;

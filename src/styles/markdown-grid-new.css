@@ -1,20 +1,5 @@
-/* GitHub Markdown Grid Layout Styles */
-/* 
- * These styles are only applied in the preview editor
- * The actual GitHub README will use standard markdown
- * using tables and allowed HTML elements like <div align="center">
- * GitHub allows certain HTML elements but sanitizes attributes
- */
-
-/* Preview table styles to make tables look like a grid of widgets */
-/* This simulates how GitHub will render the tables */
-.prose table {
-  width: 100%;
-  border-collapse: separate !important;
-  border-spacing: 0.5rem !important;
-  margin: 1.5rem 0;
-  border: none !important;
-}
+/* Basic GitHub Flavored Markdown styling - minimal version without custom CSS */
+/* This file intentionally left minimal to allow GitHub's default styling to take precedence */
 
 .prose table td {
   padding: 0.5rem !important;

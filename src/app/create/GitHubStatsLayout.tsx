@@ -9,7 +9,7 @@ export interface GitHubStatsLayoutProps {
 }
 
 // Widget arrangement options
-type WidgetArrangement = 'sideBySide' | 'statsLanguages' | 'trophiesStats' | 'allWidgets';
+type WidgetArrangement = 'sideBySide' | 'statsLanguages' | 'allWidgets';
 
 // Widget Theme options - matches the theme options in inlineStylesConverter.ts
 const themeOptions: WidgetTheme[] = [
@@ -44,20 +44,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
     }
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&${params.toString()}`;
   };
-
-  // Helper function to generate Trophy URL with parameters
-  const generateTrophyUrl = () => {
-    const params = new URLSearchParams();
-    params.append('theme', theme);
-    return `https://github-profile-trophy.vercel.app/?username=${username}&theme=${theme}&no-frame=true&margin-w=4`;
-  };
-
-  // Helper function to generate Streak Stats URL with parameters
-  const generateStreakUrl = () => {
-    const params = new URLSearchParams();
-    params.append('theme', theme);
-    return `https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${theme}&hide_border=true`;
-  };
+  // No trophy or streak functions needed
   // Generate markdown based on selected arrangement
   const generateMarkdown = () => {
     let markdown = '';
@@ -95,8 +82,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 
 </div>`;
         break;
-      
-      case 'statsLanguages':        // Stat card on top, languages below with streak stats in a table layout
+        case 'statsLanguages':        // Stat card on top, languages below in a table layout
         markdown = `<div align="center">
 
 ![GitHub Stats](${generateStatsUrl()})
@@ -110,7 +96,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 </td>
 <td>
 
-![GitHub Streak](${generateStreakUrl()})
+![GitHub Stats Details](${generateStatsUrl()}&include_all_commits=true&count_private=true)
 
 </td>
 </tr>
@@ -118,34 +104,8 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 
 </div>`;
         break;
-      
-      case 'trophiesStats':        
+        case 'allWidgets':       
         markdown = `<div align="center">
-
-![Trophy](${generateTrophyUrl()})
-
-<table>
-<tr>
-<td>
-
-![GitHub Stats](${generateStatsUrl()})
-
-</td>
-<td>
-
-![Top Languages](${generateLanguagesUrl()})
-
-</td>
-</tr>
-</table>
-
-</div>`;
-        break;
-      
-      case 'allWidgets':        // Full showcase with all widgets using HTML table layout for better compatibility
-        markdown = `<div align="center">
-
-![Trophy](${generateTrophyUrl()})
 
 <table>
 <tr>
@@ -161,12 +121,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 </td>
 </tr>
 <tr>
-<td>
-
-![GitHub Streak](${generateStreakUrl()})
-
-</td>
-<td>
+<td colspan="2">
 
 ![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme})
 
@@ -207,26 +162,14 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
             }`}
           >
             Stats & Languages Side by Side
-          </button>
-          <button
-            onClick={() => setArrangement('statsLanguages')}
+          </button>          <button            onClick={() => setArrangement('statsLanguages')}
             className={`px-4 py-3 border rounded-md text-sm ${
               arrangement === 'statsLanguages'
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 text-blue-700 dark:text-blue-300'
                 : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
-            Stats, Languages & Streak
-          </button>
-          <button
-            onClick={() => setArrangement('trophiesStats')}
-            className={`px-4 py-3 border rounded-md text-sm ${
-              arrangement === 'trophiesStats'
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 text-blue-700 dark:text-blue-300'
-                : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-            }`}
-          >
-            Trophies with Stats & Languages
+            Stats & Languages Details
           </button>
           <button
             onClick={() => setArrangement('allWidgets')}
@@ -236,7 +179,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
                 : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
-            All Widgets Showcase
+            Stats with Contributions
           </button>
         </div>
       </div>
@@ -308,9 +251,8 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
         </button>
       </div>
       
-      <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          These widgets use services like github-readme-stats and github-profile-trophy. The markdown generated uses GitHub-compatible HTML and table layouts.
+      <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">        <p className="text-xs text-gray-500 dark:text-gray-400">
+          These widgets use services like github-readme-stats. The markdown generated uses GitHub-compatible HTML and table layouts.
         </p>
       </div>
     </div>

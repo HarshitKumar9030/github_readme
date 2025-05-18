@@ -1,24 +1,5 @@
-/* GitHub Markdown Grid Layout Styles */
-.grid-widget-layout {
-  /* Grid container styles */
-  display: block; /* Will be overridden with grid when widgets are detected */
-}
-
-/* Apply grid layout when widget elements are present */
-.grid-widget-layout:has(.widget-stats),
-.grid-widget-layout:has(.widget-languages),
-.grid-widget-layout:has(.widget-trophy),
-.grid-widget-layout:has(.widget-streak) {
-  display: grid;
-  grid-template-columns: repeat(var(--grid-columns, 2), 1fr);
-  gap: 1rem;
-  margin: 1.5rem 0;
-}
-
-/* Widget specific styles */
-.widget-stats,
-.widget-languages,
-.widget-trophy,
+/* Basic GitHub Flavored Markdown styling - minimal version without custom CSS */
+/* This file intentionally left minimal to allow GitHub's default styling to take precedence */
 .widget-streak {
   break-inside: avoid;
   page-break-inside: avoid;

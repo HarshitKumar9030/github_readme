@@ -97,16 +97,13 @@ export default function CreatePage() {
     twitter: "",
     linkedin: "",
   });
-
   // Advanced configuration state
   const [widgetConfig, setWidgetConfig] = useState<Partial<WidgetConfig>>({
     theme: 'light',
     showIcons: true,
     includePrivate: false,
     layout: 'compact',
-    includeAllCommits: true,
-    showTrophies: true,
-    showStreak: true
+    includeAllCommits: true
   });
   // State for toast notifications
   const [showToast, setShowToast] = useState(false);
@@ -413,74 +410,7 @@ export default function CreatePage() {
     let markdown = '';
     
     // Add title
-    markdown += `# ${projectName || 'My GitHub Profile'}\n\n`;
-
-    // Add CSS styles for grid layout if using widgets
-    if (builderBlocks.some(block => block.type === 'widget')) {
-      markdown += `<!-- GitHub README Grid Layout Styles -->\n`;
-      markdown += `<style>\n`;
-      markdown += `.grid-container {\n`;
-      markdown += `  display: grid;\n`;
-      markdown += `  grid-template-columns: repeat(2, 1fr);\n`;
-      markdown += `  gap: 16px;\n`;
-      markdown += `  margin: 16px 0;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item {\n`;
-      markdown += `  border-radius: 8px;\n`;
-      markdown += `  overflow: hidden;\n`;
-      markdown += `  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);\n`;
-      markdown += `  background-color: #ffffff;\n`;
-      markdown += `  display: flex;\n`;
-      markdown += `  flex-direction: column;\n`;
-      markdown += `  transition: transform 0.3s ease;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item:hover {\n`;
-      markdown += `  transform: translateY(-2px);\n`;
-      markdown += `  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item-header {\n`;
-      markdown += `  padding: 12px 16px;\n`;
-      markdown += `  border-bottom: 1px solid #e5e7eb;\n`;
-      markdown += `  display: flex;\n`;
-      markdown += `  align-items: center;\n`;
-      markdown += `  justify-content: space-between;\n`;
-      markdown += `  font-weight: 500;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item-body {\n`;
-      markdown += `  padding: 16px;\n`;
-      markdown += `  display: flex;\n`;
-      markdown += `  justify-content: center;\n`;
-      markdown += `  flex: 1;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item-footer {\n`;
-      markdown += `  padding: 8px 16px;\n`;
-      markdown += `  border-top: 1px solid #e5e7eb;\n`;
-      markdown += `  font-size: 12px;\n`;
-      markdown += `  color: #6b7280;\n`;
-      markdown += `  text-align: right;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item-trophy {\n`;
-      markdown += `  grid-column: 1 / -1;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `.grid-item-body img {\n`;
-      markdown += `  max-width: 100%;\n`;
-      markdown += `  height: auto;\n`;
-      markdown += `}\n\n`;
-      
-      markdown += `@media (max-width: 768px) {\n`;
-      markdown += `  .grid-container {\n`;
-      markdown += `    grid-template-columns: 1fr;\n`;
-      markdown += `  }\n`;
-      markdown += `}\n`;
-      markdown += `</style>\n\n`;
-    }
+    markdown += `# ${projectName || 'My GitHub Profile'}\n\n`;    // No custom CSS needed for GitHub Flavored Markdown
     
     // Process blocks
     let isInsideGridContainer = false;
@@ -547,39 +477,7 @@ export default function CreatePage() {
               markdown += `    GitHub ReadMe Stats\n`;
               markdown += `  </div>\n`;
               markdown += `</div>\n\n`;
-              
-              hasProcessedGridItem = true;
-              
-              // Add GitHub Trophies if enabled
-              if (widgetConfig.showTrophies) {
-                // Trophies span full width
-                markdown += `<div class="grid-item grid-item-trophy">\n`;
-                markdown += `  <div class="grid-item-header">\n`;
-                markdown += `    <span>🏆 GitHub Trophies</span>\n`;
-                markdown += `  </div>\n`;
-                markdown += `  <div class="grid-item-body">\n`;
-                markdown += `    <img src="https://github-profile-trophy.vercel.app/?username=${username}&theme=${themeParam}&no-frame=false&no-bg=false&margin-w=4" alt="GitHub Trophies">\n`;
-                markdown += `  </div>\n`;
-                markdown += `  <div class="grid-item-footer">\n`;
-                markdown += `    GitHub Profile Trophy\n`;
-                markdown += `  </div>\n`;
-                markdown += `</div>\n\n`;
-              }
-              
-              // Add GitHub Streak Stats if enabled
-              if (widgetConfig.showStreak) {
-                markdown += `<div class="grid-item">\n`;
-                markdown += `  <div class="grid-item-header">\n`;
-                markdown += `    <span>🔥 Streak Stats</span>\n`;
-                markdown += `  </div>\n`;
-                markdown += `  <div class="grid-item-body">\n`;
-                markdown += `    <img src="https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${themeParam}&hide_border=false" alt="GitHub Streak Stats">\n`;
-                markdown += `  </div>\n`;
-                markdown += `  <div class="grid-item-footer">\n`;
-                markdown += `    GitHub Streak Stats\n`;
-                markdown += `  </div>\n`;
-                markdown += `</div>\n\n`;
-              }
+                hasProcessedGridItem = true;
             } else {
               markdown += `<!-- Add your GitHub username to see your stats -->\n\n`;
             }
@@ -603,49 +501,9 @@ export default function CreatePage() {
               hasProcessedGridItem = true;
             } else {
               markdown += `<!-- Add your GitHub username to see your top languages -->\n\n`;
-            }
-          } else if (block.widgetId === 'social-stats') {            
-            // First, add GitHub trophies and streaks if GitHub is configured
-            if (socials.github && widgetConfig.showTrophies) {
-              const themeParam = widgetConfig.theme || (theme === 'dark' ? 'radical' : 'default');
-              
-              markdown += `<div class="grid-item grid-item-trophy">\n`;
-              markdown += `  <div class="grid-item-header">\n`;
-              markdown += `    <span>🏆 GitHub Profile Trophy</span>\n`;
-              markdown += `  </div>\n`;
-              markdown += `  <div class="grid-item-body">\n`;
-              markdown += `    <img src="https://github-profile-trophy.vercel.app/?username=${socials.github}&theme=${themeParam}&no-frame=false&no-bg=false&margin-w=4" alt="GitHub Trophies">\n`;
-              markdown += `  </div>\n`;
-              markdown += `  <div class="grid-item-footer">\n`;
-              markdown += `    GitHub Profile Trophy\n`;
-              markdown += `  </div>\n`;
-              markdown += `</div>\n\n`;
-              
-              hasProcessedGridItem = true;
-            }
-            
-            if (socials.github && widgetConfig.showStreak) {
-              const themeParam = widgetConfig.theme || (theme === 'dark' ? 'radical' : 'default');
-              
-              markdown += `<div class="grid-item">\n`;
-              markdown += `  <div class="grid-item-header">\n`;
-              markdown += `    <span>🔥 Streak Stats</span>\n`;
-              markdown += `  </div>\n`;
-              markdown += `  <div class="grid-item-body">\n`;
-              markdown += `    <img src="https://github-readme-streak-stats.herokuapp.com/?user=${socials.github}&theme=${themeParam}&hide_border=false" alt="GitHub Streak Stats">\n`;
-              markdown += `  </div>\n`;
-              markdown += `  <div class="grid-item-footer">\n`;
-              markdown += `    GitHub Streak Stats\n`;
-              markdown += `  </div>\n`;
-              markdown += `</div>\n\n`;
-              
-              hasProcessedGridItem = true;
-            }
-            
-            // Close the grid container if we've added widget items
-            if (hasProcessedGridItem) {
-              closeGridIfOpen();
-            }
+            }          } else if (block.widgetId === 'social-stats') {
+            // No trophies or streaks, just social stats
+            closeGridIfOpen();
             
             // Then add social media links (outside of grid)
             markdown += `### Connect With Me\n\n`;
@@ -1303,7 +1161,7 @@ export default function CreatePage() {
                                             </svg>
                                             <span className="text-xs font-medium">Show Icons</span>
                                           </div>
-                                          <div className={`flex items-center gap-2 ${widgetConfig.showTrophies ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>
+                                          {/* <div className={`flex items-center gap-2 ${widgetConfig.showTrophies ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'}`}>
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                                             </svg>
@@ -1314,7 +1172,7 @@ export default function CreatePage() {
                                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                                             </svg>
                                             <span className="text-xs font-medium">Streak Stats</span>
-                                          </div>
+                                          </div> */}
                                         </div>
                                       </div>
                                     </div>
@@ -1347,22 +1205,19 @@ export default function CreatePage() {
                                     <div className="flex flex-col">
                                       <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-2">
                                         <span className="font-medium">Social Stats</span>
-                                        <div className="flex gap-2">
+                                        {/* <div className="flex gap-2">
                                           {widgetConfig.showTrophies && (
                                             <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded">Trophies</span>
                                           )}
                                           {widgetConfig.showStreak && (
                                             <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 rounded">Streak</span>
                                           )}
-                                        </div>
+                                        </div> */}
                                       </div>
                                       <SocialStatsWidget 
                                         socials={socials}
                                         theme={widgetConfig.theme || (theme === 'dark' ? 'dark' : 'light')} 
-                                        config={{
-                                          showTrophies: widgetConfig.showTrophies,
-                                          showStreak: widgetConfig.showStreak
-                                        }}
+                      
                                       />
                                     </div>
                                   )}

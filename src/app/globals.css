@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "../styles/markdown-grid.css";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));

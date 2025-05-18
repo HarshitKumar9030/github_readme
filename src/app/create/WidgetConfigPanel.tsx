@@ -14,14 +14,7 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
   config,
   onChange
 }) => {
-  const showGithubTrophies = () => {
-    return config.showTrophies !== false;
-  };
-  
-  const showGithubStreak = () => {
-    return config.showStreak !== false;
-  };
-
+  // Update configuration
   const updateConfig = (key: keyof WidgetConfig, value: any) => {
     onChange({
       ...config,
@@ -52,7 +45,7 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
         </select>
       </div>
       
-      {/* GitHub Stats specific options */}
+      {/* GitHub stats specific options */}
       {widgetType === 'github-stats' && (
         <>
           <div>
@@ -75,7 +68,7 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
                 checked={config.includePrivate === true}
                 onChange={(e) => updateConfig('includePrivate', e.target.checked)}
               />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Include Private Repos</span>
+              <span className="text-sm text-gray-700 dark:text-gray-300">Include Private Contributions</span>
             </label>
           </div>
           
@@ -91,29 +84,7 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
             </label>
           </div>
           
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                className="form-checkbox rounded border-gray-300 dark:border-gray-600"
-                checked={showGithubTrophies()}
-                onChange={(e) => updateConfig('showTrophies', e.target.checked)}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Show GitHub Trophies</span>
-            </label>
-          </div>
-          
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                className="form-checkbox rounded border-gray-300 dark:border-gray-600"
-                checked={showGithubStreak()}
-                onChange={(e) => updateConfig('showStreak', e.target.checked)}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Show GitHub Streak Stats</span>
-            </label>
-          </div>
+          {/* Trophy and streak options removed */}
         </>
       )}
       
@@ -137,29 +108,7 @@ const WidgetConfigPanel: React.FC<WidgetConfigPanelProps> = ({
       {/* Social stats specific options */}
       {widgetType === 'social-stats' && (
         <>
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                className="form-checkbox rounded border-gray-300 dark:border-gray-600"
-                checked={showGithubTrophies()}
-                onChange={(e) => updateConfig('showTrophies', e.target.checked)}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Show GitHub Trophies</span>
-            </label>
-          </div>
-          
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                className="form-checkbox rounded border-gray-300 dark:border-gray-600"
-                checked={showGithubStreak()}
-                onChange={(e) => updateConfig('showStreak', e.target.checked)}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Show GitHub Streak Stats</span>
-            </label>
-          </div>
+          {/* Trophy and streak options removed */}
         </>
       )}
     </div>

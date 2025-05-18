@@ -17,8 +17,6 @@ export interface WidgetConfig {
   layout: 'default' | 'compact';
   locale: string;
   includeAllCommits: boolean;
-  showTrophies: boolean;
-  showStreak: boolean;
 }
 
 interface ConfigPanelProps {
@@ -50,7 +48,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       ]
     }
   ];
-
   // GitHub stats specific options
   const githubStatsOptions: ConfigOption[] = [
     {
@@ -68,18 +65,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     {
       id: 'includeAllCommits',
       label: 'Include All Commits',
-      type: 'toggle',
-      defaultValue: true
-    },
-    {
-      id: 'showTrophies',
-      label: 'Show GitHub Trophies',
-      type: 'toggle',
-      defaultValue: true
-    },
-    {
-      id: 'showStreak',
-      label: 'Show GitHub Streak',
       type: 'toggle',
       defaultValue: true
     }
@@ -104,22 +89,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       defaultValue: false
     }
   ];
-
   // Social stats specific options
-  const socialStatsOptions: ConfigOption[] = [
-    {
-      id: 'showTrophies',
-      label: 'Show GitHub Trophies',
-      type: 'toggle',
-      defaultValue: true
-    },
-    {
-      id: 'showStreak',
-      label: 'Show GitHub Streak',
-      type: 'toggle',
-      defaultValue: true
-    }
-  ];
+  const socialStatsOptions: ConfigOption[] = [];
 
   // Get options based on widget type
   const getOptionsForWidgetType = () => {
@@ -211,20 +182,9 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                         <svg className={`w-5 h-5 ${isActive ? 'text-purple-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                      )}
-                      {option.id === 'includeAllCommits' && (
+                      )}                      {option.id === 'includeAllCommits' && (
                         <svg className={`w-5 h-5 ${isActive ? 'text-green-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                      )}
-                      {option.id === 'showTrophies' && (
-                        <svg className={`w-5 h-5 ${isActive ? 'text-amber-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                        </svg>
-                      )}
-                      {option.id === 'showStreak' && (
-                        <svg className={`w-5 h-5 ${isActive ? 'text-green-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
                       )}
                       <span className={`text-sm font-medium ${isActive ? 'text-gray-800 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>

@@ -11,13 +11,6 @@
     max-width: 1200px;
   }
 
-  /* Improve the GitHub stats card display */
-  .github-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-
   /* Enhanced markdown editor height */
   .CodeMirror {
     min-height: 500px !important;
