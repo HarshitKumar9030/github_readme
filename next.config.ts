@@ -32,7 +32,15 @@ const nextConfig: NextConfig = {
         hostname: "github-readme-streak-stats.herokuapp.com",
         port: "",
         pathname: "/**",
-      }],
+      },
+    {
+        protocol: "https",
+        hostname: "i.pravatar.cc",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+    
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
