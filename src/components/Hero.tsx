@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { ThemeToggle } from './ThemeToggle'
+import Link from 'next/link';
 
 const Hero = () => {
   const router = useRouter();
@@ -27,6 +28,7 @@ const Hero = () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
+  
   // Typing animation for the heading
   const headingText = "GitHub README Generator";
   const [displayedText, setDisplayedText] = useState('');
@@ -74,11 +76,11 @@ const Hero = () => {
       
       {/* Animated background dots with increased number and variety */}
       <div className="absolute inset-0 w-full h-full">
-        {[...Array(40)].map((_, i) => (
+        {[...Array(60)].map((_, i) => (
           <motion.div
             key={i}
             className={`absolute ${i % 5 === 0 ? 'w-2 h-2' : i % 3 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'} rounded-full ${
-              i % 4 === 0 ? 'bg-blue-500/20' : i % 3 === 0 ? 'bg-purple-500/15' : 'bg-gray-500/10'
+              i % 4 === 0 ? 'bg-blue-500/20' : i % 3 === 0 ? 'bg-purple-500/15' : i % 2 === 0 ? 'bg-green-500/15' : 'bg-gray-500/10'
             }`}
             initial={{ 
               x: `${Math.random() * 100}%`, 
@@ -123,8 +125,42 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        <div className="flex flex-col items-center justify-center text-center">          {/* Header with theme toggle and badge */}
+      {/* Navigation bar */}
+      <div className="absolute top-0 left-0 right-0 z-50">
+        <motion.div 
+          className="max-w-7xl mx-auto px-4 py-4 sm:px-6 flex items-center justify-between"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div className="flex items-center space-x-2" whileHover={{ scale: 1.05 }}>
+            <Image src="/file.svg" alt="Logo" width={28} height={28} />
+            <span className="font-bold text-xl">README Gen</span>
+          </motion.div>
+          
+          <div className="flex items-center space-x-6">
+            <motion.nav className="hidden md:flex space-x-6">
+              {{
+                { name: 'Home', path: '/' },
+                { name: 'Templates', path: '/templates' },
+                { name: 'Create', path: '/create' },
+                { name: 'About', path: '/about' }
+              }.map((item) => (
+                <motion.div key={item.name} whileHover={{ y: -2 }}>
+                  <Link href={item.path} className="text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
+                    {item.name}
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.nav>
+            <ThemeToggle variant="buttons" className="rounded-lg shadow-sm" />
+          </div>
+        </motion.div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 mt-16">
+        <div className="flex flex-col items-center justify-center text-center">
+          {/* Header with theme toggle and badge */}
           <div className="flex justify-between items-center w-full max-w-xl mx-auto mb-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -139,22 +175,16 @@ const Hero = () => {
                 >
                   ✨
                 </motion.span>
-                Drag-Drop Builder & GitHub Widgets
+                New: Markdown Export & GitHub Integration
               </span>
             </motion.div>
-            
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="relative"
-            >
-              <ThemeToggle variant="buttons" className="rounded-lg shadow-sm" />
-            </motion.div>
-          </div>{/* Main heading with typing animation - minimal style */}
+          </div>
+
+          {/* Main heading with typing animation - minimal style */}
           <motion.div 
             className="relative mb-6"
-          >            <motion.h1 
+          >
+            <motion.h1 
               className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight inline-block pb-2 border-b-2 border-blue-500 dark:border-blue-400"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -169,14 +199,41 @@ const Hero = () => {
             </motion.h1>
           </motion.div>
           
-          {/* Animated tagline */}          <motion.p 
+          {/* Animated tagline */}
+          <motion.p 
             className="text-xl md:text-2xl mb-6 max-w-3xl text-gray-700 dark:text-gray-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Create stunning GitHub profile README files with our intuitive drag-and-drop builder and integrated GitHub widgets
+            Create stunning GitHub profile READMEs with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets
           </motion.p>
+          
+          {/* GitHub stars badge */}
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3 }}
+          >
+            <div className="flex items-center justify-center space-x-4">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-4 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <svg className="w-4 h-4 mr-2 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                </svg>
+                <span>Star on GitHub</span>
+                <span className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded-md">1.2k</span>
+              </a>
+              <div className="flex items-center space-x-1">
+                <div className="flex -space-x-2">
+                  {[...Array(3)].map((_, i) => (
+                    <div key={i} className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-700 border border-white dark:border-gray-800"></div>
+                  ))}
+                </div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">+240 this week</span>
+              </div>
+            </div>
+          </motion.div>
           
           {/* Stats section */}
           <motion.div 
@@ -185,11 +242,12 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
           >
-            {[
-              { value: '50+', label: 'Templates' },
-              { value: '200+', label: 'Developers' },
-              { value: '4k+', label: 'READMEs Created' }
-            ].map((stat, idx) => (
+            {{
+              { value: '70+', label: 'Templates' },
+              { value: '3.5k+', label: 'Developers' },
+              { value: '8k+', label: 'READMEs Created' },
+              { value: '4.9', label: 'Average Rating' }
+            }.map((stat, idx) => (
               <motion.div
                 key={idx}
                 className="text-center px-4"
@@ -207,13 +265,15 @@ const Hero = () => {
               </motion.div>
             ))}
           </motion.div>
-            {/* CTA Buttons with enhanced hover effects */}
+            
+          {/* CTA Buttons with enhanced hover effects */}
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 mb-16"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
-          >            <motion.button
+          >
+            <motion.button
               className="px-8 py-3.5 rounded-lg bg-blue-600 text-white font-medium flex items-center justify-center gap-2 shadow-md"
               whileHover={{ 
                 scale: 1.02, 
@@ -226,7 +286,7 @@ const Hero = () => {
                 animate={{ x: [0, 3, 0] }}
                 transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
               >→</motion.span>
-              Get Started
+              Start Building Now
             </motion.button>
             <motion.button
               className="px-8 py-3.5 rounded-lg border border-gray-300 dark:border-gray-700 font-medium bg-transparent flex items-center justify-center"
@@ -237,8 +297,33 @@ const Hero = () => {
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/about')}
             >
-              Learn More
+              Browse Templates
             </motion.button>
+          </motion.div>
+          
+          {/* Demo preview image */}
+          <motion.div
+            className="relative w-full max-w-4xl mx-auto mb-10 rounded-xl overflow-hidden shadow-xl"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
+            <div className="bg-gray-800 h-8 w-full flex items-center px-4 space-x-2">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <div className="text-xs text-gray-400 ml-2">README Preview</div>
+            </div>
+            <div className="bg-white dark:bg-gray-900 p-6 border border-gray-200 dark:border-gray-800">
+              <Image 
+                src="/preview-screen.svg" 
+                alt="README Preview" 
+                width={1000} 
+                height={600}
+                className="w-full h-auto"
+                priority
+              />
+            </div>
           </motion.div>
           
           {/* Feature showcase with improved cards */}
@@ -247,7 +332,8 @@ const Hero = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.7, delay: 0.6 }}
-          >            {[
+          >
+            {{
               { 
                 icon: '/file.svg', 
                 title: 'Drag & Drop Builder', 
@@ -257,7 +343,7 @@ const Hero = () => {
               { 
                 icon: '/globe.svg', 
                 title: 'GitHub Widgets', 
-                description: 'Integrate dynamic stats cards, graphs and trophies',
+                description: 'Integrate dynamic stats cards, graphs and language charts',
                 color: 'from-purple-500/10 to-purple-600/5'
               },
               { 
@@ -266,7 +352,8 @@ const Hero = () => {
                 description: 'See changes in real-time exactly as they will appear',
                 color: 'from-indigo-500/10 to-indigo-600/5'
               }
-            ].map((feature, index) => (              <motion.div
+            }.map((feature, index) => (
+              <motion.div
                 key={index}
                 className={`flex flex-col items-center p-6 md:p-8 rounded-2xl bg-white dark:bg-gray-800/20 border border-gray-200 dark:border-gray-800 shadow-md`}
                 whileHover={{ 
@@ -296,7 +383,7 @@ const Hero = () => {
                 </motion.div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-gray-600 dark:text-gray-400 text-center">{feature.description}</p>
-                  <motion.div 
+                <motion.div 
                   className="mt-5 w-full h-1 bg-gray-200/30 dark:bg-gray-800/30 rounded-full overflow-hidden"
                   initial={{ width: 0 }}
                   whileInView={{ width: "100%" }}
@@ -316,6 +403,64 @@ const Hero = () => {
           </motion.div>
         </div>
       </div>
+      
+      {/* Testimonial section */}
+      <motion.div
+        className="max-w-5xl mx-auto mt-20 px-4"
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7 }}
+      >
+        <div className="text-center mb-10">
+          <h3 className="text-2xl md:text-3xl font-bold mb-4">What Developers Are Saying</h3>
+          <p className="text-gray-600 dark:text-gray-400">Join thousands of developers who have improved their GitHub profiles</p>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {{
+            {
+              name: "Sarah Chen",
+              role: "Senior Frontend Developer",
+              text: "This tool saved me hours of work. My GitHub profile now stands out and I've received compliments from recruiters!",
+              avatar: "https://i.pravatar.cc/100?img=1"
+            },
+            {
+              name: "James Wilson",
+              role: "Full Stack Engineer",
+              text: "The drag and drop builder makes creating professional READMEs so easy. The templates are beautiful and the widgets are extremely useful.",
+              avatar: "https://i.pravatar.cc/100?img=2"
+            },
+            {
+              name: "Priya Sharma",
+              role: "Open Source Contributor",
+              text: "I use this tool for all my repositories now. The GitHub stats integration is brilliant and gives my projects a professional look.",
+              avatar: "https://i.pravatar.cc/100?img=3"
+            }
+          }.map((testimonial, idx) => (
+            <motion.div
+              key={idx}
+              className="bg-white dark:bg-gray-800/40 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
+              whileHover={{ y: -5 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 * idx, duration: 0.5 }}
+            >
+              <div className="flex items-center mb-4">
+                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                  <Image src={testimonial.avatar} alt={testimonial.name} width={40} height={40} />
+                </div>
+                <div>
+                  <p className="font-medium">{testimonial.name}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</p>
+                </div>
+              </div>
+              <p className="text-gray-600 dark:text-gray-300 italic">"{testimonial.text}"</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
       
       {/* Enhanced floating shape animations */}
       <div className="hidden md:block">
@@ -347,7 +492,8 @@ const Hero = () => {
           />
         ))}
       </div>
-        {/* Connection to next section */}
+      
+      {/* Connection to next section */}
       <div className="absolute bottom-0 left-0 right-0">
         <svg 
           className="w-full text-white dark:text-black" 
