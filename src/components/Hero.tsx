@@ -198,15 +198,14 @@ const Hero = () => {
               >|</motion.span>
             </motion.h1>
           </motion.div>
-          
-          {/* Animated tagline */}
+            {/* Enhanced animated tagline with highlighted text */}
           <motion.p 
             className="text-xl md:text-2xl mb-6 max-w-3xl text-gray-700 dark:text-gray-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Create stunning GitHub profile READMEs with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets
+            Create <span className="font-bold text-blue-600 dark:text-blue-400">stunning GitHub profile READMEs</span> with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets. Now with <span className="font-bold text-emerald-600 dark:text-emerald-400">enhanced GFM support</span> and <span className="font-bold text-purple-600 dark:text-purple-400">direct GitHub integration</span>.
           </motion.p>
           
           {/* GitHub stars badge */}
