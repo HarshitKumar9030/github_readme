@@ -31,16 +31,24 @@ export function getAppBaseUrl(): string {
  */
 
 
+import { getBaseUrl } from "@/utils/env";
+
 export function createAbsoluteUrl(relativePath: string): string {
-  const baseUrl = getAppBaseUrl();
+  const baseUrl = getBaseUrl();
   
-  const normalizedPath = relativePath.startsWith('/') 
-    ? relativePath 
-    : `/${relativePath}`;
-    
-  const normalizedBaseUrl = baseUrl.endsWith('/')
-    ? baseUrl.slice(0, -1)
-    : baseUrl;
-    
-  return `${normalizedBaseUrl}${normalizedPath}`;
+  const normalizedPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
+  const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  
+  // Combine them ensuring no double slashes
+  const absoluteUrl = `${normalizedBaseUrl}${normalizedPath}`;
+  
+  try {
+    // Validate URL construction
+    const url = new URL(absoluteUrl);
+    return url.toString();
+  } catch (error) {
+    console.error(`Failed to create absolute URL from ${baseUrl} and ${relativePath}:`, error);
+    // Return a fallback URL that's still usable
+    return `${normalizedBaseUrl}${normalizedPath}`;
+  }
 }

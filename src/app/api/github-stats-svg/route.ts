@@ -125,11 +125,27 @@ export async function GET(request: NextRequest) {
   try {
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const username = searchParams.get('username') || '';
-    const followers = Number(searchParams.get('followers')) || 0;
-    const following = Number(searchParams.get('following')) || 0;
-    const repos = Number(searchParams.get('repos')) || 0;
+    const username = searchParams.get('username');
+    const followers = Number(searchParams.get('followers'));
+    const following = Number(searchParams.get('following'));
+    const repos = Number(searchParams.get('repos'));
     const theme = searchParams.get('theme') || 'light';
+
+    // Validate required parameters
+    if (!username) {
+      return new NextResponse('Username is required', { status: 400 });
+    }
+
+    // Validate numeric parameters
+    if (isNaN(followers) || isNaN(following) || isNaN(repos)) {
+      return new NextResponse('Invalid numeric parameters', { status: 400 });
+    }
+
+    // Validate theme
+    const validThemes = ['light', 'dark', 'radical', 'tokyonight', 'merko', 'gruvbox'];
+    if (!validThemes.includes(theme)) {
+      return new NextResponse(`Invalid theme. Valid themes are: ${validThemes.join(', ')}`, { status: 400 });
+    }
     
     // Generate SVG
     const svg = generateStatsSvg({
@@ -137,13 +153,13 @@ export async function GET(request: NextRequest) {
       followers,
       following,
       repos,
-      theme: theme as string
+      theme
     });
 
     return new NextResponse(svg, {
       headers: {
         'Content-Type': 'image/svg+xml',
-        'Cache-Control': 'max-age=3600, s-maxage=3600',
+        'Cache-Control': 'max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
@@ -151,6 +167,11 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error generating GitHub stats SVG:', error);
-    return new NextResponse('Error generating SVG', { status: 500 });
+    return new NextResponse('Error generating SVG: ' + (error instanceof Error ? error.message : 'Unknown error'), { 
+      status: 500,
+      headers: {
+        'Content-Type': 'text/plain'
+      }
+    });
   }
 }
