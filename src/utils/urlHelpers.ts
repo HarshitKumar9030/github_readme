@@ -48,7 +48,8 @@ export function createAbsoluteUrl(relativePath: string): string {
     return url.toString();
   } catch (error) {
     console.error(`Failed to create absolute URL from ${baseUrl} and ${relativePath}:`, error);
-    // Return a fallback URL that's still usable
-    return `${normalizedBaseUrl}${normalizedPath}`;
+    // If URL construction fails, return a carefully constructed fallback
+    const fallbackBase = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+    return `${fallbackBase}${normalizedPath}`;
   }
 }

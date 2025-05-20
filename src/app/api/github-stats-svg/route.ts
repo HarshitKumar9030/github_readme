@@ -73,10 +73,9 @@ function getThemeColors(theme: string) {
 // Generate SVG for GitHub stats
 function generateStatsSvg({ username, followers, following, repos, theme }: GitHubStatsParams) {
   const colors = getThemeColors(theme);
-  
-  // SVG dimensions
-  const width = 400;
-  const height = 200;
+    // SVG dimensions
+  const width = 495;
+  const height = 195;
   
   // Determine background style
   const bgStyle = colors.bg.startsWith('linear') 
@@ -123,12 +122,11 @@ function generateStatsSvg({ username, followers, following, repos, theme }: GitH
 
 export async function GET(request: NextRequest) {
   try {
-    // Parse query parameters
-    const { searchParams } = new URL(request.url);
-    const username = searchParams.get('username');
-    const followers = Number(searchParams.get('followers'));
-    const following = Number(searchParams.get('following'));
-    const repos = Number(searchParams.get('repos'));
+    const searchParams = request.nextUrl.searchParams;
+    const username = searchParams.get('username') || '';
+    const followers = parseInt(searchParams.get('followers') || '0', 10);
+    const following = parseInt(searchParams.get('following') || '0', 10);
+    const repos = parseInt(searchParams.get('repos') || '0', 10);
     const theme = searchParams.get('theme') || 'light';
 
     // Validate required parameters
@@ -146,8 +144,7 @@ export async function GET(request: NextRequest) {
     if (!validThemes.includes(theme)) {
       return new NextResponse(`Invalid theme. Valid themes are: ${validThemes.join(', ')}`, { status: 400 });
     }
-    
-    // Generate SVG
+      // Generate SVG
     const svg = generateStatsSvg({
       username,
       followers,
@@ -155,23 +152,19 @@ export async function GET(request: NextRequest) {
       repos,
       theme
     });
-
     return new NextResponse(svg, {
       headers: {
-        'Content-Type': 'image/svg+xml',
-        'Cache-Control': 'max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN'
       }
     });
   } catch (error) {
     console.error('Error generating GitHub stats SVG:', error);
-    return new NextResponse('Error generating SVG: ' + (error instanceof Error ? error.message : 'Unknown error'), { 
-      status: 500,
-      headers: {
-        'Content-Type': 'text/plain'
-      }
-    });
+    return new NextResponse('Error generating SVG', { status: 500 });
   }
 }

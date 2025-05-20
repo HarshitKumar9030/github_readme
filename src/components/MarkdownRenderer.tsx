@@ -104,18 +104,30 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                 img: ({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>): React.ReactNode => {
                   if (typeof src === 'string') {
                     const isAbsoluteUrl = src.startsWith('http://') || src.startsWith('https://');
+                    const isGitHubStats = src.includes('/api/github-stats-svg');
                     
-                    // Use Next.js Image component but without any additional styling
+                    // Use specific dimensions for GitHub stats SVG
+                    const dimensions = isGitHubStats ? {
+                      width: 495,
+                      height: 195
+                    } : {
+                      width: 700,
+                      height: 350
+                    };
+                    
                     return (
                       <div className="inline-block" style={{ maxWidth: '100%' }}>
                         <Image
                           src={src}
                           alt={alt || ''}
-                          width={700}
-                          height={350}
+                          {...dimensions}
                           unoptimized={true}
-                          style={{ maxWidth: '100%' }}
-                          className="rounded-md"
+                          style={{ 
+                            maxWidth: '100%',
+                            height: 'auto'
+                          }}
+                          className={`rounded-md ${isGitHubStats ? 'mt-2 mb-4' : ''}`}
+                          priority={isGitHubStats}
                         />
                       </div>
                     );
