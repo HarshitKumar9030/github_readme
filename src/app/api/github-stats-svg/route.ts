@@ -139,12 +139,14 @@ export async function GET(request: NextRequest) {
       repos,
       theme: theme as string
     });
-    
-    // Return SVG with correct headers
+
     return new NextResponse(svg, {
       headers: {
         'Content-Type': 'image/svg+xml',
-        'Cache-Control': 'max-age=3600',
+        'Cache-Control': 'max-age=3600, s-maxage=3600',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization'
       }
     });
   } catch (error) {

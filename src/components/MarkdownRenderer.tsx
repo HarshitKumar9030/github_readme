@@ -101,17 +101,23 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     </code>
                   );
                 },
-                  img: ({ src, alt, ...props }) => {
+                img: ({ src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>): React.ReactNode => {
                   if (typeof src === 'string') {
+                    const isAbsoluteUrl = src.startsWith('http://') || src.startsWith('https://');
+                    
                     // Use Next.js Image component but without any additional styling
                     return (
-                      <Image
-                        src={src}
-                        alt={alt || ''}
-                        width={700}
-                        height={350}
-                        unoptimized={true}
-                      />
+                      <div className="inline-block" style={{ maxWidth: '100%' }}>
+                        <Image
+                          src={src}
+                          alt={alt || ''}
+                          width={700}
+                          height={350}
+                          unoptimized={true}
+                          style={{ maxWidth: '100%' }}
+                          className="rounded-md"
+                        />
+                      </div>
                     );
                   }
                   return null;

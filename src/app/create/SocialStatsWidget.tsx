@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import { Socials } from "./IntegrationMenu";
 import { getGithubStats } from "@/services/socialStats";
+import { createAbsoluteUrl } from "@/utils/urlHelpers";
 
 // Social stats interface
 export interface SocialStats {
@@ -55,12 +56,10 @@ export default function SocialStatsWidget({
               repositories: githubData.public_repos,
               avatar: githubData.avatar_url,
               name: githubData.name,
-              bio: githubData.bio
-            },
-          }));          // Generate SVG URL for the stats
-          // Using static SVG for now until API issues are resolved
-          // const generatedSvgUrl = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&followers=${githubData.followers}&following=${githubData.following}&repos=${githubData.public_repos}&theme=${theme}`;
-          const generatedSvgUrl = `/github-stats-example.svg`;
+              bio: githubData.bio            },          }));          // Generate SVG URL for the stats
+          // Generate a fully qualified URL for better compatibility with external tools
+          const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&followers=${githubData.followers}&following=${githubData.following}&repos=${githubData.public_repos}&theme=${theme}`;
+          const generatedSvgUrl = createAbsoluteUrl(apiPath);
           setSvgUrl(generatedSvgUrl);
           
           setError(false);
@@ -100,16 +99,13 @@ export default function SocialStatsWidget({
       default:
         return "bg-white border-gray-200 text-gray-900";
     }
-  };
-  // Function to generate markdown for GitHub stats
+  };  // Function to generate markdown for GitHub stats
   const generateMarkdown = () => {
     if (!svgUrl) return "";
     
-    // Create absolute URL for the SVG
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-    const absoluteSvgUrl = `${baseUrl}${svgUrl}`;
-    
-    return `![GitHub Stats](${absoluteSvgUrl})`;
+    // The svgUrl is already absolute, so we can use it directly
+    // Making sure we format it properly for markdown
+    return `![GitHub Stats for @${socials.github}](${svgUrl})`;
   };
 
   // Toggle between card view and SVG view
@@ -134,12 +130,43 @@ export default function SocialStatsWidget({
                 className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               >
                 {viewMode === "card" ? "Show SVG" : "Show Card"}
-              </button>
-              <button 
+              </button>              <button 
                 onClick={() => {
                   if (navigator.clipboard) {
-                    navigator.clipboard.writeText(generateMarkdown());
-                    alert('Markdown copied to clipboard!');
+                    // Create a toast notification for better UX
+                    const markdownText = generateMarkdown();
+                    navigator.clipboard.writeText(markdownText)
+                      .then(() => {
+                        // Create a temporary element to show a toast-like notification
+                        const notification = document.createElement('div');
+                        notification.style.position = 'fixed';
+                        notification.style.bottom = '20px';
+                        notification.style.left = '50%';
+                        notification.style.transform = 'translateX(-50%)';
+                        notification.style.backgroundColor = '#4ade80';
+                        notification.style.color = '#fff';
+                        notification.style.padding = '10px 20px';
+                        notification.style.borderRadius = '4px';
+                        notification.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+                        notification.style.zIndex = '9999';
+                        notification.textContent = 'Markdown copied to clipboard!';
+                        
+                        document.body.appendChild(notification);
+                        
+                        // Remove the notification after 2 seconds
+                        setTimeout(() => {
+                          document.body.removeChild(notification);
+                        }, 2000);
+                        
+                        // Also log the markdown to console for debugging
+                        console.log('Copied markdown:', markdownText);
+                      })
+                      .catch(err => {
+                        console.error('Failed to copy markdown: ', err);
+                        alert('Failed to copy markdown to clipboard');
+                      });
+                  } else {
+                    alert('Your browser does not support clipboard operations');
                   }
                 }}
                 className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
@@ -197,15 +224,16 @@ export default function SocialStatsWidget({
                     </div>
                   </div>
                 ) : (
-                  <div className="rounded-md overflow-hidden bg-white p-2">
-                    <div className="flex justify-center">
-                      {/* Use Next.js Image for SVGs */}
+                  <div className="rounded-md overflow-hidden bg-white p-2">                    <div className="flex justify-center">
+                      {/* Use Next.js Image with unoptimized for SVGs */}
                       <Image 
                         src={svgUrl} 
-                        alt="GitHub Stats SVG" 
+                        alt={`GitHub Stats for @${socials.github}`}
                         width={400}
                         height={200}
-                        style={{ maxWidth: '100%' }}
+                        style={{ maxWidth: '100%', height: 'auto' }}
+                        unoptimized={true}
+                        priority={true}
                       />
                     </div>
                     <div className="text-xs text-center text-gray-500 dark:text-gray-400 pt-2">
