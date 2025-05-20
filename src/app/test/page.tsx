@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import React from 'react'
+import Image from 'next/image'
 import { getGithubStats } from '@/services/socialStats'
 
 const Test = () => {
     const [ username, setUsername ] = useState<string>('');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [ stats, setStats ] = useState<any>(null);
     const getStats  = async () => {
         const stats = await getGithubStats(username);
@@ -29,7 +29,7 @@ const Test = () => {
             <div className="flex items-center justify-center flex-col">
                 {stats && (
                     <div className="bg-white shadow-md rounded-md p-4 m-4">
-                        <img src={stats.avatar_url} alt="Avatar" className="rounded-full w-24 h-24" />
+                        <Image src={stats.avatar_url} alt="Avatar" className="rounded-full w-24 h-24" width={96} height={96} />
                         <h2 className="text-xl font-bold">{stats.name}</h2>
                         <p>{stats.bio}</p>
                         <p>Followers: {stats.followers}</p>
