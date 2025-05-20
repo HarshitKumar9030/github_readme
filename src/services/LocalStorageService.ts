@@ -1,4 +1,3 @@
-/* eslint-disable prefer-const */
 'use client';
 
 export type StorageKey = string;
@@ -145,20 +144,19 @@ export class LocalStorageService {
    * @param data The data to monitor and store
    * @param debounceMs Debounce time in milliseconds (default 2000ms)
    */
-    static setupAutoSave<T>(key: StorageKey, data: T, debounceMs: number = 2000): () => void {
-    let timeoutId: NodeJS.Timeout | undefined;
+  
+  static setupAutoSave<T>(key: StorageKey, data: T, debounceMs: number = 2000): () => void {
+    let timeoutId: NodeJS.Timeout;
     const save = () => {
       this.save(key, data);
     };
 
     // Clear any existing timeout and set a new one
-    if (timeoutId) clearTimeout(timeoutId);
+    clearTimeout(timeoutId);
     timeoutId = setTimeout(save, debounceMs);
 
     // Return cleanup function to clear timeout
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
+    return () => clearTimeout(timeoutId);
   }
 }
 
