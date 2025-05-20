@@ -146,17 +146,15 @@ export class LocalStorageService {
    */
   
   static setupAutoSave<T>(key: StorageKey, data: T, debounceMs: number = 2000): () => void {
-    let timeoutId: NodeJS.Timeout;
-    const save = () => {
+    // eslint-disable-next-line prefer-const
+    let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
       this.save(key, data);
-    };
-
-    // Clear any existing timeout and set a new one
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(save, debounceMs);
+    }, debounceMs);
 
     // Return cleanup function to clear timeout
-    return () => clearTimeout(timeoutId);
+    return () => {
+      if (timeoutId !== undefined) clearTimeout(timeoutId);
+    };
   }
 }
 

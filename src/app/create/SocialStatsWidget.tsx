@@ -196,10 +196,11 @@ export default function SocialStatsWidget({
                       Click &quot;Show SVG&quot; to preview the standalone SVG card for Markdown export
                     </div>
                   </div>
-                ) : (                  <div className="rounded-md overflow-hidden bg-white p-2">
+                ) : (
+                  <div className="rounded-md overflow-hidden bg-white p-2">
                     <div className="flex justify-center">
-                      {/* Use img tag instead of Next.js Image for SVGs */}
-                      <img 
+                      {/* Use Next.js Image for SVGs */}
+                      <Image 
                         src={svgUrl} 
                         alt="GitHub Stats SVG" 
                         width={400}

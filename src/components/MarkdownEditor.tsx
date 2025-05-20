@@ -145,7 +145,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
               Centered content can also use the <code>align</code> attribute:
             </div>
             <div className="mt-1 text-gray-700 dark:text-gray-300 text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded font-mono overflow-auto">
-              &lt;div align="center"&gt;<br/>
+              &lt;div align=&quot;center&quot;&gt;<br/>
               &nbsp;&nbsp;![Stats](url)<br/>
               &lt;/div&gt;
             </div>
