@@ -60,8 +60,7 @@ export default function SocialStatsWidget({
               bio: githubData.bio
             },
           }));
-          
-          // Generate SVG URL for the stats
+            // Generate SVG URL for the stats - the profile data is also fetched directly in the API
           const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&followers=${githubData.followers}&following=${githubData.following}&repos=${githubData.public_repos}&theme=${theme}`;
           const absoluteSvgUrl = createAbsoluteUrl(apiPath);
           setSvgUrl(absoluteSvgUrl);
@@ -211,12 +210,11 @@ export default function SocialStatsWidget({
                   Click &quot;Show SVG&quot; to preview the standalone SVG card for Markdown export
                 </p>
                 {svgUrl && (
-                  <div className="relative">
-                    <Image
+                  <div className="relative">                    <Image
                       src={svgUrl}
                       alt={`GitHub Stats for @${socials.github}`}
-                      width={400}
-                      height={200}
+                      width={495}
+                      height={250}
                       style={{
                         maxWidth: '100%',
                         height: 'auto'

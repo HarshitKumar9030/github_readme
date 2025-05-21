@@ -105,11 +105,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   if (typeof src === 'string') {
                     const isAbsoluteUrl = src.startsWith('http://') || src.startsWith('https://');
                     const isGitHubStats = src.includes('/api/github-stats-svg');
-                    
-                    // Use specific dimensions for GitHub stats SVG
+                      // Use specific dimensions for GitHub stats SVG
                     const dimensions = isGitHubStats ? {
                       width: 495,
-                      height: 195
+                      height: 250
                     } : {
                       width: 700,
                       height: 350
