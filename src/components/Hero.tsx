@@ -197,10 +197,10 @@ const Hero = () => {
           <div className="flex items-center space-x-6">            <motion.nav className="hidden md:flex space-x-6">
               {[
                 { name: 'Home', path: '/' },
+                { name: 'Features', path: '/features' },
                 { name: 'Templates', path: '/templates' },
                 { name: 'Create', path: '/create' },
-                { name: 'About', path: '/about' },
-                { name: 'New Features', path: '/features' }
+                { name: 'About', path: '/about' }
               ].map((item) => (
                 <motion.div key={item.name} whileHover={{ y: -2 }}>
                   <Link href={item.path} className="text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
@@ -355,14 +355,13 @@ const Hero = () => {
               >→</motion.span>
               Start Building Now
             </motion.button>
-            <motion.button
-              className="px-8 py-3.5 rounded-lg border border-gray-300 dark:border-gray-700 font-medium bg-transparent flex items-center justify-center"
+            <motion.button              className="px-8 py-3.5 rounded-lg border border-gray-300 dark:border-gray-700 font-medium bg-transparent flex items-center justify-center"
               whileHover={{ 
                 scale: 1.02, 
                 borderColor: "#3b82f6"
               }}
               whileTap={{ scale: 0.98 }}
-              onClick={() => router.push('/about')}
+              onClick={() => router.push('/templates')}
             >
               Browse Templates
             </motion.button>
