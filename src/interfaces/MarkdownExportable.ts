@@ -10,16 +10,17 @@ export interface MarkdownExportable {
   
   /**
    * Preview the component in its current state
-   * @returns JSX Element for preview
+   * @returns React Element for preview
    */
-  renderPreview?: () => JSX.Element;
+  renderPreview?: () => React.ReactElement;
 }
 
 /**
  * Base widget configuration shared by all widgets
  */
 export interface BaseWidgetConfig {
-  theme: 'light' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox';
+  id?: string;
+  theme?: 'light' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox';
 }
 
 /**
