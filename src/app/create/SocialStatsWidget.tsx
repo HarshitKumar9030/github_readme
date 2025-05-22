@@ -85,21 +85,20 @@ export default function SocialStatsWidget({
     fetchData();
   }, [socials.github, theme]);
 
-  // Helper to get theme-based styles
   const getThemeStyles = () => {
     switch (theme) {
       case "dark":
-        return "bg-gray-800 border-gray-700 text-white";
+        return "bg-gray-800 text-white";
       case "radical":
-        return "bg-gradient-to-br from-pink-600 to-purple-800 border-pink-500 text-white";
+        return "bg-gradient-to-br from-pink-600 to-purple-800 text-white";
       case "tokyonight":
-        return "bg-gradient-to-r from-blue-900 to-indigo-900 border-blue-700 text-white";
+        return "bg-gradient-to-r from-blue-900 to-indigo-900  text-white";
       case "merko":
-        return "bg-gradient-to-r from-green-900 to-green-700 border-green-600 text-white";
+        return "bg-gradient-to-r from-green-900 to-green-700  text-white";
       case "gruvbox":
-        return "bg-amber-700 border-amber-600 text-white";
+        return "bg-amber-700text-white";
       default:
-        return "bg-white border-gray-200 text-gray-900";
+        return "bg-white text-gray-900";
     }
   };
 
@@ -116,7 +115,7 @@ export default function SocialStatsWidget({
 
   return (
     <motion.div
-      className={`rounded-xl shadow-lg overflow-hidden border ${getThemeStyles()}`}
+      className={`rounded-xl shadow-lg overflow-hidden ${getThemeStyles()}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getGithubStats } from '@/services/socialStats';
 
 export const runtime = 'edge';
 
@@ -80,6 +81,7 @@ function getThemeColors(theme: string) {
  * Generates SVG for GitHub stats
  * Returns clean, modern design with configurable options
  */
+
 function generateStatsSvg({ 
   username, 
   followers, 
@@ -131,6 +133,7 @@ function generateStatsSvg({
         fill="none" rx="12" x="1" y="1" filter="${theme !== 'dark' ? 'url(#shadow)' : 'none'}" />` : '',
     
     // Avatar with clip path
+
     avatar: () => avatarUrl ? `
       <defs>
         <clipPath id="avatar-clip">
@@ -215,49 +218,38 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const username = searchParams.get('username') || '';
-    const followers = parseInt(searchParams.get('followers') || '0', 10);
-    const following = parseInt(searchParams.get('following') || '0', 10);
-    const repos = parseInt(searchParams.get('repos') || '0', 10);
     const theme = searchParams.get('theme') || 'light';
     const hideBorder = searchParams.get('hideBorder') === 'true';
     const hideTitle = searchParams.get('hideTitle') === 'true';
     const layout = searchParams.get('layout') === 'compact' ? 'compact' : 'default';
-
-    // Validate required parameters
     if (!username) {
       return new NextResponse('Username is required', { status: 400 });
     }
-
-    // Validate numeric parameters
-    if (isNaN(followers) || isNaN(following) || isNaN(repos)) {
-      return new NextResponse('Invalid numeric parameters', { status: 400 });
-    }
-
-    // Validate theme
     const validThemes = ['light', 'dark', 'radical', 'tokyonight', 'merko', 'gruvbox'];
     if (!validThemes.includes(theme)) {
       return new NextResponse(`Invalid theme. Valid themes are: ${validThemes.join(', ')}`, { status: 400 });
     }
-
-    // Fetch user profile data from GitHub API
-    let avatarUrl, name, bio;
+    let avatarUrl = '', name = '', bio = '', followers = 0, following = 0, repos = 0;
     try {
-      const response = await fetch(`https://api.github.com/users/${username}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json'
+      const data = await getGithubStats(username);
+      name = data.name || '';
+      bio = data.bio || '';
+      followers = data.followers || 0;
+      following = data.following || 0;
+      repos = data.public_repos || 0;
+      if (data.avatar_url) {
+        try {
+          const avatarRes = await fetch(data.avatar_url);
+          const avatarBuffer = await avatarRes.arrayBuffer();
+          const base64 = Buffer.from(avatarBuffer).toString('base64');
+          avatarUrl = `data:image/png;base64,${base64}`;
+        } catch {
+          avatarUrl = data.avatar_url;
         }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        avatarUrl = data.avatar_url;
-        name = data.name;
-        bio = data.bio;
       }
     } catch (error) {
-      console.error('Error fetching GitHub user data:', error);
-      // Continue without profile data if the fetch fails
-    }    // Generate SVG
+      return new NextResponse('Failed to fetch GitHub user data', { status: 500 });
+    }
     const svg = generateStatsSvg({
       username,
       followers,
@@ -283,7 +275,6 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error generating GitHub stats SVG:', error);
     return new NextResponse('Error generating SVG', { status: 500 });
   }
 }

@@ -505,6 +505,9 @@ export default function CreatePage() {
               handleMoveBlockUp={handleMoveBlockUp}
               handleMoveBlockDown={handleMoveBlockDown}
               loadTemplate={loadTemplate}
+              widgetConfig={widgetConfig}
+              username={username}
+              socials={socials}
             />            {/* Right Sidebar - Properties */}
             <PropertiesPanel 
               selectedBlock={builderBlocks.find(block => block.id === selectedBlockId)}

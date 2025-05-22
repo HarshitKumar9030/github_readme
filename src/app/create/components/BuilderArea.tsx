@@ -2,7 +2,10 @@
 
 import React from 'react';
 import { Block } from '@/interfaces/BlockTypes';
+import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
+import SocialStatsWidget from '@/widgets/SocialStatsWidget';
 
+// Accept widgetConfig, username, socials as props
 interface BuilderAreaProps {
   builderBlocks: Block[];
   dragOver: boolean;
@@ -15,6 +18,9 @@ interface BuilderAreaProps {
   handleMoveBlockUp: (id: string) => void;
   handleMoveBlockDown: (id: string) => void;
   loadTemplate: (templateType: string) => void;
+  widgetConfig: any;
+  username: string;
+  socials: any;
 }
 
 const BuilderArea: React.FC<BuilderAreaProps> = ({
@@ -28,7 +34,10 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   handleRemoveBlock,
   handleMoveBlockUp,
   handleMoveBlockDown,
-  loadTemplate
+  loadTemplate,
+  widgetConfig,
+  username,
+  socials
 }) => {
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
@@ -168,8 +177,30 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                              block.widgetId === 'top-languages' ? 'Top Languages Widget' : 
                              'Social Stats Widget'}
                           </div>
-                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4 h-20 flex items-center justify-center">
-                            <span className="text-xs text-gray-400">Widget Preview</span>
+                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">
+                            {block.widgetId === 'github-stats' && (
+                              <GitHubStatsWidget 
+                                config={{
+                                  username: username,
+                                  theme: widgetConfig.theme || 'light',
+                                  layoutType: 'stats',
+                                  ...widgetConfig
+                                }}
+                              />
+                            )}
+                            {block.widgetId === 'social-stats' && (
+                              <SocialStatsWidget 
+                                config={{
+                                  socials: socials,
+                                  displayLayout: 'horizontal',
+                                  showDetails: true,
+                                  showImages: true
+                                }}
+                              />
+                            )}
+                            {block.widgetId === 'top-languages' && (
+                              <span className="text-xs text-gray-400">Top Languages preview coming soon</span>
+                            )}
                           </div>
                         </div>
                       )}
