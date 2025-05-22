@@ -7,6 +7,7 @@ export interface TopLanguagesWidgetConfig extends BaseWidgetConfig {
   hideBorder?: boolean;
   hideTitle?: boolean;
   layout?: 'compact' | 'default';
+  layoutStyle?: 'center' | 'left' | 'right';
   theme?: 'light' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox';
   customTitle?: string;
   excludeRepos?: string;
@@ -37,7 +38,6 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${config.username}&${params.toString()}`;
   };
-
   // Generate markdown
   const generateMarkdown = () => {
     if (!config.username) return '<!-- Add a GitHub username to display Top Languages stats -->';
@@ -47,7 +47,27 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     } else if (!config.hideTitle) {
       md += `## Top Languages\n\n`;
     }
-    md += `![Top Languages](${generateUrl()})\n\n`;
+    
+    // Apply layout style if specified
+    const layoutStyle = config.layoutStyle || 'center';
+    
+    if (layoutStyle === 'center') {
+      md += `<div align="center">\n\n`;
+      md += `<img src="${generateUrl()}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
+      md += `</div>\n\n`;
+    } else if (layoutStyle === 'left') {
+      md += `<div align="left">\n\n`;
+      md += `<img src="${generateUrl()}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
+      md += `</div>\n\n`;
+    } else if (layoutStyle === 'right') {
+      md += `<div align="right">\n\n`;
+      md += `<img src="${generateUrl()}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
+      md += `</div>\n\n`;
+    } else {
+      // Fallback to simple markdown image
+      md += `![Top Languages](${generateUrl()})\n\n`;
+    }
+    
     return md;
   };
 

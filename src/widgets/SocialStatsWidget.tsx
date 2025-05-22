@@ -7,7 +7,6 @@ import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfa
 import { getGithubStats } from "@/services/socialStats";
 import { Socials } from "@/interfaces/Socials";
 
-// Social stats interface
 export interface SocialStats {
   github?: {
     followers: number;
@@ -24,6 +23,7 @@ export interface SocialStatsWidgetConfig extends BaseWidgetConfig {
   displayLayout: 'grid' | 'horizontal' | 'inline';
   showDetails: boolean;
   showImages: boolean;
+  layoutAlignment?: 'center' | 'left' | 'right';
   compactMode?: boolean;
   hideTitle?: boolean;
   hideBorder?: boolean;
@@ -58,7 +58,8 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
       if (config.socials?.github) {
         setLoading(true);
         setError(null);
-        try {          const githubStats = await getGithubStats(config.socials.github);
+        try {          
+          const githubStats = await getGithubStats(config.socials.github);
           setStats(prev => ({
             ...prev,
             github: {
@@ -80,58 +81,60 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     }
 
     fetchData();
-  }, [config.socials?.github]);  /**
+  }, [config.socials?.github]);  
+  
+  /**
    * Generate social icons as markdown
    */
   const generateSocialIcons = () => {
     const icons: string[] = [];
     const { socials } = config;
     
-    // GitHub
     if (socials?.github) {
       icons.push(`[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/${socials.github})`);
     }
     
-    // Twitter/X
     if (socials?.twitter) {
       icons.push(`[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${socials.twitter})`);
     }
     
-    // LinkedIn
     if (socials?.linkedin) {
       icons.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${socials.linkedin})`);
     }
     
-    // Instagram
     if (socials?.instagram) {
       icons.push(`[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/${socials.instagram})`);
     }
     
-    // YouTube
     if (socials?.youtube) {
       icons.push(`[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/c/${socials.youtube})`);
     }
 
-    // Medium
     if (socials?.medium) {
       icons.push(`[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@${socials.medium})`);
     }
 
-    // Dev.to
     if (socials?.dev) {
       icons.push(`[![Dev.to](https://img.shields.io/badge/dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/${socials.dev})`);
     }
     
     return icons;
   };
+  
   /**
    * Generate GitHub stats as markdown
    */
+
+
   const generateGitHubStats = () => {
     if (!stats.github) return '';
     
     const { github } = stats;
     let result = '';
+    
+    // Apply layout alignment
+    const alignment = config.layoutAlignment || 'center';
+    result += `<div align="${alignment}">\n\n`;
     
     if (github.name && !config.hideTitle) {
       const title = config.customTitle || `${github.name}'s GitHub Stats`;
@@ -155,22 +158,24 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
       }
       result += '\n\n';
     } else {
-      // Use table for detailed view
       const border = config.hideBorder ? 'no-border' : '';
       
-      result += `<div class="github-stats ${border}">\n\n`;
-      result += '| GitHub Stats | Value |\n| --- | --- |\n';
-      if (!config.hideFollowers) result += `| Followers | ${github.followers} |\n`;
-      if (!config.hideFollowing) result += `| Following | ${github.following} |\n`;
-      if (!config.hideRepos) result += `| Repositories | ${github.repositories} |\n`;
-      result += '\n</div>\n\n';
+      result += '<table align="center">\n';
+      result += '<tr>\n<th>GitHub Stats</th>\n<th>Value</th>\n</tr>\n';
+      if (!config.hideFollowers) result += `<tr>\n<td>Followers</td>\n<td>${github.followers}</td>\n</tr>\n`;
+      if (!config.hideFollowing) result += `<tr>\n<td>Following</td>\n<td>${github.following}</td>\n</tr>\n`;
+      if (!config.hideRepos) result += `<tr>\n<td>Repositories</td>\n<td>${github.repositories}</td>\n</tr>\n`;
+      result += '</table>\n\n';
     }
+    
+    result += '</div>\n\n';
     
     return result;
   };
-
+  
   /**
-   * Generate markdown for the widget   */
+   * Generate markdown for the widget   
+   */
   const generateMarkdown = (): string => {
     let markdown = '';
     const icons = generateSocialIcons();
@@ -180,8 +185,11 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     
     // Icons
     if (icons.length > 0) {
+      // Apply layout alignment if specified
+      const alignment = config.layoutAlignment || 'center';
+      
       if (config.displayLayout === 'grid') {
-        markdown += '<div align="center">\n\n';
+        markdown += `<div align="${alignment}">\n\n`;
         for (let i = 0; i < icons.length; i++) {
           markdown += icons[i] + '\n';
           if ((i + 1) % 3 === 0 && i !== icons.length - 1) {
@@ -190,11 +198,13 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
         }
         markdown += '\n</div>\n\n';
       } else if (config.displayLayout === 'horizontal') {
+        markdown += `<div align="${alignment}">\n\n`;
         markdown += icons.join(' ');
-        markdown += '\n\n';
+        markdown += '\n\n</div>\n\n';
       } else {
+        markdown += `<div align="${alignment}">\n\n`;
         markdown += icons.join('\n\n');
-        markdown += '\n\n';
+        markdown += '\n\n</div>\n\n';
       }
     }
     
@@ -205,7 +215,8 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     
     return markdown;
   };
-    // Generate markdown for the widget and notify parent
+    
+  // Generate markdown for the widget and notify parent
   useEffect(() => {
     if (onMarkdownGenerated) {
       const markdown = generateMarkdown();
@@ -219,8 +230,15 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
    */
   const renderSocialIcons = () => {
     const { socials } = config;
+    // Determine justification based on layoutAlignment
+    const justifyClass = config.layoutAlignment === 'left' 
+      ? 'justify-start' 
+      : config.layoutAlignment === 'right' 
+        ? 'justify-end' 
+        : 'justify-center';
+    
     return (
-      <div className={`flex ${config.displayLayout === 'grid' ? 'flex-wrap gap-3 justify-center' : 'flex-col sm:flex-row gap-4'}`}>
+      <div className={`flex ${config.displayLayout === 'grid' ? 'flex-wrap gap-3 ' + justifyClass : 'flex-col sm:flex-row gap-4 ' + justifyClass}`}>
         {socials?.github && (
           <a href={`https://github.com/${socials.github}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm font-medium bg-black text-white rounded-md px-3 py-1.5 hover:bg-gray-800 transition-colors">
             <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -245,10 +263,11 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
             LinkedIn
           </a>
         )}
-        {/* Other social icons can be added here */}
+        {/* Other social icons would be rendered here */}
       </div>
     );
   };
+
   /**
    * Render GitHub stats for preview
    */
@@ -257,13 +276,27 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     
     const displayTitle = config.hideTitle ? null : (config.customTitle || `${stats.github.name || 'GitHub'} Stats`);
     
+    // Determine text alignment based on layoutAlignment
+    const textAlignClass = config.layoutAlignment === 'left' 
+      ? 'text-left' 
+      : config.layoutAlignment === 'right' 
+        ? 'text-right' 
+        : 'text-center';
+    
+    // Determine flex alignment based on layoutAlignment
+    const flexAlignClass = config.layoutAlignment === 'left' 
+      ? 'justify-start' 
+      : config.layoutAlignment === 'right' 
+        ? 'justify-end' 
+        : 'justify-center';
+    
     return (
-      <div className={`mt-6 p-4 rounded-lg ${config.hideBorder ? '' : 'border border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800`}>
+      <div className={`mt-6 p-4 rounded-lg ${config.hideBorder ? '' : 'border border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 ${textAlignClass}`}>
         {displayTitle && (
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{displayTitle}</h3>
+          <h3 className={`text-lg font-semibold text-gray-900 dark:text-white mb-3 ${textAlignClass}`}>{displayTitle}</h3>
         )}
         
-        <div className="flex items-start gap-4">
+        <div className={`flex items-start gap-4 ${flexAlignClass}`}>
           {config.showImages && stats.github.avatar && (
             <div className="flex-shrink-0">
               <Image 
@@ -284,7 +317,7 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
             )}
             
             {config.compactMode ? (
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className={`mt-3 flex flex-wrap gap-2 ${config.layoutAlignment === 'left' ? 'justify-start' : config.layoutAlignment === 'right' ? 'justify-end' : 'justify-center'}`}>
                 {!config.hideFollowers && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
                     <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
@@ -314,7 +347,7 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
                 )}
               </div>
             ) : (
-              <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+              <div className={`mt-3 grid grid-cols-3 gap-3 text-sm ${config.layoutAlignment === 'left' ? 'justify-start' : config.layoutAlignment === 'right' ? 'justify-end' : 'justify-center'}`}>
                 {!config.hideFollowers && (
                   <div className="flex flex-col items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700">
                     <span className="font-bold text-lg text-gray-900 dark:text-white">{stats.github.followers}</span>
@@ -362,6 +395,33 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
           </button>
         </div>
       </div>
+      
+      {/* Layout Alignment Control */}
+      <div className="mb-4">
+        <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+          Layout Alignment
+        </label>
+        <div className="flex gap-2">
+          <button
+            className={`px-2.5 py-1.5 text-xs font-medium rounded ${config.layoutAlignment === 'left' || !config.layoutAlignment ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            onClick={() => onConfigChange?.({ ...config, layoutAlignment: 'left' })}
+          >
+            Left
+          </button>
+          <button
+            className={`px-2.5 py-1.5 text-xs font-medium rounded ${config.layoutAlignment === 'center' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            onClick={() => onConfigChange?.({ ...config, layoutAlignment: 'center' })}
+          >
+            Center
+          </button>
+          <button
+            className={`px-2.5 py-1.5 text-xs font-medium rounded ${config.layoutAlignment === 'right' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            onClick={() => onConfigChange?.({ ...config, layoutAlignment: 'right' })}
+          >
+            Right
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <div className="flex justify-center items-center p-8">
@@ -385,7 +445,6 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
   );
 };
 
-// Generate markdown implementation for MarkdownExportable
 SocialStatsWidget.generateMarkdown = function() {
   // This is just a stub, the actual implementation is inside the component
   return '## Connect with Me\n\n<!-- Social links will appear here -->';
