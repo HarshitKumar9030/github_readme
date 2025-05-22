@@ -25,6 +25,13 @@ export interface SocialStatsWidgetConfig extends BaseWidgetConfig {
   showDetails: boolean;
   showImages: boolean;
   compactMode?: boolean;
+  hideTitle?: boolean;
+  hideBorder?: boolean;
+  hideFollowers?: boolean;
+  hideFollowing?: boolean;
+  hideRepos?: boolean;
+  customTitle?: string;
+  badgeStyle?: 'flat' | 'flat-square' | 'plastic' | 'for-the-badge';
 }
 
 interface SocialStatsWidgetProps extends BaseWidgetProps {

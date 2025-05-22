@@ -12,8 +12,19 @@ export interface GitHubStatsWidgetConfig extends BaseWidgetConfig {
   includeAllCommits?: boolean;
   hideBorder?: boolean;
   hideTitle?: boolean;
-  layoutType: 'stats' | 'languages' | 'combined';
+  layoutType: 'stats' | 'languages' | 'combined' | 'trophies' | 'streaks' | 'full';
+  layoutStyle: 'side-by-side' | 'grid' | 'vertical';
   compactMode?: boolean;
+  showTrophies?: boolean;
+  showStreaks?: boolean;
+  showLanguages?: boolean;
+  showStats?: boolean;
+  hideRank?: boolean;
+  customTitle?: string;
+  trophyTheme?: 'flat' | 'onedark' | 'gruvbox' | 'dracula' | 'monokai' | 'chalk' | 'nord' | 'alduin' | 'darkhub' | 'juicyfresh' | 'buddhism' | 'oldie' | 'radical' | 'onestar' | 'discord' | 'algolia' | 'gitdimmed' | 'tokyonight';
+  streakTheme?: string;
+  hideIssues?: boolean;
+  hidePRs?: boolean;
 }
 
 interface StatsData {
@@ -42,8 +53,18 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [svgUrl, setSvgUrl] = useState<string>('');
-  const [languagesSvgUrl, setLanguagesSvgUrl] = useState<string>('');
-  const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
+  const [languagesSvgUrl, setLanguagesSvgUrl] = useState<string>('');  const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
+  
+  // Set default configuration values
+  const effectiveConfig = {
+    ...config,
+    layoutType: config.layoutType || 'stats',
+    layoutStyle: config.layoutStyle || 'side-by-side',
+    showTrophies: config.showTrophies ?? (config.layoutType === 'trophies' || config.layoutType === 'full'),
+    showStreaks: config.showStreaks ?? (config.layoutType === 'streaks' || config.layoutType === 'full'),
+    showLanguages: config.showLanguages ?? (['languages', 'combined', 'full'].includes(config.layoutType || '')),
+    showStats: config.showStats ?? (['stats', 'combined', 'full'].includes(config.layoutType || ''))
+  };
 
   // Fetch GitHub stats when username changes
   useEffect(() => {
@@ -120,8 +141,7 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     
     return `https://github-readme-stats.vercel.app/api?username=${config.username}&${params.toString()}`;
   };
-  
-  // Generate Top Languages URL with parameters
+    // Generate Top Languages URL with parameters
   const generateLanguagesUrl = () => {
     const params = new URLSearchParams();
     
@@ -132,6 +152,39 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${config.username}&${params.toString()}`;
   };
 
+  // Generate GitHub Trophies URL
+  const generateTrophiesUrl = () => {
+    const params = new URLSearchParams();
+    
+    if (config.theme) {
+      // Map theme to trophy compatible themes
+      const themeMap: Record<string, string> = {
+        light: 'flat',
+        dark: 'darkhub',
+        radical: 'radical',
+        tokyonight: 'tokyonight',
+        merko: 'monokai',
+        gruvbox: 'gruvbox'
+      };
+      params.append('theme', themeMap[config.theme] || 'flat');
+    }
+    
+    if (config.hideBorder === true) {
+      params.append('no-frame', 'true');
+    }
+    
+    return `https://github-profile-trophy.vercel.app/?username=${config.username}&${params.toString()}`;
+  };
+  
+  // Generate GitHub Streak Stats URL
+  const generateStreakUrl = () => {
+    const params = new URLSearchParams();
+    
+    if (config.theme) params.append('theme', config.theme);
+    if (config.hideBorder === true) params.append('hide_border', 'true');
+    
+    return `https://github-readme-streak-stats.herokuapp.com/?user=${config.username}&${params.toString()}`;
+  };
   // Generate markdown for the widget based on layout type
   const generateMarkdown = (): string => {
     // If we don't have a username yet, return empty string
@@ -140,6 +193,13 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     const customCardUrl = svgUrl;
     const statsUrl = generateStatsUrl();
     const languagesUrl = generateLanguagesUrl();
+    const trophiesUrl = generateTrophiesUrl();
+    const streaksUrl = generateStreakUrl();
+    
+    // Helper function to wrap content in a centered div if needed
+    const centerContent = (content: string): string => {
+      return `<div align="center">\n\n${content}\n\n</div>`;
+    };
     
     switch (config.layoutType) {
       case 'stats':
@@ -147,11 +207,16 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
       
       case 'languages':
         return `![Top Languages](${languagesUrl})`;
+        
+      case 'trophies':
+        return `![GitHub Trophies](${trophiesUrl})`;
+        
+      case 'streaks':
+        return `![GitHub Streaks](${streaksUrl})`;
       
       case 'combined':
-        return `<div align="center">
-
-<table>
+        if (config.layoutStyle === 'side-by-side') {
+          return centerContent(`<table>
 <tr>
 <td>
 
@@ -164,9 +229,57 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
 
 </td>
 </tr>
-</table>
+</table>`);
+        } else if (config.layoutStyle === 'grid') {
+          return centerContent(`<table>
+<tr>
+<td>
 
-</div>`;
+![Github Stats](${customCardUrl || statsUrl})
+
+</td>
+<td>
+
+![Top Languages](${languagesUrl})
+
+</td>
+</tr>
+<tr>
+<td colspan="2">
+
+![GitHub Trophies](${trophiesUrl})
+
+</td>
+</tr>
+<tr>
+<td colspan="2">
+
+![GitHub Streaks](${streaksUrl})
+
+</td>
+</tr>
+</table>`);
+        } else {
+          // Vertical layout
+          return `![GitHub Stats](${customCardUrl || statsUrl})\n\n![Top Languages](${languagesUrl})`;
+        }
+        
+      case 'full':
+        return centerContent(`## My GitHub Stats
+
+![GitHub Stats](${customCardUrl || statsUrl})
+
+## My GitHub Streaks
+
+![GitHub Streaks](${streaksUrl})
+
+## My GitHub Trophies
+
+![GitHub Trophies](${trophiesUrl})
+
+## My Most Used Languages
+
+![Top Languages](${languagesUrl})`);
       
       default:
         return `![GitHub Stats](${customCardUrl || statsUrl})`;
@@ -284,23 +397,45 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
                     <div className="text-sm opacity-80">Following</div>
                   </div>
                 </div>
-                
-                {config.layoutType === 'combined' && (
+                  {(config.layoutType === 'combined' || config.layoutType === 'full') && (
                   <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-sm mb-2">Layout Preview: Combined Stats & Languages</p>
-                    <div className="flex flex-wrap gap-4">
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="text-xs mb-1 opacity-80">GitHub Stats</div>
-                        <div className="bg-black/10 h-24 rounded flex items-center justify-center">
-                          Preview Stats
+                    <p className="text-sm mb-2">Layout Preview: {config.layoutStyle === 'side-by-side' ? 'Side by Side' : config.layoutStyle === 'grid' ? 'Grid Layout' : 'Vertical Layout'}</p>
+                    <div className={`${config.layoutStyle === 'side-by-side' ? 'flex flex-wrap' : config.layoutStyle === 'grid' ? 'grid grid-cols-2' : 'flex flex-col'} gap-4`}>
+                      {(config.showStats !== false) && (
+                        <div className="flex-1 min-w-[200px]">
+                          <div className="text-xs mb-1 opacity-80">GitHub Stats</div>
+                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
+                            Preview Stats
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex-1 min-w-[200px]">
-                        <div className="text-xs mb-1 opacity-80">Top Languages</div>
-                        <div className="bg-black/10 h-24 rounded flex items-center justify-center">
-                          Preview Languages
+                      )}
+                      
+                      {(config.showLanguages !== false) && (
+                        <div className="flex-1 min-w-[200px]">
+                          <div className="text-xs mb-1 opacity-80">Top Languages</div>
+                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
+                            Preview Languages
+                          </div>
                         </div>
-                      </div>
+                      )}
+                      
+                      {(config.showTrophies === true) && (
+                        <div className={config.layoutStyle === 'grid' ? "col-span-2" : "flex-1 min-w-[200px]"}>
+                          <div className="text-xs mb-1 opacity-80">GitHub Trophies</div>
+                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
+                            Trophies Preview
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(config.showStreaks === true) && (
+                        <div className={config.layoutStyle === 'grid' ? "col-span-2" : "flex-1 min-w-[200px]"}>
+                          <div className="text-xs mb-1 opacity-80">GitHub Streaks</div>
+                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
+                            Streaks Preview
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
