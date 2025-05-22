@@ -399,12 +399,21 @@ export default function CreatePage() {
       )
     );
   }
-
   function updateBlockLayout(id: string, layout: 'grid' | 'flow' | 'inline'): void {
     setBuilderBlocks(prevBlocks =>
       prevBlocks.map(block =>
         block.id === id
           ? { ...block, layout }
+          : block
+      )
+    );
+  }
+  
+  function updateBlockContainerLayout(id: string, blockLayout: 'default' | 'side-by-side' | 'grid'): void {
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
+        block.id === id
+          ? { ...block, blockLayout }
           : block
       )
     );
@@ -496,15 +505,14 @@ export default function CreatePage() {
               handleMoveBlockUp={handleMoveBlockUp}
               handleMoveBlockDown={handleMoveBlockDown}
               loadTemplate={loadTemplate}
-            />
-
-            {/* Right Sidebar - Properties */}
+            />            {/* Right Sidebar - Properties */}
             <PropertiesPanel 
-              selectedBlock={builderBlocks.find(block => block.id === selectedBlockId) || null}
+              selectedBlock={builderBlocks.find(block => block.id === selectedBlockId)}
               selectedBlockId={selectedBlockId}
               setSelectedBlockId={setSelectedBlockId}
               updateBlockContent={updateBlockContent}
               updateBlockLayout={updateBlockLayout}
+              updateBlockContainerLayout={updateBlockContainerLayout}
               updateTemplateProperty={updateTemplateProperty}
               updateWidgetProperty={updateWidgetProperty}
               widgetConfig={widgetConfig}
