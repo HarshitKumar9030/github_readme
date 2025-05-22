@@ -27,6 +27,9 @@ export interface WidgetConfig {
   showStats: boolean;
   trophyTheme: string;
   customTitle: string;
+  excludeRepos?: string;
+  excludeLangs?: string;
+  cardWidth?: number;
 }
 
 interface ConfigPanelProps {

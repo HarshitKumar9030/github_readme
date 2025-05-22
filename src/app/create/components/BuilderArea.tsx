@@ -4,6 +4,7 @@ import React from 'react';
 import { Block } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
 import SocialStatsWidget from '@/widgets/SocialStatsWidget';
+import TopLanguagesWidget from '@/widgets/TopLanguagesWidget';
 
 // Accept widgetConfig, username, socials as props
 interface BuilderAreaProps {
@@ -215,7 +216,20 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                               />
                             )}
                             {block.widgetId === 'top-languages' && (
-                              <span className="text-xs text-gray-400">Top Languages preview coming soon</span>
+                              <TopLanguagesWidget
+                                config={{
+                                  username: username,
+                                  theme: widgetConfig.theme || 'light',
+                                  layout: widgetConfig.layout || 'compact',
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || '',
+                                }}
+                                onMarkdownGenerated={(md: string) => {
+                                  if (typeof window !== 'undefined') {
+                                  }
+                                }}
+                              />
                             )}
                           </div>
                         </div>
