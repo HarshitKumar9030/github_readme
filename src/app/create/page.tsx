@@ -33,7 +33,9 @@ export default function CreatePage() {
     { id: "block-1", type: "content", label: "About Me", content: "About me content" },
     { id: "block-2", type: "content", label: "Skills", content: "Skills content" },
     { id: "block-3", type: "content", label: "Projects", content: "Projects content" },
-  ];  // State
+  ];
+
+  // State
   const [builderBlocks, setBuilderBlocks] = useState<Block[]>([]);
   const [draggedBlock, setDraggedBlock] = useState<Block | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -66,10 +68,6 @@ export default function CreatePage() {
   const [projects, setProjects] = useState<ReadmeProject[]>([]);
   const [showPreview, setShowPreview] = useState(false);
   const [markdownCache, setMarkdownCache] = useState<Record<string, string>>({});
-  
-  // Local storage keys
-  const AUTOSAVE_KEY = 'github-readme-autosave';
-  const PROJECTS_KEY = 'readme-projects';
 
   // Handle markdown generation from widget components
   const handleWidgetMarkdownGenerated = (blockId: string, markdown: string) => {
@@ -77,88 +75,8 @@ export default function CreatePage() {
       ...prev,
       [blockId]: markdown
     }));
-  };  // Load saved data from localStorage
-  useEffect(() => {
-    // Load auto-saved data
-    if (LocalStorageService.isAvailable() && LocalStorageService.exists(AUTOSAVE_KEY)) {
-      try {
-        const savedData = LocalStorageService.load<AutoSaveData | null>(AUTOSAVE_KEY, null);
-        
-        if (savedData && savedData.timestamp) {
-          // Only restore if data is less than 7 days old
-          const dataAge = Date.now() - savedData.timestamp;
-          const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
-          
-          if (dataAge < maxAge) {
-            setBuilderBlocks(savedData.blocks || []);
-            setProjectName(savedData.projectName || 'My README');
-            setUsername(savedData.githubUsername || '');
-            setSocials(savedData.socials || {
-              github: "",
-              instagram: "",
-              twitter: "",
-              linkedin: "",
-            });
-            setWidgetConfig(savedData.widgetConfig || {
-              theme: 'light',
-              showIcons: true,
-              includePrivate: false,
-              layout: 'compact',
-              includeAllCommits: true
-            });
-            
-            setToastMessage('Restored your previous work from auto-save');
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-          } else {
-            // Data is too old, clear it
-            LocalStorageService.remove(AUTOSAVE_KEY);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load autosaved data:', error);
-        // If there was an error, clear the potentially corrupted data
-        LocalStorageService.remove(AUTOSAVE_KEY);
-      }
-    }
-    
-    // Load saved projects
-    if (LocalStorageService.isAvailable() && LocalStorageService.exists(PROJECTS_KEY)) {
-      try {
-        const savedProjects = LocalStorageService.load<ReadmeProject[]>(PROJECTS_KEY, []);
-        if (savedProjects && Array.isArray(savedProjects)) {
-          setProjects(savedProjects);
-        }
-      } catch (error) {
-        console.error('Failed to load saved projects:', error);
-      }
-    }
-  }, []);
-  // Setup auto-save for the current state
-  useEffect(() => {
-    if (LocalStorageService.isAvailable()) {
-      // Function to get current state to save
-      const getCurrentState = (): AutoSaveData => ({
-        blocks: builderBlocks,
-        projectName: projectName,
-        githubUsername: username,
-        socials: socials,
-        widgetConfig: widgetConfig,
-        timestamp: Date.now()
-      });
-      
-      // Set up auto-save that runs on changes
-      const cleanup = LocalStorageService.setupAutoSave<AutoSaveData>(
-        AUTOSAVE_KEY,
-        getCurrentState,
-        500 // 500ms debounce for more responsive saving
-      );
-      
-      // Clean up on component unmount
-      return cleanup;
-    }
-  }, [builderBlocks, projectName, username, socials, widgetConfig]);
-  
+  };
+
   // Generate complete markdown preview from all blocks
   const generatePreview = () => {
     let markdown = '';
@@ -170,6 +88,7 @@ export default function CreatePage() {
     if (username) {
       markdown += `> Created by [${username}](https://github.com/${username})\n\n`;
     }
+    
     // Generate markdown for each block
     builderBlocks.forEach(block => {
       if (block.type === 'widget') {
@@ -218,6 +137,7 @@ export default function CreatePage() {
     
     return markdown;
   };
+
   // Save current state as a project
   const saveProject = () => {
     try {
@@ -227,9 +147,6 @@ export default function CreatePage() {
         createdAt: Date.now(),
         updatedAt: Date.now(),
         blocks: builderBlocks,
-        socials: socials,
-        widgetConfig: widgetConfig,
-        githubUsername: username,
         settings: {
           username,
           theme: (theme as 'light' | 'dark' | 'auto') || 'light',
@@ -238,25 +155,14 @@ export default function CreatePage() {
       
       const updatedProjects = [...projects, newProject];
       setProjects(updatedProjects);
-      
-      // Use LocalStorageService instead of direct localStorage
-      const saveResult = LocalStorageService.save(PROJECTS_KEY, updatedProjects);
-      
-      if (!saveResult) {
-        throw new Error('LocalStorage save operation failed');
-      }
-      
+      localStorage.setItem('readme-projects', JSON.stringify(updatedProjects));
       setShowExportModal(false);
       
       // Show success feedback
-      setToastMessage('Project saved successfully!');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      alert('Project saved successfully!');
     } catch (error) {
       console.error('Failed to save project:', error);
-      setToastMessage('Failed to save project. Please try again.');
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      alert('Failed to save project. Please try again.');
     }
   };
 
@@ -334,98 +240,52 @@ export default function CreatePage() {
     e.preventDefault();
     setDragOver(true);
   };
-  const handleDragLeave = () => setDragOver(false);  const handleDrop = (e: React.DragEvent) => {
+  const handleDragLeave = () => setDragOver(false);
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     if (draggedBlock) {
-      const newBlocks = [...builderBlocks, { ...draggedBlock, id: `${draggedBlock.id}-${Date.now()}` }];
-      setBuilderBlocks(newBlocks);
+      setBuilderBlocks([...builderBlocks, { ...draggedBlock, id: `${draggedBlock.id}-${Date.now()}` }]);
       setDraggedBlock(null);
-      
-      // Save updated blocks to localStorage when a new block is dropped
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
     }
   };
 
   const handleBlockSelect = (id: string): void => {
     setSelectedBlockId(id === selectedBlockId ? null : id);
   };
+
   // Block manipulation functions
   const handleRemoveBlock = (id: string): void => {
-    const newBlocks = builderBlocks.filter(block => block.id !== id);
-    setBuilderBlocks(newBlocks);
-    
-    // Save updated blocks to localStorage
-    if (LocalStorageService.isAvailable()) {
-      LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-        blocks: newBlocks,
-        projectName,
-        githubUsername: username,
-        socials,
-        widgetConfig,
-        timestamp: Date.now()
-      });
-    }
-    
+    setBuilderBlocks(builderBlocks.filter(block => block.id !== id));
     if (selectedBlockId === id) {
       setSelectedBlockId(null);
     }
   };
+
   const handleMoveBlockUp = (id: string): void => {
     const index = builderBlocks.findIndex(block => block.id === id);
     if (index > 0) {
       const newBlocks = [...builderBlocks];
       [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
       setBuilderBlocks(newBlocks);
-      
-      // Save updated blocks order to localStorage
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
     }
   };
+
   const handleMoveBlockDown = (id: string): void => {
     const index = builderBlocks.findIndex(block => block.id === id);
     if (index !== -1 && index < builderBlocks.length - 1) {
       const newBlocks = [...builderBlocks];
       [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
       setBuilderBlocks(newBlocks);
-      
-      // Save updated blocks order to localStorage
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
     }
   };
+
   function loadTemplate(templateType: string): void {
-    let newBlocks: Block[] = [];
+    setBuilderBlocks([]);
     
     switch (templateType) {
       case 'classic':
-        newBlocks = [
+        setBuilderBlocks([
           { 
             id: `template-classic-${Date.now()}`, 
             type: "template", 
@@ -450,11 +310,11 @@ export default function CreatePage() {
             label: "GitHub Stats",
             widgetId: "github-stats"
           }
-        ];
+        ]);
         break;
         
       case 'minimal':
-        newBlocks = [
+        setBuilderBlocks([
           { 
             id: `template-minimal-${Date.now()}`, 
             type: "template", 
@@ -473,11 +333,11 @@ export default function CreatePage() {
             label: "Top Languages",
             widgetId: "top-languages"
           }
-        ];
+        ]);
         break;
         
       case 'social':
-        newBlocks = [
+        setBuilderBlocks([
           {
             id: `widget-social-${Date.now()}`,
             type: "widget",
@@ -490,28 +350,13 @@ export default function CreatePage() {
             label: "Introduction",
             content: `# Hi there! I'm ${username || '[Your Name]'}\n\nWelcome to my GitHub profile!`
           }
-        ];
+        ]);
         break;
         
       default:
         setToastMessage(`Unknown template type: ${templateType}`);
         setShowToast(true);
         return;
-    }
-    
-    // Update state with the new blocks
-    setBuilderBlocks(newBlocks);
-    
-    // Save to localStorage immediately when template is loaded
-    if (LocalStorageService.isAvailable()) {
-      LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-        blocks: newBlocks,
-        projectName,
-        githubUsername: username,
-        socials,
-        widgetConfig,
-        timestamp: Date.now()
-      });
     }
     
     // Show success message
@@ -525,188 +370,54 @@ export default function CreatePage() {
   }
 
   function updateBlockContent(id: string, content: string): void {
-    setBuilderBlocks(prevBlocks => {
-      const newBlocks = prevBlocks.map(block =>
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
         block.id === id && block.type === 'content'
           ? { ...block, content }
           : block
-      );
-      
-      // Save to localStorage immediately for better persistence
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
-      
-      return newBlocks;
-    });
+      )
+    );
   }
 
   function updateWidgetProperty<K extends keyof WidgetBlock>(id: string, property: K, value: WidgetBlock[K]): void {
-    setBuilderBlocks(prevBlocks => {
-      const newBlocks = prevBlocks.map(block =>
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
         block.id === id && block.type === 'widget'
           ? { ...block, [property]: value }
           : block
-      );
-      
-      // Save to localStorage immediately
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
-      
-      return newBlocks;
-    });
+      )
+    );
   }
+
   // Add this function to fix the error
   function updateTemplateProperty<K extends keyof TemplateBlock>(id: string, property: K, value: TemplateBlock[K]): void {
-    setBuilderBlocks(prevBlocks => {
-      const newBlocks = prevBlocks.map(block =>
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
         block.id === id && block.type === 'template'
           ? { ...block, [property]: value }
           : block
-      );
-      
-      // Save to localStorage immediately
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
-      
-      return newBlocks;
-    });
-  }  function updateBlockLayout(id: string, layout: 'grid' | 'flow' | 'inline'): void {
-    setBuilderBlocks(prevBlocks => {
-      const newBlocks = prevBlocks.map(block =>
+      )
+    );
+  }
+  function updateBlockLayout(id: string, layout: 'grid' | 'flow' | 'inline'): void {
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
         block.id === id
           ? { ...block, layout }
           : block
-      );
-      
-      // Save to localStorage immediately
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
-      
-      return newBlocks;
-    });
+      )
+    );
   }
-    function updateBlockContainerLayout(id: string, blockLayout: 'default' | 'side-by-side' | 'grid'): void {
-    setBuilderBlocks(prevBlocks => {
-      const newBlocks = prevBlocks.map(block =>
+  
+  function updateBlockContainerLayout(id: string, blockLayout: 'default' | 'side-by-side' | 'grid'): void {
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
         block.id === id
           ? { ...block, blockLayout }
           : block
-      );
-      
-      // Save to localStorage immediately
-      if (LocalStorageService.isAvailable()) {
-        LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-          blocks: newBlocks,
-          projectName,
-          githubUsername: username,
-          socials,
-          widgetConfig,
-          timestamp: Date.now()
-        });
-      }
-      
-      return newBlocks;
-    });
+      )
+    );
   }
-
-  // Enhanced handlers with localStorage persistence
-  const handleProjectNameChange = (name: string) => {
-    setProjectName(name);
-    
-    // Save to localStorage immediately when project name changes
-    if (LocalStorageService.isAvailable()) {
-      LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-        blocks: builderBlocks,
-        projectName: name,
-        githubUsername: username,
-        socials,
-        widgetConfig,
-        timestamp: Date.now()
-      });
-    }
-  };
-  
-  const handleUsernameChange = (newUsername: string) => {
-    setUsername(newUsername);
-    
-    // Save to localStorage immediately when username changes
-    if (LocalStorageService.isAvailable()) {
-      LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-        blocks: builderBlocks,
-        projectName,
-        githubUsername: newUsername,
-        socials,
-        widgetConfig,
-        timestamp: Date.now()
-      });
-    }
-  };
-
-  // Enhanced handler for socials with localStorage persistence
-  const handleSocialsChange = (newSocials: Socials) => {
-    setSocials(newSocials);
-    
-    // Save to localStorage immediately when socials change
-    if (LocalStorageService.isAvailable()) {
-      LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-        blocks: builderBlocks,
-        projectName,
-        githubUsername: username,
-        socials: newSocials,
-        widgetConfig,
-        timestamp: Date.now()
-      });
-    }
-  };
-
-  // Enhanced handler for widget config with localStorage persistence
-  const handleWidgetConfigChange = (newConfig: Partial<WidgetConfig>) => {
-    setWidgetConfig(newConfig);
-    
-    // Save to localStorage immediately when widget config changes
-    if (LocalStorageService.isAvailable()) {
-      LocalStorageService.save<AutoSaveData>(AUTOSAVE_KEY, {
-        blocks: builderBlocks,
-        projectName,
-        githubUsername: username,
-        socials,
-        widgetConfig: newConfig,
-        timestamp: Date.now()
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
@@ -745,24 +456,26 @@ export default function CreatePage() {
         
         {/* README Generator Builder Interface */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {/* Top Header Bar with Project Name and GitHub Username */}          <HeaderBar 
+          {/* Top Header Bar with Project Name and GitHub Username */}
+          <HeaderBar 
             projectName={projectName}
-            setProjectName={handleProjectNameChange}
+            setProjectName={setProjectName}
             username={username}
-            setUsername={handleUsernameChange}
+            setUsername={setUsername}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[700px]">
-            {/* Left sidebar with tabs */}            <BuilderSidebar 
+            {/* Left sidebar with tabs */}
+            <BuilderSidebar 
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               availableBlocks={availableBlocks}
               handleDragStart={handleDragStart}
               handleDragEnd={handleDragEnd}
               socials={socials}
-              setSocials={handleSocialsChange}
+              setSocials={setSocials}
               widgetConfig={widgetConfig}
-              setWidgetConfig={handleWidgetConfigChange}
+              setWidgetConfig={setWidgetConfig}
               loadTemplate={loadTemplate}
             />
             {/* No idea why there were two prope panels here fixed it  */}
@@ -795,7 +508,8 @@ export default function CreatePage() {
               widgetConfig={widgetConfig}
               username={username}
               socials={socials}
-            />            {/* Right Sidebar - Properties */}            <PropertiesPanel 
+            />            {/* Right Sidebar - Properties */}
+            <PropertiesPanel 
               selectedBlock={builderBlocks.find(block => block.id === selectedBlockId)}
               selectedBlockId={selectedBlockId}
               setSelectedBlockId={setSelectedBlockId}
@@ -805,7 +519,7 @@ export default function CreatePage() {
               updateTemplateProperty={updateTemplateProperty}
               updateWidgetProperty={updateWidgetProperty}
               widgetConfig={widgetConfig}
-              setWidgetConfig={handleWidgetConfigChange}
+              setWidgetConfig={setWidgetConfig}
               username={username}
             />
           </div>
