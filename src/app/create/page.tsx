@@ -400,6 +400,16 @@ export default function CreatePage() {
     );
   }
 
+  function updateBlockLayout(id: string, layout: 'grid' | 'flow' | 'inline'): void {
+    setBuilderBlocks(prevBlocks =>
+      prevBlocks.map(block =>
+        block.id === id
+          ? { ...block, layout }
+          : block
+      )
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
       {/* Mobile warning popup */}
@@ -450,20 +460,28 @@ export default function CreatePage() {
             <BuilderSidebar 
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              availableBlocks={availableBlocks}
+              handleDragStart={handleDragStart}
+              handleDragEnd={handleDragEnd}
+              socials={socials}
+              setSocials={setSocials}
+              widgetConfig={widgetConfig}
+              setWidgetConfig={setWidgetConfig}
+              loadTemplate={loadTemplate}
             />
-            <PropertiesPanel 
+            {/* No idea why there were two prope panels here fixed it  */}
+            {/* <PropertiesPanel 
               selectedBlock={builderBlocks.find(block => block.id === selectedBlockId) || null}
               selectedBlockId={selectedBlockId}
               setSelectedBlockId={setSelectedBlockId}
               updateBlockContent={updateBlockContent}
               updateBlockLayout={updateBlockLayout}
-              updateBlockContainerLayout={updateBlockContainerLayout}
               updateTemplateProperty={updateTemplateProperty}
               updateWidgetProperty={updateWidgetProperty}
               widgetConfig={widgetConfig}
               setWidgetConfig={setWidgetConfig}
               username={username}
-            />
+            /> */}
 
             {/* Main Builder Area */}
             <BuilderArea 
@@ -482,12 +500,11 @@ export default function CreatePage() {
 
             {/* Right Sidebar - Properties */}
             <PropertiesPanel 
-              selectedBlock={selectedBlock}
+              selectedBlock={builderBlocks.find(block => block.id === selectedBlockId) || null}
               selectedBlockId={selectedBlockId}
               setSelectedBlockId={setSelectedBlockId}
               updateBlockContent={updateBlockContent}
               updateBlockLayout={updateBlockLayout}
-              updateBlockContainerLayout={updateBlockContainerLayout}
               updateTemplateProperty={updateTemplateProperty}
               updateWidgetProperty={updateWidgetProperty}
               widgetConfig={widgetConfig}
