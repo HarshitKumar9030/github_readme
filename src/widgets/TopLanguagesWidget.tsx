@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
 export interface TopLanguagesWidgetConfig extends BaseWidgetConfig {
@@ -8,6 +9,9 @@ export interface TopLanguagesWidgetConfig extends BaseWidgetConfig {
   layout?: 'compact' | 'default';
   theme?: 'light' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox';
   customTitle?: string;
+  excludeRepos?: string;
+  excludeLangs?: string;
+  cardWidth?: number;
 }
 
 interface TopLanguagesWidgetProps extends BaseWidgetProps {
@@ -20,7 +24,6 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
   onMarkdownGenerated
 }) => {
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
-
   // Generate the image URL
   const generateUrl = () => {
     if (!config.username) return '';
@@ -28,6 +31,10 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     if (config.theme) params.append('theme', config.theme);
     if (config.layout) params.append('layout', config.layout);
     if (config.hideBorder) params.append('hide_border', 'true');
+    if (config.excludeRepos) params.append('exclude_repo', config.excludeRepos);
+    if (config.excludeLangs) params.append('hide', config.excludeLangs);
+    if (config.cardWidth) params.append('card_width', config.cardWidth.toString());
+    
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${config.username}&${params.toString()}`;
   };
 
@@ -49,14 +56,22 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     if (onMarkdownGenerated) onMarkdownGenerated(generateMarkdown());
     // eslint-disable-next-line
   }, [config]);
-
   return (
     <div className="rounded-lg border p-4">
       {viewMode === 'preview' ? (
         <>
           {!config.hideTitle && <h3 className="text-lg font-medium">{config.customTitle || 'Top Languages'}</h3>}
           {config.username ? (
-            <img src={generateUrl()} alt="Top Languages" className="w-full h-auto mt-2" />
+            <div className="relative w-full h-auto mt-2" style={{ minHeight: 150 }}>              <Image 
+                src={generateUrl()} 
+                alt="Top Languages" 
+                width={config.cardWidth || 495} 
+                height={195} 
+                priority 
+                unoptimized // GitHub API SVGs need to remain unoptimized to render correctly
+                style={{ width: '100%', height: 'auto' }}
+              />
+            </div>
           ) : (
             <div className="text-amber-600">Please enter a GitHub username.</div>
           )}

@@ -136,24 +136,29 @@ export class LocalStorageService {
       console.error('Error getting all localStorage keys:', error);
       return [];
     }
-  }
-
-  /**
+  }  /**
    * Set up auto-save for a component state
    * @param key The key to store the data under 
-   * @param data The data to monitor and store
-   * @param debounceMs Debounce time in milliseconds (default 2000ms)
+   * @param getData A function that returns the data to store
+   * @param debounceMs Debounce time in milliseconds (default 500ms)
    */
   
-  static setupAutoSave<T>(key: StorageKey, data: T, debounceMs: number = 2000): () => void {
-    // eslint-disable-next-line prefer-const
-    let timeoutId: ReturnType<typeof setTimeout> | undefined = setTimeout(() => {
-      this.save(key, data);
-    }, debounceMs);
+  static setupAutoSave<T>(key: StorageKey, getData: () => T, debounceMs: number = 500): () => void {
+    // Function to save the current data
+    const saveData = () => {
+      const currentData = getData();
+      this.save(key, currentData);
+    };
+    
+    // Set up interval to save data periodically
+    const intervalId = setInterval(saveData, debounceMs);
+    
+    // Save immediately on first call
+    saveData();
 
-    // Return cleanup function to clear timeout
+    // Return cleanup function to clear interval
     return () => {
-      if (timeoutId !== undefined) clearTimeout(timeoutId);
+      clearInterval(intervalId);
     };
   }
 }

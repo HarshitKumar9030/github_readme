@@ -22,6 +22,7 @@ interface BuilderAreaProps {
   widgetConfig: any;
   username: string;
   socials: any;
+  handleWidgetMarkdownGenerated?: (blockId: string, markdown: string) => void;
 }
 
 const BuilderArea: React.FC<BuilderAreaProps> = ({
@@ -38,7 +39,8 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   loadTemplate,
   widgetConfig,
   username,
-  socials
+  socials,
+  handleWidgetMarkdownGenerated
 }) => {
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
@@ -214,8 +216,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   customTitle: widgetConfig.customTitle
                                 }}
                               />
-                            )}
-                            {block.widgetId === 'top-languages' && (
+                            )}                            {block.widgetId === 'top-languages' && (
                               <TopLanguagesWidget
                                 config={{
                                   username: username,
@@ -224,9 +225,12 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   hideBorder: widgetConfig.hideBorder || false,
                                   hideTitle: widgetConfig.hideTitle || false,
                                   customTitle: widgetConfig.customTitle || '',
-                                }}
-                                onMarkdownGenerated={(md: string) => {
-                                  if (typeof window !== 'undefined') {
+                                  excludeRepos: widgetConfig.excludeRepos || '',
+                                  excludeLangs: widgetConfig.excludeLangs || '',
+                                  cardWidth: widgetConfig.cardWidth || 495,
+                                }}                                onMarkdownGenerated={(md: string) => {
+                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
+                                    handleWidgetMarkdownGenerated(block.id, md);
                                   }
                                 }}
                               />

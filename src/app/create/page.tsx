@@ -1,38 +1,83 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useTheme } from 'next-themes';
+import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useTheme } from "next-themes";
 
 // Components
-import MobileWarning from '@/components/MobileWarning';
-import ReadmePreview from './README-Preview';
-import HeaderBar from './components/HeaderBar';
-import BuilderSidebar from './components/BuilderSidebar';
-import BuilderArea from './components/BuilderArea';
-import PropertiesPanel from './components/PropertiesPanel';
-import FooterBar from './components/FooterBar';
+import MobileWarning from "@/components/MobileWarning";
+import ReadmePreview from "./README-Preview";
+import HeaderBar from "./components/HeaderBar";
+import BuilderSidebar from "./components/BuilderSidebar";
+import BuilderArea from "./components/BuilderArea";
+import PropertiesPanel from "./components/PropertiesPanel";
+import FooterBar from "./components/FooterBar";
 
 // Services
-import LocalStorageService from '@/services/LocalStorageService';
+import LocalStorageService from "@/services/LocalStorageService";
 
 // Types and Interfaces
-import { Block, ContentBlock, TemplateBlock, WidgetBlock } from '@/interfaces/BlockTypes';
-import { Socials } from '@/interfaces/Socials';
-import { WidgetConfig } from '@/interfaces/WidgetConfig';
-import { AutoSaveData, ReadmeProject } from '@/interfaces/ProjectInterfaces';
+import {
+  Block,
+  ContentBlock,
+  TemplateBlock,
+  WidgetBlock,
+} from "@/interfaces/BlockTypes";
+import { Socials } from "@/interfaces/Socials";
+import { WidgetConfig } from "@/interfaces/WidgetConfig";
+import { AutoSaveData, ReadmeProject } from "@/interfaces/ProjectInterfaces";
 
 export default function CreatePage() {
   // Define available blocks
   const availableBlocks: Block[] = [
-    { id: "template-1", type: "template", label: "Classic Template", templateId: "classic" },
-    { id: "template-2", type: "template", label: "Minimal Template", templateId: "minimal" },
-    { id: "widget-1", type: "widget", label: "GitHub Stats", widgetId: "github-stats" },
-    { id: "widget-2", type: "widget", label: "Top Languages", widgetId: "top-languages" },
-    { id: "widget-3", type: "widget", label: "Social Stats", widgetId: "social-stats" },
-    { id: "block-1", type: "content", label: "About Me", content: "About me content" },
-    { id: "block-2", type: "content", label: "Skills", content: "Skills content" },
-    { id: "block-3", type: "content", label: "Projects", content: "Projects content" },
+    {
+      id: "template-1",
+      type: "template",
+      label: "Classic Template",
+      templateId: "classic",
+    },
+    {
+      id: "template-2",
+      type: "template",
+      label: "Minimal Template",
+      templateId: "minimal",
+    },
+    {
+      id: "widget-1",
+      type: "widget",
+      label: "GitHub Stats",
+      widgetId: "github-stats",
+    },
+    {
+      id: "widget-2",
+      type: "widget",
+      label: "Top Languages",
+      widgetId: "top-languages",
+    },
+    {
+      id: "widget-3",
+      type: "widget",
+      label: "Social Stats",
+      widgetId: "social-stats",
+    },
+    {
+      id: "block-1",
+      type: "content",
+      label: "About Me",
+      content: "About me content",
+    },
+    {
+      id: "block-2",
+      type: "content",
+      label: "Skills",
+      content: "Skills content",
+    },
+    {
+      id: "block-3",
+      type: "content",
+      label: "Projects",
+      content: "Projects content",
+    },
   ];
 
   // State
@@ -46,95 +91,139 @@ export default function CreatePage() {
     twitter: "",
     linkedin: "",
   });
-  
+
   // Advanced configuration state
   const [widgetConfig, setWidgetConfig] = useState<Partial<WidgetConfig>>({
-    theme: 'light',
+    theme: "light",
     showIcons: true,
     includePrivate: false,
-    layout: 'compact',
-    includeAllCommits: true
+    layout: "compact",
+    includeAllCommits: true,
   });
-    // Interface state
+  // Interface state
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
+  const [toastMessage, setToastMessage] = useState("");
   const [showMobileWarning, setShowMobileWarning] = useState(true);
-  const [activeTab, setActiveTab] = useState<'blocks' | 'templates' | 'social' | 'settings'>('blocks');
-  const [projectName, setProjectName] = useState<string>('My README');
-  const [username, setUsername] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<
+    "blocks" | "templates" | "social" | "settings"
+  >("blocks");
+  const [projectName, setProjectName] = useState<string>("My README");
+  const [username, setUsername] = useState<string>("");
   const { theme, setTheme } = useTheme();
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [projects, setProjects] = useState<ReadmeProject[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [markdownCache, setMarkdownCache] = useState<Record<string, string>>({});
+  const [markdownCache, setMarkdownCache] = useState<Record<string, string>>(
+    {}
+  );
 
   // Handle markdown generation from widget components
   const handleWidgetMarkdownGenerated = (blockId: string, markdown: string) => {
-    setMarkdownCache(prev => ({
+    setMarkdownCache((prev) => ({
       ...prev,
-      [blockId]: markdown
+      [blockId]: markdown,
     }));
   };
 
-  // Generate complete markdown preview from all blocks
+  // Load saved data on component mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedData = LocalStorageService.load<AutoSaveData | null>(
+        AUTOSAVE_KEY,
+        null
+      );
+
+      if (savedData) {
+        setBuilderBlocks(savedData.blocks || []);
+        setProjectName(savedData.projectName || "My README");
+        setUsername(savedData.githubUsername || "");
+        setSocials(
+          savedData.socials || {
+            github: "",
+            instagram: "",
+            twitter: "",
+            linkedin: "",
+          }
+        );
+        setWidgetConfig(
+          savedData.widgetConfig || {
+            theme: "light",
+            showIcons: true,
+            includePrivate: false,
+            layout: "compact",
+            includeAllCommits: true,
+          }
+        );
+      }
+    }
+  }, []);
+
   const generatePreview = () => {
-    let markdown = '';
-    
-    // Title section
+    let markdown = "";
+
     markdown += `# ${projectName}\n\n`;
-    
-    // GitHub username if available
+
     if (username) {
       markdown += `> Created by [${username}](https://github.com/${username})\n\n`;
     }
-    
+
     // Generate markdown for each block
-    builderBlocks.forEach(block => {
-      if (block.type === 'widget') {
+    builderBlocks.forEach((block) => {
+      if (block.type === "widget") {
         // Use cached markdown for widgets if available
         const cachedMarkdown = markdownCache[block.id];
         if (cachedMarkdown) {
           markdown += cachedMarkdown;
         } else {
           // Fallback for widgets without cached markdown
-          if (block.widgetId === 'github-stats') {
-            const statsUrl = `/api/github-stats-svg?username=${username}&theme=${widgetConfig.theme || 'light'}&hideBorder=${widgetConfig.hideBorder || false}&hideTitle=${widgetConfig.hideTitle || false}&layout=${widgetConfig.layoutCompact ? 'compact' : 'default'}`;
+          if (block.widgetId === "github-stats") {
+            const statsUrl = `/api/github-stats-svg?username=${username}&theme=${
+              widgetConfig.theme || "light"
+            }&hideBorder=${widgetConfig.hideBorder || false}&hideTitle=${
+              widgetConfig.hideTitle || false
+            }&layout=${widgetConfig.layoutCompact ? "compact" : "default"}`;
             markdown += `\n## GitHub Stats\n\n`;
             markdown += `<img src="${statsUrl}" alt="GitHub Stats" />\n\n`;
-          } else if (block.widgetId === 'top-languages') {
+          } else if (block.widgetId === "top-languages") {
             markdown += `\n## Top Languages\n\n`;
-            markdown += `![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${widgetConfig.theme || 'light'})\n\n`;
-          } else if (block.widgetId === 'social-stats') {
+            markdown += `![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${
+              widgetConfig.theme || "light"
+            })\n\n`;
+          } else if (block.widgetId === "social-stats") {
             markdown += `\n## Connect With Me\n\n`;
-            if (socials.github) markdown += `- [GitHub](https://github.com/${socials.github})\n`;
-            if (socials.twitter) markdown += `- [Twitter](https://twitter.com/${socials.twitter})\n`;
-            if (socials.linkedin) markdown += `- [LinkedIn](https://linkedin.com/in/${socials.linkedin})\n`;
-            if (socials.instagram) markdown += `- [Instagram](https://instagram.com/${socials.instagram})\n\n`;
+            if (socials.github)
+              markdown += `- [GitHub](https://github.com/${socials.github})\n`;
+            if (socials.twitter)
+              markdown += `- [Twitter](https://twitter.com/${socials.twitter})\n`;
+            if (socials.linkedin)
+              markdown += `- [LinkedIn](https://linkedin.com/in/${socials.linkedin})\n`;
+            if (socials.instagram)
+              markdown += `- [Instagram](https://instagram.com/${socials.instagram})\n\n`;
           }
         }
-      } else if (block.type === 'content') {
+      } else if (block.type === "content") {
         // Content blocks just add their content directly
         markdown += `\n${(block as ContentBlock).content}\n\n`;
-      } else if (block.type === 'template') {
+      } else if (block.type === "template") {
         // Handle templates
         const templateId = (block as TemplateBlock).templateId;
-        if (templateId === 'classic') {
+        if (templateId === "classic") {
           markdown += `\n## About Me\n\nA passionate developer focused on creating elegant solutions.\n\n`;
           markdown += `## Projects\n\n- Project 1: Description\n- Project 2: Description\n\n`;
           markdown += `## Skills\n\n- Skill 1\n- Skill 2\n- Skill 3\n\n`;
-        } else if (templateId === 'minimal') {
-          markdown += `\n## ${username || 'Developer'}\n\n`;
+        } else if (templateId === "minimal") {
+          markdown += `\n## ${username || "Developer"}\n\n`;
           markdown += `Currently working on interesting projects.\n\n`;
           markdown += `### Contact\n\n📧 Email: example@example.com\n\n`;
         }
       }
     });
-    
+
     // Add footer
     markdown += `---\n`;
     markdown += `*This README was generated with ❤️ by [GitHub Readme Generator](https://github.com/username/readme-generator)*\n`;
-    
+
     return markdown;
   };
 
@@ -149,20 +238,20 @@ export default function CreatePage() {
         blocks: builderBlocks,
         settings: {
           username,
-          theme: (theme as 'light' | 'dark' | 'auto') || 'light',
-        }
+          theme: (theme as "light" | "dark" | "auto") || "light",
+        },
       };
-      
+
       const updatedProjects = [...projects, newProject];
       setProjects(updatedProjects);
-      localStorage.setItem('readme-projects', JSON.stringify(updatedProjects));
+      localStorage.setItem("readme-projects", JSON.stringify(updatedProjects));
       setShowExportModal(false);
-      
+
       // Show success feedback
-      alert('Project saved successfully!');
+      alert("Project saved successfully!");
     } catch (error) {
-      console.error('Failed to save project:', error);
-      alert('Failed to save project. Please try again.');
+      console.error("Failed to save project:", error);
+      alert("Failed to save project. Please try again.");
     }
   };
 
@@ -170,8 +259,8 @@ export default function CreatePage() {
   const loadProject = (project: ReadmeProject) => {
     setBuilderBlocks(project.blocks);
     setProjectName(project.name);
-    setUsername(project.settings?.username ?? '');
-    setTheme(project.settings?.theme ?? 'light');
+    setUsername(project.settings?.username ?? "");
+    setTheme(project.settings?.theme ?? "light");
     setShowImportModal(false);
   };
 
@@ -186,26 +275,28 @@ export default function CreatePage() {
         blocks: builderBlocks,
         settings: {
           username,
-          theme: (theme as 'light' | 'dark' | 'auto') || 'light',
-        }
+          theme: (theme as "light" | "dark" | "auto") || "light",
+        },
       };
-      
+
       const dataStr = JSON.stringify(projectData, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-      
-      const exportFileDefaultName = `${projectName.toLowerCase().replace(/\s+/g, '-')}-readme.json`;
-      
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
+      const dataUri =
+        "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+      const exportFileDefaultName = `${projectName
+        .toLowerCase()
+        .replace(/\s+/g, "-")}-readme.json`;
+
+      const linkElement = document.createElement("a");
+      linkElement.setAttribute("href", dataUri);
+      linkElement.setAttribute("download", exportFileDefaultName);
       linkElement.click();
     } catch (error) {
-      console.error('Failed to export project:', error);
-      alert('Failed to export project. Please try again.');
+      console.error("Failed to export project:", error);
+      alert("Failed to export project. Please try again.");
     }
   };
 
-  // Import project from JSON file
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -214,26 +305,25 @@ export default function CreatePage() {
     reader.onload = (e) => {
       try {
         const content = e.target?.result;
-        if (typeof content === 'string') {
+        if (typeof content === "string") {
           const projectData: ReadmeProject = JSON.parse(content);
           setBuilderBlocks(projectData.blocks);
           setProjectName(projectData.name);
           if (projectData.settings) {
-            setUsername(projectData.settings.username || '');
-            setTheme(projectData.settings.theme || 'light');
+            setUsername(projectData.settings.username || "");
+            setTheme(projectData.settings.theme || "light");
           }
           setShowImportModal(false);
-          alert('Project imported successfully!');
+          alert("Project imported successfully!");
         }
       } catch (error) {
-        console.error('Failed to parse project file:', error);
-        alert('Failed to import project. Invalid file format.');
+        console.error("Failed to parse project file:", error);
+        alert("Failed to import project. Invalid file format.");
       }
     };
     reader.readAsText(file);
   };
 
-  // Drag handlers
   const handleDragStart = (block: Block) => setDraggedBlock(block);
   const handleDragEnd = () => setDraggedBlock(null);
   const handleDragOver = (e: React.DragEvent) => {
@@ -245,7 +335,10 @@ export default function CreatePage() {
     e.preventDefault();
     setDragOver(false);
     if (draggedBlock) {
-      setBuilderBlocks([...builderBlocks, { ...draggedBlock, id: `${draggedBlock.id}-${Date.now()}` }]);
+      setBuilderBlocks([
+        ...builderBlocks,
+        { ...draggedBlock, id: `${draggedBlock.id}-${Date.now()}` },
+      ]);
       setDraggedBlock(null);
     }
   };
@@ -254,135 +347,152 @@ export default function CreatePage() {
     setSelectedBlockId(id === selectedBlockId ? null : id);
   };
 
-  // Block manipulation functions
   const handleRemoveBlock = (id: string): void => {
-    setBuilderBlocks(builderBlocks.filter(block => block.id !== id));
+    setBuilderBlocks(builderBlocks.filter((block) => block.id !== id));
     if (selectedBlockId === id) {
       setSelectedBlockId(null);
     }
   };
 
   const handleMoveBlockUp = (id: string): void => {
-    const index = builderBlocks.findIndex(block => block.id === id);
+    const index = builderBlocks.findIndex((block) => block.id === id);
     if (index > 0) {
       const newBlocks = [...builderBlocks];
-      [newBlocks[index - 1], newBlocks[index]] = [newBlocks[index], newBlocks[index - 1]];
+      [newBlocks[index - 1], newBlocks[index]] = [
+        newBlocks[index],
+        newBlocks[index - 1],
+      ];
       setBuilderBlocks(newBlocks);
     }
   };
 
   const handleMoveBlockDown = (id: string): void => {
-    const index = builderBlocks.findIndex(block => block.id === id);
+    const index = builderBlocks.findIndex((block) => block.id === id);
     if (index !== -1 && index < builderBlocks.length - 1) {
       const newBlocks = [...builderBlocks];
-      [newBlocks[index], newBlocks[index + 1]] = [newBlocks[index + 1], newBlocks[index]];
+      [newBlocks[index], newBlocks[index + 1]] = [
+        newBlocks[index + 1],
+        newBlocks[index],
+      ];
       setBuilderBlocks(newBlocks);
     }
   };
 
   function loadTemplate(templateType: string): void {
     setBuilderBlocks([]);
-    
+
     switch (templateType) {
-      case 'classic':
+      case "classic":
         setBuilderBlocks([
-          { 
-            id: `template-classic-${Date.now()}`, 
-            type: "template", 
-            label: "Classic Template", 
-            templateId: "classic" 
+          {
+            id: `template-classic-${Date.now()}`,
+            type: "template",
+            label: "Classic Template",
+            templateId: "classic",
           },
           {
             id: `block-about-${Date.now()}`,
             type: "content",
             label: "About Me",
-            content: "## About Me\n\nA passionate developer focused on creating elegant solutions."
+            content:
+              "## About Me\n\nA passionate developer focused on creating elegant solutions.",
           },
           {
             id: `block-projects-${Date.now()}`,
             type: "content",
             label: "Projects",
-            content: "## Projects\n\n- Project 1: Description\n- Project 2: Description"
+            content:
+              "## Projects\n\n- Project 1: Description\n- Project 2: Description",
           },
           {
             id: `widget-stats-${Date.now()}`,
             type: "widget",
             label: "GitHub Stats",
-            widgetId: "github-stats"
-          }
+            widgetId: "github-stats",
+          },
         ]);
         break;
-        
-      case 'minimal':
+
+      case "minimal":
         setBuilderBlocks([
-          { 
-            id: `template-minimal-${Date.now()}`, 
-            type: "template", 
-            label: "Minimal Template", 
-            templateId: "minimal" 
+          {
+            id: `template-minimal-${Date.now()}`,
+            type: "template",
+            label: "Minimal Template",
+            templateId: "minimal",
           },
           {
             id: `block-intro-${Date.now()}`,
             type: "content",
             label: "Introduction",
-            content: `## ${username || 'Developer'}\n\nCurrently working on interesting projects.`
+            content: `## ${
+              username || "Developer"
+            }\n\nCurrently working on interesting projects.`,
           },
           {
             id: `widget-languages-${Date.now()}`,
             type: "widget",
             label: "Top Languages",
-            widgetId: "top-languages"
-          }
+            widgetId: "top-languages",
+          },
         ]);
         break;
-        
-      case 'social':
+
+      case "social":
         setBuilderBlocks([
           {
             id: `widget-social-${Date.now()}`,
             type: "widget",
             label: "Social Stats",
-            widgetId: "social-stats"
+            widgetId: "social-stats",
           },
           {
             id: `block-intro-${Date.now()}`,
             type: "content",
             label: "Introduction",
-            content: `# Hi there! I'm ${username || '[Your Name]'}\n\nWelcome to my GitHub profile!`
-          }
+            content: `# Hi there! I'm ${
+              username || "[Your Name]"
+            }\n\nWelcome to my GitHub profile!`,
+          },
         ]);
         break;
-        
+
       default:
         setToastMessage(`Unknown template type: ${templateType}`);
         setShowToast(true);
         return;
     }
-    
-    // Show success message
-    setToastMessage(`${templateType.charAt(0).toUpperCase() + templateType.slice(1)} template loaded successfully!`);
+
+    setToastMessage(
+      `${
+        templateType.charAt(0).toUpperCase() + templateType.slice(1)
+      } template loaded successfully!`
+    );
     setShowToast(true);
-    
-    // Auto-hide toast after 3 seconds
+
     setTimeout(() => {
       setShowToast(false);
     }, 3000);
   }
 
   function updateBlockContent(id: string, content: string): void {
-    setBuilderBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === id && block.type === 'content'
+    setBuilderBlocks((prevBlocks) =>
+      prevBlocks.map((block) =>
+        block.id === id && block.type === "content"
           ? { ...block, content }
           : block
       )
     );
   }
 
-  function updateWidgetProperty<K extends keyof WidgetBlock>(id: string, property: K, value: WidgetBlock[K]): void {
-    setBuilderBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === id && block.type === 'widget'
+  function updateWidgetProperty<K extends keyof WidgetBlock>(
+    id: string,
+    property: K,
+    value: WidgetBlock[K]
+  ): void {
+    setBuilderBlocks((prevBlocks) =>
+      prevBlocks.map((block) =>
+        block.id === id && block.type === "widget"
           ? { ...block, [property]: value }
           : block
       )
@@ -390,58 +500,134 @@ export default function CreatePage() {
   }
 
   // Add this function to fix the error
-  function updateTemplateProperty<K extends keyof TemplateBlock>(id: string, property: K, value: TemplateBlock[K]): void {
-    setBuilderBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === id && block.type === 'template'
+  function updateTemplateProperty<K extends keyof TemplateBlock>(
+    id: string,
+    property: K,
+    value: TemplateBlock[K]
+  ): void {
+    setBuilderBlocks((prevBlocks) =>
+      prevBlocks.map((block) =>
+        block.id === id && block.type === "template"
           ? { ...block, [property]: value }
           : block
       )
     );
   }
-  function updateBlockLayout(id: string, layout: 'grid' | 'flow' | 'inline'): void {
-    setBuilderBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === id
-          ? { ...block, layout }
-          : block
-      )
-    );
-  }
-  
-  function updateBlockContainerLayout(id: string, blockLayout: 'default' | 'side-by-side' | 'grid'): void {
-    setBuilderBlocks(prevBlocks =>
-      prevBlocks.map(block =>
-        block.id === id
-          ? { ...block, blockLayout }
-          : block
+  function updateBlockLayout(
+    id: string,
+    layout: "grid" | "flow" | "inline"
+  ): void {
+    setBuilderBlocks((prevBlocks) =>
+      prevBlocks.map((block) =>
+        block.id === id ? { ...block, layout } : block
       )
     );
   }
 
+  function updateBlockContainerLayout(
+    id: string,
+    blockLayout: "default" | "side-by-side" | "grid"
+  ): void {
+    setBuilderBlocks((prevBlocks) =>
+      prevBlocks.map((block) =>
+        block.id === id ? { ...block, blockLayout } : block
+      )
+    );
+  }
+
+  // Add autosave functionality
+  const AUTOSAVE_KEY = "readme-generator-autosave";
+
+  // Load saved data on component mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedData = LocalStorageService.load<AutoSaveData | null>(
+        AUTOSAVE_KEY,
+        null
+      );
+
+      if (savedData) {
+        setBuilderBlocks(savedData.blocks || []);
+        setProjectName(savedData.projectName || "My README");
+        setUsername(savedData.githubUsername || "");
+        setSocials(
+          savedData.socials || {
+            github: "",
+            instagram: "",
+            twitter: "",
+            linkedin: "",
+          }
+        );
+        setWidgetConfig(
+          savedData.widgetConfig || {
+            theme: "light",
+            showIcons: true,
+            includePrivate: false,
+            layout: "compact",
+            includeAllCommits: true,
+          }
+        );
+      }
+    }
+  }, []);
+
+  // Setup autosave
+  const getCurrentData = useCallback(() => {
+    const data: AutoSaveData = {
+      blocks: builderBlocks,
+      projectName: projectName,
+      githubUsername: username,
+      socials: socials,
+      widgetConfig: widgetConfig,
+      timestamp: Date.now(),
+    };
+    return data;
+  }, [builderBlocks, projectName, username, socials, widgetConfig]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const cleanup = LocalStorageService.setupAutoSave<AutoSaveData>(
+        AUTOSAVE_KEY,
+        getCurrentData,
+        1000 // Save every second when changes occur
+      );
+
+      return cleanup;
+    }
+  }, [
+    builderBlocks,
+    projectName,
+    username,
+    socials,
+    widgetConfig,
+    getCurrentData,
+  ]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
       {/* Mobile warning popup */}
-      {showMobileWarning && <MobileWarning onDismiss={() => setShowMobileWarning(false)} />}
-      
+      {showMobileWarning && (
+        <MobileWarning onDismiss={() => setShowMobileWarning(false)} />
+      )}
+
       <div className="max-w-8xl mx-auto px-4 sm:px-6 py-12">
         <div className="mb-8 text-center">
-          <Link 
+          <Link
             href="/"
             className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-6"
           >
-            <svg 
-              className="w-5 h-5 mr-2" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
             Back to Home
@@ -450,14 +636,15 @@ export default function CreatePage() {
             Create Your README
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Choose a template and customize it to create your perfect GitHub profile README
+            Choose a template and customize it to create your perfect GitHub
+            profile README
           </p>
         </div>
-        
+
         {/* README Generator Builder Interface */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Top Header Bar with Project Name and GitHub Username */}
-          <HeaderBar 
+          <HeaderBar
             projectName={projectName}
             setProjectName={setProjectName}
             username={username}
@@ -466,7 +653,7 @@ export default function CreatePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[700px]">
             {/* Left sidebar with tabs */}
-            <BuilderSidebar 
+            <BuilderSidebar
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               availableBlocks={availableBlocks}
@@ -491,9 +678,8 @@ export default function CreatePage() {
               setWidgetConfig={setWidgetConfig}
               username={username}
             /> */}
-
-            {/* Main Builder Area */}
-            <BuilderArea 
+            {/* Main Builder Area */}{" "}
+            <BuilderArea
               builderBlocks={builderBlocks}
               dragOver={dragOver}
               handleDragOver={handleDragOver}
@@ -508,9 +694,13 @@ export default function CreatePage() {
               widgetConfig={widgetConfig}
               username={username}
               socials={socials}
-            />            {/* Right Sidebar - Properties */}
-            <PropertiesPanel 
-              selectedBlock={builderBlocks.find(block => block.id === selectedBlockId)}
+              handleWidgetMarkdownGenerated={handleWidgetMarkdownGenerated}
+            />
+            {/* Right Sidebar - Properties */}
+            <PropertiesPanel
+              selectedBlock={builderBlocks.find(
+                (block) => block.id === selectedBlockId
+              )}
               selectedBlockId={selectedBlockId}
               setSelectedBlockId={setSelectedBlockId}
               updateBlockContent={updateBlockContent}
@@ -525,7 +715,7 @@ export default function CreatePage() {
           </div>
 
           {/* Footer Actions */}
-          <FooterBar 
+          <FooterBar
             setShowPreview={setShowPreview}
             setShowImportModal={setShowImportModal}
             exportToFile={exportToFile}
@@ -535,22 +725,102 @@ export default function CreatePage() {
 
         {/* Preview Modal */}
         {showPreview && (
-          <ReadmePreview 
+          <ReadmePreview
             content={generatePreview()}
             onClose={() => setShowPreview(false)}
             onCopy={() => {
-              navigator.clipboard.writeText(generatePreview())
+              navigator.clipboard
+                .writeText(generatePreview())
                 .then(() => {
-                  alert('Markdown copied to clipboard!');
+                  alert("Markdown copied to clipboard!");
                 })
-                .catch(err => {
-                  console.error('Failed to copy: ', err);
+                .catch((err) => {
+                  console.error("Failed to copy: ", err);
                 });
             }}
           />
         )}
 
-        {/* Import Modal would go here */}
+        {/* Import Modal */}
+        {showImportModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  Import Project
+                </h3>
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Upload a previously exported README project file (.json)
+                </p>
+
+                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md p-6 text-center">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileUpload}
+                    id="file-upload"
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer flex flex-col items-center justify-center"
+                  >
+                    <svg
+                      className="w-12 h-12 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                      />
+                    </svg>
+                    <span className="mt-2 text-sm font-medium text-blue-600 dark:text-blue-400">
+                      Click to upload file
+                    </span>
+                    <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      or drag and drop
+                    </span>
+                  </label>
+                </div>
+
+                <div className="mt-4 flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowImportModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Toast notifications would go here */}
       </div>
     </div>
