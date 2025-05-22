@@ -124,7 +124,6 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     
     return icons;
   };
-
   /**
    * Generate GitHub stats as markdown
    */
@@ -134,18 +133,38 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     const { github } = stats;
     let result = '';
     
-    if (github.name) {
-      result += `### ${github.name}\n\n`;
+    if (github.name && !config.hideTitle) {
+      const title = config.customTitle || `${github.name}'s GitHub Stats`;
+      result += `### ${title}\n\n`;
     }
     
     if (github.bio) {
       result += `${github.bio}\n\n`;
     }
     
-    result += '| GitHub Stats | Value |\n| --- | --- |\n';
-    result += `| Followers | ${github.followers} |\n`;
-    result += `| Following | ${github.following} |\n`;
-    result += `| Repositories | ${github.repositories} |\n\n`;
+    // For compact mode, use badges instead of table
+    if (config.compactMode) {
+      if (!config.hideFollowers) {
+        result += `![GitHub followers](https://img.shields.io/github/followers/${config.socials.github}?style=${config.badgeStyle || 'for-the-badge'}&label=Followers&color=007ec6) `;
+      }
+      if (!config.hideFollowing) {
+        result += `![GitHub following](https://img.shields.io/github/following/${config.socials.github}?style=${config.badgeStyle || 'for-the-badge'}&label=Following&color=2ea44f) `;
+      }
+      if (!config.hideRepos) {
+        result += `![GitHub repositories](https://img.shields.io/badge/Repositories-${github.repositories}-orange?style=${config.badgeStyle || 'for-the-badge'}&logo=github) `;
+      }
+      result += '\n\n';
+    } else {
+      // Use table for detailed view
+      const border = config.hideBorder ? 'no-border' : '';
+      
+      result += `<div class="github-stats ${border}">\n\n`;
+      result += '| GitHub Stats | Value |\n| --- | --- |\n';
+      if (!config.hideFollowers) result += `| Followers | ${github.followers} |\n`;
+      if (!config.hideFollowing) result += `| Following | ${github.following} |\n`;
+      if (!config.hideRepos) result += `| Repositories | ${github.repositories} |\n`;
+      result += '\n</div>\n\n';
+    }
     
     return result;
   };
@@ -230,15 +249,20 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
       </div>
     );
   };
-
   /**
    * Render GitHub stats for preview
    */
   const renderGitHubStats = () => {
     if (!stats.github) return null;
     
+    const displayTitle = config.hideTitle ? null : (config.customTitle || `${stats.github.name || 'GitHub'} Stats`);
+    
     return (
-      <div className="mt-6 p-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+      <div className={`mt-6 p-4 rounded-lg ${config.hideBorder ? '' : 'border border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800`}>
+        {displayTitle && (
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{displayTitle}</h3>
+        )}
+        
         <div className="flex items-start gap-4">
           {config.showImages && stats.github.avatar && (
             <div className="flex-shrink-0">
@@ -247,31 +271,72 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
                 alt={stats.github.name || 'GitHub User'} 
                 width={64} 
                 height={64} 
-                className="rounded-full"
+                className="rounded-full border-2 border-gray-200 dark:border-gray-600"
               />
             </div>
           )}
-          <div>
-            {stats.github.name && (
-              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">{stats.github.name}</h4>
+          <div className="flex-grow">
+            {stats.github.name && !config.hideTitle && (
+              <h4 className="text-md font-semibold text-gray-900 dark:text-white">{stats.github.name}</h4>
             )}
             {stats.github.bio && (
               <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{stats.github.bio}</p>
             )}
-            <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
-              <div className="flex flex-col items-center p-2 rounded-md bg-gray-50 dark:bg-gray-700">
-                <span className="font-bold text-gray-900 dark:text-white">{stats.github.repositories}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Repos</span>
+            
+            {config.compactMode ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {!config.hideFollowers && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                    <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M5.5 9C7.433 9 9 7.433 9 5.5S7.433 2 5.5 2 2 3.567 2 5.5 3.567 9 5.5 9zm0 2C3.014 11 1 13.014 1 15.5 1 16.5 1 18 5.5 18s4.5-1.5 4.5-2.5c0-2.486-2.014-4.5-4.5-4.5zm9-2c1.933 0 3.5-1.567 3.5-3.5S16.433 2 14.5 2 11 3.567 11 5.5s1.567 3.5 3.5 3.5zm0 2c-2.486 0-4.5 2.014-4.5 4.5 0 1 0 2.5 4.5 2.5s4.5-1.5 4.5-2.5c0-2.486-2.014-4.5-4.5-4.5z" />
+                    </svg>
+                    {stats.github.followers} Followers
+                  </span>
+                )}
+                
+                {!config.hideFollowing && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                    <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M14.5 9c1.933 0 3.5-1.567 3.5-3.5S16.433 2 14.5 2 11 3.567 11 5.5s1.567 3.5 3.5 3.5zm0 2c-2.486 0-4.5 2.014-4.5 4.5 0 1 0 2.5 4.5 2.5s4.5-1.5 4.5-2.5c0-2.486-2.014-4.5-4.5-4.5z" />
+                      <path d="M5.5 9C7.433 9 9 7.433 9 5.5S7.433 2 5.5 2 2 3.567 2 5.5 3.567 9 5.5 9zm0 2C3.014 11 1 13.014 1 15.5 1 16.5 1 18 5.5 18s4.5-1.5 4.5-2.5c0-2.486-2.014-4.5-4.5-4.5z" />
+                    </svg>
+                    {stats.github.following} Following
+                  </span>
+                )}
+                
+                {!config.hideRepos && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300">
+                    <svg className="mr-1.5 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V8a2 2 0 00-2-2h-5L9 4H4zm7 5a1 1 0 10-2 0v1H8a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+                    </svg>
+                    {stats.github.repositories} Repositories
+                  </span>
+                )}
               </div>
-              <div className="flex flex-col items-center p-2 rounded-md bg-gray-50 dark:bg-gray-700">
-                <span className="font-bold text-gray-900 dark:text-white">{stats.github.followers}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Followers</span>
+            ) : (
+              <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+                {!config.hideFollowers && (
+                  <div className="flex flex-col items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                    <span className="font-bold text-lg text-gray-900 dark:text-white">{stats.github.followers}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Followers</span>
+                  </div>
+                )}
+                
+                {!config.hideFollowing && (
+                  <div className="flex flex-col items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                    <span className="font-bold text-lg text-gray-900 dark:text-white">{stats.github.following}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Following</span>
+                  </div>
+                )}
+                
+                {!config.hideRepos && (
+                  <div className="flex flex-col items-center p-3 rounded-md bg-gray-50 dark:bg-gray-700">
+                    <span className="font-bold text-lg text-gray-900 dark:text-white">{stats.github.repositories}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Repos</span>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col items-center p-2 rounded-md bg-gray-50 dark:bg-gray-700">
-                <span className="font-bold text-gray-900 dark:text-white">{stats.github.following}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">Following</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

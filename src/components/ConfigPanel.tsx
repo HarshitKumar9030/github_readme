@@ -14,8 +14,19 @@ export interface WidgetConfig {
   showIcons: boolean;
   includePrivate: boolean;
   layout: 'default' | 'compact';
+  layoutStyle: 'side-by-side' | 'grid' | 'vertical';
   locale: string;
   includeAllCommits: boolean;
+  hideTitle: boolean;
+  hideBorder: boolean;
+  hideRank: boolean;
+  layoutCompact: boolean;
+  showTrophies: boolean;
+  showStreaks: boolean;
+  showLanguages: boolean;
+  showStats: boolean;
+  trophyTheme: string;
+  customTitle: string;
 }
 
 interface ConfigPanelProps {
@@ -46,8 +57,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         { value: 'gruvbox', label: 'Gruvbox' }
       ]
     }
-  ];
-  // GitHub stats specific options
+  ];  // GitHub stats specific options
   const githubStatsOptions: ConfigOption[] = [
     {
       id: 'showIcons',
@@ -57,7 +67,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     },
     {
       id: 'includePrivate',
-      label: 'Include Priv. Contri.',
+      label: 'Include Private Contri.',
       type: 'toggle',
       defaultValue: false
     },
@@ -66,6 +76,80 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       label: 'Include All Commits',
       type: 'toggle',
       defaultValue: true
+    },
+    {
+      id: 'hideTitle',
+      label: 'Hide Title',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideBorder',
+      label: 'Hide Border',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideRank',
+      label: 'Hide Rank',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'layoutCompact',
+      label: 'Use Compact Layout',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'layoutStyle',
+      label: 'Layout Style',
+      type: 'select',
+      defaultValue: 'side-by-side',
+      options: [
+        { value: 'side-by-side', label: 'Side by Side' },
+        { value: 'grid', label: 'Grid Layout' },
+        { value: 'vertical', label: 'Vertical Stack' }
+      ]
+    },
+    {
+      id: 'showTrophies',
+      label: 'Show GitHub Trophies',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'showStreaks',
+      label: 'Show GitHub Streaks',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'showLanguages',
+      label: 'Show Top Languages',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'customTitle',
+      label: 'Custom Title',
+      type: 'text',
+      defaultValue: ''
+    },
+    {
+      id: 'trophyTheme',
+      label: 'Trophy Theme',
+      type: 'select',
+      defaultValue: 'flat',
+      options: [
+        { value: 'flat', label: 'Flat' },
+        { value: 'onedark', label: 'One Dark' },
+        { value: 'gruvbox', label: 'Gruvbox' },
+        { value: 'dracula', label: 'Dracula' },
+        { value: 'tokyonight', label: 'Tokyo Night' },
+        { value: 'nord', label: 'Nord' },
+        { value: 'radical', label: 'Radical' }
+      ]
     }
   ];
 
@@ -87,9 +171,63 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       type: 'toggle',
       defaultValue: false
     }
+  ];  // Social stats specific options
+  const socialStatsOptions: ConfigOption[] = [
+    {
+      id: 'compactMode',
+      label: 'Compact Display',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideTitle',
+      label: 'Hide Title',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideBorder',
+      label: 'Hide Border',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideFollowers',
+      label: 'Hide Followers Count',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideFollowing',
+      label: 'Hide Following Count',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideRepos',
+      label: 'Hide Repository Count',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'customTitle',
+      label: 'Custom Title',
+      type: 'text',
+      defaultValue: ''
+    },
+    {
+      id: 'badgeStyle',
+      label: 'Badge Style',
+      type: 'select',
+      defaultValue: 'for-the-badge',
+      options: [
+        { value: 'for-the-badge', label: 'For The Badge' },
+        { value: 'flat', label: 'Flat' },
+        { value: 'flat-square', label: 'Flat Square' },
+        { value: 'plastic', label: 'Plastic' }
+      ]
+    }
   ];
-  // Social stats specific options
-  const socialStatsOptions: ConfigOption[] = [];
 
   // Get options based on widget type
   const getOptionsForWidgetType = () => {
@@ -117,6 +255,30 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   const themeOptions = options.filter(opt => opt.id === 'theme');
   const toggleOptions = options.filter(opt => opt.type === 'toggle');
   const otherOptions = options.filter(opt => opt.type !== 'toggle' && opt.id !== 'theme');
+
+  // Render a text input
+  const renderTextInput = (option: ConfigOption) => {
+    const value = config[option.id as keyof typeof config] ?? option.defaultValue;
+    
+    return (
+      <div key={option.id} className="mb-3">
+        <label 
+          htmlFor={`text-${option.id}`} 
+          className="block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {option.label}
+        </label>
+        <input
+          type="text"
+          id={`text-${option.id}`}
+          value={value}
+          onChange={(e) => handleChange(option.id, e.target.value)}
+          className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          placeholder={`Enter ${option.label.toLowerCase()}`}
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="rounded-lg">

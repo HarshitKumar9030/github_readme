@@ -151,37 +151,23 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${config.username}&${params.toString()}`;
   };
-
-  // Generate GitHub Trophies URL
-  const generateTrophiesUrl = () => {
+  
+  // Generate GitHub Trophy URL with parameters
+  const generateTrophyUrl = () => {
     const params = new URLSearchParams();
     
-    if (config.theme) {
-      // Map theme to trophy compatible themes
-      const themeMap: Record<string, string> = {
-        light: 'flat',
-        dark: 'darkhub',
-        radical: 'radical',
-        tokyonight: 'tokyonight',
-        merko: 'monokai',
-        gruvbox: 'gruvbox'
-      };
-      params.append('theme', themeMap[config.theme] || 'flat');
-    }
-    
-    if (config.hideBorder === true) {
-      params.append('no-frame', 'true');
-    }
+    if (config.trophyTheme) params.append('theme', config.trophyTheme);
+    if (config.hideBorder !== undefined) params.append('no-frame', config.hideBorder.toString());
     
     return `https://github-profile-trophy.vercel.app/?username=${config.username}&${params.toString()}`;
   };
   
-  // Generate GitHub Streak Stats URL
+  // Generate GitHub Streak Stats URL with parameters
   const generateStreakUrl = () => {
     const params = new URLSearchParams();
     
     if (config.theme) params.append('theme', config.theme);
-    if (config.hideBorder === true) params.append('hide_border', 'true');
+    if (config.hideBorder !== undefined) params.append('hide_border', config.hideBorder.toString());
     
     return `https://github-readme-streak-stats.herokuapp.com/?user=${config.username}&${params.toString()}`;
   };
@@ -193,7 +179,7 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     const customCardUrl = svgUrl;
     const statsUrl = generateStatsUrl();
     const languagesUrl = generateLanguagesUrl();
-    const trophiesUrl = generateTrophiesUrl();
+    const trophiesUrl = generateTrophyUrl();
     const streaksUrl = generateStreakUrl();
     
     // Helper function to wrap content in a centered div if needed
@@ -327,44 +313,24 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
   };
   
   return (
-    <div className={`rounded-xl shadow-lg overflow-hidden border ${getThemeStyles()}`}>
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold">GitHub Statistics</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={toggleViewMode}
-              className="text-xs px-2 py-1 rounded bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              {viewMode === 'preview' ? 'Show Markdown' : 'Show Preview'}
-            </button>
-            {viewMode === 'markdown' && (
-              <button
-                onClick={copyMarkdown}
-                className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors"
-              >
-                Copy Markdown
-              </button>
-            )}
-          </div>
+    <div className={`github-stats-widget rounded-lg border overflow-hidden ${getThemeStyles()}`}>
+      {loading ? (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-
-        {loading && (
-          <div className="flex items-center justify-center p-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current"></div>
-          </div>
-        )}
-
-        {error && (
-          <div className="text-red-500 text-center p-4">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && statsData && (
-          <>
+      ) : error ? (
+        <div className="p-4 text-red-600 dark:text-red-400">
+          Error: {error}. Please check the GitHub username.
+        </div>
+      ) : !config.username ? (
+        <div className="p-4 text-amber-600 dark:text-amber-400">
+          Please enter a GitHub username to display stats.
+        </div>
+      ) : statsData ? (
+        <>
             {viewMode === 'preview' ? (
-              <div className="space-y-4">
+              <div className="space-y-4 p-4">
+                {/* User Profile Section */}
                 <div className="flex items-center gap-4">
                   {statsData.avatar_url && (
                     <Image
@@ -383,137 +349,128 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-4 text-center pt-2">
-                  <div className="bg-black/10 rounded-lg p-3">
-                    <div className="text-xl font-bold">{statsData.repositories}</div>
-                    <div className="text-sm opacity-80">Repositories</div>
+                {/* Basic Stats - Always shown */}
+                {effectiveConfig.showStats && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">GitHub Stats</h3>
+                    <div className="grid grid-cols-3 gap-4 text-center pt-2">
+                      <div className="bg-black/10 rounded-lg p-3">
+                        <div className="text-xl font-bold">{statsData.repositories}</div>
+                        <div className="text-sm opacity-80">Repositories</div>
+                      </div>
+                      <div className="bg-black/10 rounded-lg p-3">
+                        <div className="text-xl font-bold">{statsData.followers}</div>
+                        <div className="text-sm opacity-80">Followers</div>
+                      </div>
+                      <div className="bg-black/10 rounded-lg p-3">
+                        <div className="text-xl font-bold">{statsData.following}</div>
+                        <div className="text-sm opacity-80">Following</div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="bg-black/10 rounded-lg p-3">
-                    <div className="text-xl font-bold">{statsData.followers}</div>
-                    <div className="text-sm opacity-80">Followers</div>
-                  </div>
-                  <div className="bg-black/10 rounded-lg p-3">
-                    <div className="text-xl font-bold">{statsData.following}</div>
-                    <div className="text-sm opacity-80">Following</div>
-                  </div>
-                </div>
-                  {(config.layoutType === 'combined' || config.layoutType === 'full') && (
-                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-sm mb-2">Layout Preview: {config.layoutStyle === 'side-by-side' ? 'Side by Side' : config.layoutStyle === 'grid' ? 'Grid Layout' : 'Vertical Layout'}</p>
-                    <div className={`${config.layoutStyle === 'side-by-side' ? 'flex flex-wrap' : config.layoutStyle === 'grid' ? 'grid grid-cols-2' : 'flex flex-col'} gap-4`}>
-                      {(config.showStats !== false) && (
-                        <div className="flex-1 min-w-[200px]">
-                          <div className="text-xs mb-1 opacity-80">GitHub Stats</div>
-                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
-                            Preview Stats
+                )}
+                
+                {/* Layout Preview section */}
+                {svgUrl && (effectiveConfig.layoutType === 'combined' || effectiveConfig.layoutType === 'full') && (
+                  <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 className="text-sm font-medium mb-2">Widget Preview</h3>
+                    
+                    {/* Grid Layout */}
+                    <div className={`
+                      ${effectiveConfig.layoutStyle === 'side-by-side' ? 'flex flex-wrap' : 
+                        effectiveConfig.layoutStyle === 'grid' ? 'grid grid-cols-2' : 
+                        'flex flex-col'} 
+                      gap-4
+                    `}>
+                      {/* GitHub Stats Card */}
+                      {effectiveConfig.showStats && (
+                        <div className={`${effectiveConfig.layoutStyle === 'side-by-side' || effectiveConfig.layoutStyle === 'grid' ? 'flex-1 min-w-[45%]' : 'w-full'}`}>
+                          <div className="relative overflow-hidden">
+                            <div className="text-xs mb-1 opacity-80 font-medium">GitHub Stats</div>
+                            <div className="bg-black/5 rounded overflow-hidden">
+                              <Image 
+                                src={svgUrl}
+                                alt="GitHub Stats"
+                                width={450} 
+                                height={200}
+                                className="w-full h-auto"
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
                       
-                      {(config.showLanguages !== false) && (
-                        <div className="flex-1 min-w-[200px]">
-                          <div className="text-xs mb-1 opacity-80">Top Languages</div>
-                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
-                            Preview Languages
-                          </div>
-                        </div>
-                      )}
-                      
-                      {(config.showTrophies === true) && (
-                        <div className={config.layoutStyle === 'grid' ? "col-span-2" : "flex-1 min-w-[200px]"}>
-                          <div className="text-xs mb-1 opacity-80">GitHub Trophies</div>
-                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
-                            Trophies Preview
-                          </div>
-                        </div>
-                      )}
-                      
-                      {(config.showStreaks === true) && (
-                        <div className={config.layoutStyle === 'grid' ? "col-span-2" : "flex-1 min-w-[200px]"}>
-                          <div className="text-xs mb-1 opacity-80">GitHub Streaks</div>
-                          <div className="bg-black/10 h-24 rounded flex items-center justify-center">
-                            Streaks Preview
+                      {/* Top Languages Card */}
+                      {effectiveConfig.showLanguages && (
+                        <div className={`${effectiveConfig.layoutStyle === 'side-by-side' || effectiveConfig.layoutStyle === 'grid' ? 'flex-1 min-w-[45%]' : 'w-full'}`}>
+                          <div className="relative overflow-hidden">
+                            <div className="text-xs mb-1 opacity-80 font-medium">Top Languages</div>
+                            <div className="bg-black/5 rounded overflow-hidden">
+                              <Image 
+                                src={languagesSvgUrl || generateLanguagesUrl()}
+                                alt="Top Languages"
+                                width={450} 
+                                height={200}
+                                className="w-full h-auto"
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-black/5 p-3 rounded-lg">
-                  <pre className="whitespace-pre-wrap text-xs"><code>{generateMarkdown()}</code></pre>
-                </div>
-                
-                {svgUrl && (
-                  <div>
-                    <p className="text-xs mb-2 opacity-80">Preview:</p>
-                    {config.layoutType === 'stats' && (
-                      <Image
-                        src={svgUrl}
-                        alt="GitHub Stats"
-                        width={495}
-                        height={195}
-                        style={{ maxWidth: '100%', height: 'auto' }}
-                        unoptimized
-                        priority
-                        className="rounded-md border border-gray-200 dark:border-gray-700"
-                      />
+                    
+                    {/* Trophies Section */}
+                    {effectiveConfig.showTrophies && (
+                      <div className="mt-4">
+                        <div className="text-xs mb-1 opacity-80 font-medium">GitHub Trophies</div>
+                        <div className="bg-black/5 rounded overflow-hidden">
+                          <img 
+                            src={generateTrophyUrl()}
+                            alt="GitHub Trophies"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      </div>
                     )}
                     
-                    {config.layoutType === 'languages' && languagesSvgUrl && (
-                      <Image
-                        src={languagesSvgUrl}
-                        alt="Top Languages"
-                        width={350}
-                        height={165}
-                        style={{ maxWidth: '100%', height: 'auto' }}
-                        unoptimized
-                        priority
-                        className="rounded-md border border-gray-200 dark:border-gray-700"
-                      />
-                    )}
-                    
-                    {config.layoutType === 'combined' && (
-                      <div className="space-y-2">
-                        <Image
-                          src={svgUrl}
-                          alt="GitHub Stats"
-                          width={495}
-                          height={195}
-                          style={{ maxWidth: '100%', height: 'auto' }}
-                          unoptimized
-                          priority
-                          className="rounded-md border border-gray-200 dark:border-gray-700"
-                        />
-                        <Image
-                          src={languagesSvgUrl}
-                          alt="Top Languages"
-                          width={350}
-                          height={165}
-                          style={{ maxWidth: '100%', height: 'auto' }}
-                          unoptimized
-                          priority
-                          className="rounded-md border border-gray-200 dark:border-gray-700"
-                        />
+                    {/* Streaks Section */}
+                    {effectiveConfig.showStreaks && (
+                      <div className="mt-4">
+                        <div className="text-xs mb-1 opacity-80 font-medium">GitHub Streaks</div>
+                        <div className="bg-black/5 rounded overflow-hidden">
+                          <img 
+                            src={generateStreakUrl()}
+                            alt="GitHub Streaks"
+                            className="w-full h-auto"
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="p-4">
+                <div className="font-mono text-sm bg-gray-50 dark:bg-gray-800/80 p-4 rounded-lg overflow-auto max-h-96">
+                  <pre className="whitespace-pre-wrap">{generateMarkdown()}</pre>
+                </div>
+              </div>
             )}
-          </>
-        )}
-
-        {!config.username && (
-          <div className="text-center p-8">
-            <p className="text-sm opacity-70">
-              Enter a GitHub username in settings to display stats
-            </p>
-          </div>
-        )}
-      </div>
+            
+            {/* View toggle button */}
+            <div className="flex items-center justify-between p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {viewMode === 'preview' ? 'Widget Preview' : 'Markdown View'}
+              </span>
+              <button
+                onClick={toggleViewMode}
+                className="text-xs px-3 py-1 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              >
+                {viewMode === 'preview' ? 'View Markdown' : 'View Preview'}
+              </button>
+            </div>
+        </>
+      ) : null}
     </div>
   );
 };

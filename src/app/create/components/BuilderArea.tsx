@@ -177,14 +177,25 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                              block.widgetId === 'top-languages' ? 'Top Languages Widget' : 
                              'Social Stats Widget'}
                           </div>
-                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">
-                            {block.widgetId === 'github-stats' && (
+                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">                            {block.widgetId === 'github-stats' && (
                               <GitHubStatsWidget 
                                 config={{
                                   username: username,
                                   theme: widgetConfig.theme || 'light',
-                                  layoutType: 'stats',
-                                  ...widgetConfig
+                                  layoutType: 'full',
+                                  layoutStyle: widgetConfig.layoutStyle || 'side-by-side',
+                                  showTrophies: true,
+                                  showStreaks: true,
+                                  showLanguages: true,
+                                  showStats: true,
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  includeAllCommits: widgetConfig.includeAllCommits || false,
+                                  includePrivate: widgetConfig.includePrivate || false,
+                                  compactMode: widgetConfig.layoutCompact || false,
+                                  hideRank: widgetConfig.hideRank || false,
+                                  trophyTheme: widgetConfig.trophyTheme || widgetConfig.theme || 'flat',
+                                  customTitle: widgetConfig.customTitle
                                 }}
                               />
                             )}
@@ -192,9 +203,14 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                               <SocialStatsWidget 
                                 config={{
                                   socials: socials,
-                                  displayLayout: 'horizontal',
+                                  displayLayout: widgetConfig.layout === 'compact' ? 'inline' : 'horizontal',
                                   showDetails: true,
-                                  showImages: true
+                                  showImages: true,
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  theme: widgetConfig.theme || 'light',
+                                  compactMode: widgetConfig.layoutCompact || false,
+                                  customTitle: widgetConfig.customTitle
                                 }}
                               />
                             )}

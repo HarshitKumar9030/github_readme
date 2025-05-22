@@ -1,4 +1,3 @@
-
 /**
  * Configuration options for widgets
  */
@@ -13,4 +12,8 @@ export interface WidgetConfig {
   layoutCompact: boolean;
   hideRank: boolean;
   layout?: 'compact' | 'default';
+  excludeRepos?: string;
+  excludeLangs?: string;
+  cardWidth?: number;
+  customTitle?: string;
 }
