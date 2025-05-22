@@ -124,10 +124,8 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
       }
     }
     fetchData();
-  }, [config.username, config.theme, config.layoutType, config.layoutStyle, config.showTrophies, config.showStreaks, config.showStats, config.hideBorder, config.hideTitle, config.compactMode, config.showIcons, config.includePrivate, config.includeAllCommits, config.trophyTheme, config.streakTheme]);
-
-  // Markdown generation for different layouts
-  const generateMarkdown = () => {
+  }, [config.username, config.theme, config.layoutType, config.layoutStyle, config.showTrophies, config.showStreaks, config.showStats, config.hideBorder, config.hideTitle, config.compactMode, config.showIcons, config.includePrivate, config.includeAllCommits, config.trophyTheme, config.streakTheme]);  // Markdown generation for different layouts
+  const generateMarkdown = (): string => {
     if (!config.username) return '';
     let md = '';
     // Title
@@ -136,37 +134,49 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     } else if (!config.hideTitle) {
       md += `## GitHub Stats\n\n`;
     }
-    // Layouts
+      // GitHub compatible format - no styles or classes needed
+      // Layouts
     if (effectiveConfig.layoutStyle === 'side-by-side') {
-      md += `<div align="center">\n\n<table>\n<tr>\n<td>\n\n`;
-      md += `![GitHub Stats](${svgUrl})\n\n`;
+      md += `<div align="center">\n\n`;
+      md += `<table>\n<tr>\n`;
+      md += `<td align="center" valign="top">\n`;
+      md += `<img src="${svgUrl}" alt="GitHub Stats" width="450" />\n`;
       md += `</td>\n`;
       if (trophyUrl) {
-        md += `<td>\n\n![Trophies](${trophyUrl})\n\n</td>\n`;
+        md += `<td align="center" valign="top">\n`;
+        md += `<img src="${trophyUrl}" alt="Trophies" width="450" />\n`;
+        md += `</td>\n`;
       } else if (streakUrl) {
-        md += `<td>\n\n![Streak](${streakUrl})\n\n</td>\n`;
+        md += `<td align="center" valign="top">\n`;
+        md += `<img src="${streakUrl}" alt="Streak" width="450" />\n`;
+        md += `</td>\n`;
       }
-      md += `</tr>\n</table>\n\n</div>\n`;
-    } else if (effectiveConfig.layoutStyle === 'grid') {
-      md += `<div align="center">\n\n<table>\n<tr>\n<td>\n\n`;
-      md += `![GitHub Stats](${svgUrl})\n\n`;
+      md += `</tr>\n</table>\n\n</div>\n`;    } else if (effectiveConfig.layoutStyle === 'grid') {
+      md += `<div align="center">\n\n`;
+      md += `<table>\n<tr>\n`;
+      md += `<td align="center">\n`;
+      md += `<img src="${svgUrl}" alt="GitHub Stats" width="450" />\n`;
       md += `</td>\n`;
       if (trophyUrl) {
-        md += `<td>\n\n![Trophies](${trophyUrl})\n\n</td>\n`;
+        md += `<td align="center">\n`;
+        md += `<img src="${trophyUrl}" alt="Trophies" width="450" />\n`;
+        md += `</td>\n`;
       }
       md += `</tr>\n<tr>\n`;
       if (streakUrl) {
-        md += `<td colspan=2>\n\n![Streak](${streakUrl})\n\n</td>\n`;
+        md += `<td colspan="2" align="center">\n`;
+        md += `<img src="${streakUrl}" alt="Streak" width="500" />\n`;
+        md += `</td>\n`;
       }
-      md += `</tr>\n</table>\n\n</div>\n`;
-    } else {
+      md += `</tr>\n</table>\n\n</div>\n`;    } else {
       // vertical or fallback
-      md += `<div align="center">\n\n`;
-      md += `![GitHub Stats](${svgUrl})\n\n`;
-      if (trophyUrl) md += `![Trophies](${trophyUrl})\n\n`;
-      if (streakUrl) md += `![Streak](${streakUrl})\n\n`;
+      md += `<div align="center">\n`;
+      md += `<img src="${svgUrl}" alt="GitHub Stats" width="500" /><br/>\n\n`;
+      if (trophyUrl) md += `<img src="${trophyUrl}" alt="Trophies" width="500" /><br/>\n\n`;
+      if (streakUrl) md += `<img src="${streakUrl}" alt="Streak" width="500" /><br/>\n\n`;
       md += `</div>\n`;
     }
+    
     return md;
   };
 

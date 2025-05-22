@@ -180,8 +180,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                              block.widgetId === 'top-languages' ? 'Top Languages Widget' : 
                              'Social Stats Widget'}
                           </div>
-                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">                            {block.widgetId === 'github-stats' && (
-                              <GitHubStatsWidget 
+                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">                            {block.widgetId === 'github-stats' && (                              <GitHubStatsWidget 
                                 config={{
                                   username: username,
                                   theme: widgetConfig.theme || 'light',
@@ -200,10 +199,14 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   trophyTheme: widgetConfig.trophyTheme || widgetConfig.theme || 'flat',
                                   customTitle: widgetConfig.customTitle
                                 }}
+                                onMarkdownGenerated={(md: string) => {
+                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
+                                    handleWidgetMarkdownGenerated(block.id, md);
+                                  }
+                                }}
                               />
                             )}
-                            {block.widgetId === 'social-stats' && (
-                              <SocialStatsWidget 
+                            {block.widgetId === 'social-stats' && (                              <SocialStatsWidget 
                                 config={{
                                   socials: socials,
                                   displayLayout: widgetConfig.layout === 'compact' ? 'inline' : 'horizontal',
@@ -214,6 +217,11 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   theme: widgetConfig.theme || 'light',
                                   compactMode: widgetConfig.layoutCompact || false,
                                   customTitle: widgetConfig.customTitle
+                                }}
+                                onMarkdownGenerated={(md: string) => {
+                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
+                                    handleWidgetMarkdownGenerated(block.id, md);
+                                  }
                                 }}
                               />
                             )}                            {block.widgetId === 'top-languages' && (
