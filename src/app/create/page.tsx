@@ -114,6 +114,8 @@ export default function CreatePage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [projects, setProjects] = useState<ReadmeProject[]>([]);
   const [showPreview, setShowPreview] = useState(false);
+  const [livePreviewMode, setLivePreviewMode] = useState(false);
+  const [previewContent, setPreviewContent] = useState<string>("");
   const [markdownCache, setMarkdownCache] = useState<Record<string, string>>(
     {}
   );
@@ -158,74 +160,176 @@ export default function CreatePage() {
       }
     }
   }, []);
+  const generatePreview = useCallback(() => {
+    try {
+      let markdown = "";
 
-  const generatePreview = () => {
-    let markdown = "";
+      // Header with project name and optional user badge
+      const sanitizedProjectName = projectName?.trim() || "My Awesome Project";
+      markdown += `# ${sanitizedProjectName}\n\n`;
 
-    markdown += `# ${projectName}\n\n`;
+      // Add user profile badge if username is provided
+      if (username?.trim()) {
+        markdown += `<div align="center">\n\n`;
+        markdown += `[![Profile Badge](https://img.shields.io/badge/Profile-${username}-blue?style=for-the-badge&logo=github)](https://github.com/${username})\n\n`;
+        markdown += `</div>\n\n`;
+        markdown += `> Created by **[${username}](https://github.com/${username})**\n\n`;
+      }
 
-    if (username) {
-      markdown += `> Created by [${username}](https://github.com/${username})\n\n`;
-    }
+      // Add table of contents if there are multiple sections
+      if (builderBlocks.length > 1) {
+        markdown += `## 📋 Table of Contents\n\n`;
+        builderBlocks.forEach((block, index) => {
+          if (block.type === "widget") {
+            const widgetName = block.widgetId === "github-stats" ? "GitHub Stats" :
+                             block.widgetId === "top-languages" ? "Top Languages" :
+                             block.widgetId === "social-stats" ? "Connect With Me" : "Widget";
+            markdown += `- [${widgetName}](#${widgetName.toLowerCase().replace(/\s+/g, '-')})\n`;
+          } else if (block.type === "template") {
+            const templateName = (block as TemplateBlock).templateId === "classic" ? "About Me" : "Profile";
+            markdown += `- [${templateName}](#${templateName.toLowerCase().replace(/\s+/g, '-')})\n`;
+          } else if (block.type === "content") {
+            const contentTitle = `Section ${index + 1}`;
+            markdown += `- [${contentTitle}](#${contentTitle.toLowerCase().replace(/\s+/g, '-')})\n`;
+          }
+        });
+        markdown += `\n`;
+      }
 
-    // Generate markdown for each block
-    builderBlocks.forEach((block) => {
-      if (block.type === "widget") {
-        // Use cached markdown for widgets if available
-        const cachedMarkdown = markdownCache[block.id];
-        if (cachedMarkdown) {
-          markdown += cachedMarkdown;
-        } else {
-          // Fallback for widgets without cached markdown
-          if (block.widgetId === "github-stats") {
-            const statsUrl = `/api/github-stats-svg?username=${username}&theme=${
-              widgetConfig.theme || "light"
-            }&hideBorder=${widgetConfig.hideBorder || false}&hideTitle=${
-              widgetConfig.hideTitle || false
-            }&layout=${widgetConfig.layoutCompact ? "compact" : "default"}`;
-            markdown += `\n## GitHub Stats\n\n`;
-            markdown += `<img src="${statsUrl}" alt="GitHub Stats" />\n\n`;
-          } else if (block.widgetId === "top-languages") {
-            markdown += `\n## Top Languages\n\n`;
-            markdown += `![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${
-              widgetConfig.theme || "light"
-            })\n\n`;
-          } else if (block.widgetId === "social-stats") {
-            markdown += `\n## Connect With Me\n\n`;
-            if (socials.github)
-              markdown += `- [GitHub](https://github.com/${socials.github})\n`;
-            if (socials.twitter)
-              markdown += `- [Twitter](https://twitter.com/${socials.twitter})\n`;
-            if (socials.linkedin)
-              markdown += `- [LinkedIn](https://linkedin.com/in/${socials.linkedin})\n`;
-            if (socials.instagram)
-              markdown += `- [Instagram](https://instagram.com/${socials.instagram})\n\n`;
+      // Generate markdown for each block with enhanced styling
+      builderBlocks.forEach((block, index) => {
+        if (block.type === "widget") {
+          // Use cached markdown for widgets if available
+          const cachedMarkdown = markdownCache[block.id];
+          if (cachedMarkdown) {
+            markdown += cachedMarkdown;
+          } else {
+            // Enhanced fallback for widgets without cached markdown
+            if (block.widgetId === "github-stats" && username?.trim()) {
+              markdown += `\n## 📊 GitHub Stats\n\n`;
+              markdown += `<div align="center">\n\n`;
+              
+              const statsUrl = `/api/github-stats-svg?username=${username}&theme=${
+                widgetConfig.theme || "light"
+              }&hideBorder=${widgetConfig.hideBorder || false}&hideTitle=${
+                widgetConfig.hideTitle || false
+              }&layout=${widgetConfig.layoutCompact ? "compact" : "default"}`;
+              
+              markdown += `<img src="${statsUrl}" alt="${username}'s GitHub Stats" width="400" />\n\n`;
+              markdown += `</div>\n\n`;
+              
+            } else if (block.widgetId === "top-languages" && username?.trim()) {
+              markdown += `\n## 🚀 Top Languages\n\n`;
+              markdown += `<div align="center">\n\n`;
+              markdown += `![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${
+                widgetConfig.theme || "light"
+              }&hide_border=${widgetConfig.hideBorder || false})\n\n`;
+              markdown += `</div>\n\n`;
+              
+            } else if (block.widgetId === "social-stats") {
+              markdown += `\n## 🌐 Connect With Me\n\n`;
+              markdown += `<div align="center">\n\n`;
+              
+              const socialLinks = [];
+              if (socials.github?.trim()) {
+                socialLinks.push(`[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/${socials.github})`);
+              }
+              if (socials.linkedin?.trim()) {
+                socialLinks.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${socials.linkedin})`);
+              }
+              if (socials.twitter?.trim()) {
+                socialLinks.push(`[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${socials.twitter})`);
+              }
+              if (socials.instagram?.trim()) {
+                socialLinks.push(`[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/${socials.instagram})`);
+              }
+              
+              if (socialLinks.length > 0) {
+                markdown += socialLinks.join(' ') + '\n\n';
+              } else {
+                markdown += `*Social links will appear here once you add them in the Social tab.*\n\n`;
+              }
+              markdown += `</div>\n\n`;
+            }
+          }
+        } else if (block.type === "content") {
+          // Enhanced content blocks with better formatting
+          const contentBlock = block as ContentBlock;
+          const content = contentBlock.content?.trim();
+          if (content) {
+            markdown += `\n${content}\n\n`;
+          }
+        } else if (block.type === "template") {
+          // Enhanced templates with better styling
+          const templateId = (block as TemplateBlock).templateId;
+          if (templateId === "classic") {
+            markdown += `\n## 👨‍💻 About Me\n\n`;
+            markdown += `<div align="center">\n\n`;
+            markdown += `🚀 **Passionate Developer** | 💡 **Problem Solver** | 🌟 **Technology Enthusiast**\n\n`;
+            markdown += `</div>\n\n`;
+            markdown += `I'm a dedicated developer who loves creating elegant solutions to complex problems. With a focus on clean code and user experience, I strive to build applications that make a difference.\n\n`;
+            
+            markdown += `## 🛠️ Tech Stack & Skills\n\n`;
+            markdown += `<div align="center">\n\n`;
+            markdown += `![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)\n`;
+            markdown += `![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)\n`;
+            markdown += `![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)\n`;
+            markdown += `![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)\n\n`;
+            markdown += `</div>\n\n`;
+            
+            markdown += `## 🎯 Current Focus\n\n`;
+            markdown += `- 🔭 Working on exciting open-source projects\n`;
+            markdown += `- 🌱 Learning cutting-edge technologies\n`;
+            markdown += `- 👯 Looking to collaborate on innovative solutions\n`;
+            markdown += `- 💬 Ask me about web development and software architecture\n\n`;
+            
+          } else if (templateId === "minimal") {
+            markdown += `\n## 👋 Hello, I'm ${username || "a Developer"}!\n\n`;
+            markdown += `<div align="center">\n\n`;
+            markdown += `*Building the future, one commit at a time* ✨\n\n`;
+            markdown += `</div>\n\n`;
+            markdown += `Currently working on interesting projects and always eager to learn new technologies.\n\n`;
+            markdown += `### 📫 How to reach me\n\n`;
+            if (username) {
+              markdown += `- 💼 GitHub: [@${username}](https://github.com/${username})\n`;
+            }
+            markdown += `- 📧 Email: your.email@example.com\n`;
+            markdown += `- 💭 Let's connect and build something amazing together!\n\n`;
           }
         }
-      } else if (block.type === "content") {
-        // Content blocks just add their content directly
-        markdown += `\n${(block as ContentBlock).content}\n\n`;
-      } else if (block.type === "template") {
-        // Handle templates
-        const templateId = (block as TemplateBlock).templateId;
-        if (templateId === "classic") {
-          markdown += `\n## About Me\n\nA passionate developer focused on creating elegant solutions.\n\n`;
-          markdown += `## Projects\n\n- Project 1: Description\n- Project 2: Description\n\n`;
-          markdown += `## Skills\n\n- Skill 1\n- Skill 2\n- Skill 3\n\n`;
-        } else if (templateId === "minimal") {
-          markdown += `\n## ${username || "Developer"}\n\n`;
-          markdown += `Currently working on interesting projects.\n\n`;
-          markdown += `### Contact\n\n📧 Email: example@example.com\n\n`;
-        }
+      });
+
+      // Enhanced footer with better styling
+      if (builderBlocks.length === 0) {
+        markdown += `## 🚀 Getting Started\n\n`;
+        markdown += `Welcome to your new README! Start by adding some blocks from the sidebar to customize your profile.\n\n`;
+        markdown += `### Quick Tips:\n`;
+        markdown += `- Add your GitHub username in the settings\n`;
+        markdown += `- Use widgets to show your GitHub stats\n`;
+        markdown += `- Add social links to connect with others\n`;
+        markdown += `- Use templates for quick setup\n\n`;
       }
-    });
 
-    // Add footer
-    markdown += `---\n`;
-    markdown += `*This README was generated with ❤️ by [GitHub Readme Generator](https://github.com/username/readme-generator)*\n`;
+      markdown += `---\n\n`;
+      markdown += `<div align="center">\n\n`;
+      markdown += `### 💝 Made with ❤️ using [GitHub README Generator](https://github.com/username/readme-generator)\n\n`;
+      markdown += `*Last updated: ${new Date().toLocaleDateString()}*\n\n`;
+      markdown += `</div>\n`;
 
-    return markdown;
-  };
+      return markdown;
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      return `# ${projectName || 'My Project'}\n\n**Error generating preview. Please check your configuration and try again.**\n\n---\n\n*Generated with GitHub README Generator*`;
+    }
+  }, [builderBlocks, projectName, username, socials, widgetConfig, markdownCache]);
+
+  // Live preview update effect
+  useEffect(() => {
+    if (livePreviewMode || showPreview) {
+      const newContent = generatePreview();
+      setPreviewContent(newContent);
+    }
+  }, [builderBlocks, projectName, username, socials, widgetConfig, markdownCache, livePreviewMode, showPreview, generatePreview]);
 
   // Save current state as a project
   const saveProject = () => {
@@ -535,10 +639,8 @@ export default function CreatePage() {
     );
   }
 
-  // Add autosave functionality
   const AUTOSAVE_KEY = "readme-generator-autosave";
 
-  // Load saved data on component mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedData = LocalStorageService.load<AutoSaveData | null>(
@@ -602,6 +704,31 @@ export default function CreatePage() {
     widgetConfig,
     getCurrentData,
   ]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Preview: Ctrl+P (or Cmd+P on Mac)
+      if ((event.ctrlKey || event.metaKey) && event.key === "p") {
+        event.preventDefault();
+        setShowPreview(true);
+      }
+
+      // Save: Ctrl+S (or Cmd+S on Mac)
+      if ((event.ctrlKey || event.metaKey) && event.key === "s") {
+        event.preventDefault();
+        saveProject();
+      }
+
+      // Close preview: Escape
+      if (event.key === "Escape" && showPreview) {
+        setShowPreview(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showPreview, saveProject]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
@@ -723,22 +850,57 @@ export default function CreatePage() {
           />
         </div>
 
-        {/* Preview Modal */}
-        {showPreview && (
+        {/* Preview Modal */}        {showPreview && (
           <ReadmePreview
-            content={generatePreview()}
+            content={previewContent || generatePreview()}
             onClose={() => setShowPreview(false)}
+            liveMode={livePreviewMode}
+            onLiveModeToggle={setLivePreviewMode}
             onCopy={() => {
+              const contentToCopy = previewContent || generatePreview();
               navigator.clipboard
-                .writeText(generatePreview())
+                .writeText(contentToCopy)
                 .then(() => {
-                  alert("Markdown copied to clipboard!");
+                  setToastMessage("Markdown copied to clipboard!");
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
                 })
                 .catch((err) => {
                   console.error("Failed to copy: ", err);
+                  setToastMessage("Failed to copy to clipboard");
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 3000);
                 });
             }}
           />
+        )}
+
+        {/* Toast Notification */}
+        {showToast && (
+          <div className="fixed bottom-4 right-4 z-50">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-sm">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    {toastMessage}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowToast(false)}
+                  className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Import Modal */}
