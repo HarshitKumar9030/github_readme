@@ -6,6 +6,7 @@ import { createAbsoluteUrl } from "@/utils/urlHelpers";
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import { getGithubStats } from "@/services/socialStats";
 import { Socials } from "@/interfaces/Socials";
+import ConfigPanel from "@/components/ConfigPanel";
 
 // Social stats interface
 export interface SocialStats {
@@ -32,6 +33,9 @@ export interface SocialStatsWidgetConfig extends BaseWidgetConfig {
   hideRepos?: boolean;
   customTitle?: string;
   badgeStyle?: 'flat' | 'flat-square' | 'plastic' | 'for-the-badge';
+  cardLayout?: 'default' | 'compact';
+  useSvgCard?: boolean;
+  gridColumns?: 2 | 3 | 4;
 }
 
 interface SocialStatsWidgetProps extends BaseWidgetProps {
@@ -40,42 +44,42 @@ interface SocialStatsWidgetProps extends BaseWidgetProps {
 }
 
 // Move markdown helpers outside the component to avoid re-creation on every render
-const generateSocialIcons = (socials: Socials, displayLayout: string) => {
+const generateSocialIcons = (socials: Socials, displayLayout: string, badgeStyle: string = 'for-the-badge', gridColumns?: number) => {
   const icons: string[] = [];
   
   // GitHub
   if (socials?.github) {
-    icons.push(`[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/${socials.github})`);
+    icons.push(`[![GitHub](https://img.shields.io/badge/GitHub-100000?style=${badgeStyle}&logo=github&logoColor=white)](https://github.com/${socials.github})`);
   }
   
   // Twitter/X
   if (socials?.twitter) {
-    icons.push(`[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${socials.twitter})`);
+    icons.push(`[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=${badgeStyle}&logo=twitter&logoColor=white)](https://twitter.com/${socials.twitter})`);
   }
   
   // LinkedIn
   if (socials?.linkedin) {
-    icons.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${socials.linkedin})`);
+    icons.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=${badgeStyle}&logo=linkedin&logoColor=white)](https://linkedin.com/in/${socials.linkedin})`);
   }
   
   // Instagram
   if (socials?.instagram) {
-    icons.push(`[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/${socials.instagram})`);
+    icons.push(`[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=${badgeStyle}&logo=instagram&logoColor=white)](https://instagram.com/${socials.instagram})`);
   }
   
   // YouTube
   if (socials?.youtube) {
-    icons.push(`[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtube.com/c/${socials.youtube})`);
+    icons.push(`[![YouTube](https://img.shields.io/badge/YouTube-FF0000?style=${badgeStyle}&logo=youtube&logoColor=white)](https://youtube.com/c/${socials.youtube})`);
   }
 
   // Medium
   if (socials?.medium) {
-    icons.push(`[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@${socials.medium})`);
+    icons.push(`[![Medium](https://img.shields.io/badge/Medium-12100E?style=${badgeStyle}&logo=medium&logoColor=white)](https://medium.com/@${socials.medium})`);
   }
 
   // Dev.to
   if (socials?.dev) {
-    icons.push(`[![Dev.to](https://img.shields.io/badge/dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/${socials.dev})`);
+    icons.push(`[![Dev.to](https://img.shields.io/badge/dev.to-0A0A0A?style=${badgeStyle}&logo=devdotto&logoColor=white)](https://dev.to/${socials.dev})`);
   }
   
   return icons;
@@ -94,6 +98,24 @@ const generateGitHubStats = (stats: SocialStats, config: SocialStatsWidgetConfig
   
   if (github.bio) {
     result += `${github.bio}\n\n`;
+  }
+  
+  // Use SVG card if enabled
+  if (config.useSvgCard && config.socials.github) {
+    const svgParams = new URLSearchParams({
+      username: config.socials.github,
+      theme: config.theme || 'light',
+      layout: config.compactMode ? 'compact' : 'default'
+    });
+    
+    if (config.hideBorder) svgParams.append('hideBorder', 'true');
+    if (config.hideTitle) svgParams.append('hideTitle', 'true');
+    
+    const svgUrl = createAbsoluteUrl(`/api/github-stats-svg?${svgParams.toString()}`);
+    result += `<div align="center">\n\n`;
+    result += `![GitHub Stats](${svgUrl})\n\n`;
+    result += `</div>\n\n`;
+    return result;
   }
   
   // For compact mode, use badges instead of table
@@ -125,7 +147,8 @@ const generateGitHubStats = (stats: SocialStats, config: SocialStatsWidgetConfig
 
 const generateMarkdown = (config: SocialStatsWidgetConfig, stats: SocialStats) => {
   let markdown = '';
-  const icons = generateSocialIcons(config.socials, config.displayLayout);
+  const badgeStyle = config.badgeStyle || 'for-the-badge';
+  const icons = generateSocialIcons(config.socials, config.displayLayout, badgeStyle);
   
   // Header
   markdown += '## Connect with Me\n\n';
@@ -133,14 +156,21 @@ const generateMarkdown = (config: SocialStatsWidgetConfig, stats: SocialStats) =
   // Icons
   if (icons.length > 0) {
     if (config.displayLayout === 'grid') {
+      const gridColumns = config.gridColumns || 3; // Default to 3 columns if not specified
+      
       markdown += '<div align="center">\n\n';
+      
+      // Add CSS for modern grid layout with hover effects
+      markdown += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%; max-width: 600px; margin: 0 auto;">\n\n';
+      
+      // Add each icon with hover animation styling
       for (let i = 0; i < icons.length; i++) {
+        markdown += `<div style="display: flex; justify-content: center; align-items: center; transition: transform 0.3s;">\n`;
         markdown += icons[i] + '\n';
-        if ((i + 1) % 3 === 0 && i !== icons.length - 1) {
-          markdown += '\n';
-        }
+        markdown += `</div>\n`;
       }
-      markdown += '\n</div>\n\n';
+      
+      markdown += '</div>\n\n</div>\n\n';
     } else if (config.displayLayout === 'horizontal') {
       markdown += icons.join(' ');
       markdown += '\n\n';
@@ -165,48 +195,110 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
   config,
   onConfigChange,
   onMarkdownGenerated
-}) => {
-  const [stats, setStats] = useState<SocialStats>({});
+}) => {  const [stats, setStats] = useState<SocialStats>({});
   const [loading, setLoading] = useState<boolean>(false);
+  const [svgLoading, setSvgLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
+  const [svgPreviewUrl, setSvgPreviewUrl] = useState<string>('');  const [copied, setCopied] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const [showConfig, setShowConfig] = useState<boolean>(false);
 
-  // Fetch GitHub stats when username changes
+  // Debounce function for SVG generation
+  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);// Fetch GitHub stats when username changes
   useEffect(() => {
     async function fetchData() {
       if (config.socials?.github) {
         setLoading(true);
         setError(null);
-        try {          const githubStats = await getGithubStats(config.socials.github);
-          setStats(prev => ({
-            ...prev,
-            github: {
-              followers: githubStats.followers,
-              following: githubStats.following,
-              repositories: githubStats.public_repos,
-              avatar: githubStats.avatar_url,
-              name: githubStats.name,
-              bio: githubStats.bio
-            }
-          }));
-        } catch (err) {
-          setError('Failed to fetch GitHub stats');
-          console.error(err);
-        } finally {
-          setLoading(false);
+        
+        // Clear previous debounce timer
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
         }
+        
+        // Set new debounce timer for SVG generation
+        const newTimer = setTimeout(async () => {
+          try {
+            const githubStats = await getGithubStats(config.socials.github);
+            setStats(prev => ({
+              ...prev,
+              github: {
+                followers: githubStats.followers,
+                following: githubStats.following,
+                repositories: githubStats.public_repos,
+                avatar: githubStats.avatar_url,
+                name: githubStats.name,
+                bio: githubStats.bio
+              }
+            }));
+
+            // Generate SVG preview URL for the integrated API
+            if (config.useSvgCard) {
+              setSvgLoading(true);
+              const svgParams = new URLSearchParams({
+                username: config.socials.github,
+                theme: config.theme || 'light',
+                layout: config.compactMode ? 'compact' : 'default'
+              });
+              
+              if (config.hideBorder) svgParams.append('hideBorder', 'true');
+              if (config.hideTitle) svgParams.append('hideTitle', 'true');
+              
+              setSvgPreviewUrl(createAbsoluteUrl(`/api/github-stats-svg?${svgParams.toString()}`));
+              setSvgLoading(false);
+            }
+            
+            // Reset retry count on success
+            setRetryCount(0);
+          } catch (err) {
+            setError('Failed to fetch GitHub stats');
+            console.error(err);
+          } finally {
+            setLoading(false);
+            setSvgLoading(false);
+          }
+        }, 500); // 500ms debounce
+        
+        setDebounceTimer(newTimer);
       }
     }
 
     fetchData();
-  }, [config.socials?.github]);  // Generate markdown for the widget and notify parent
+    
+    // Cleanup function to clear timer on unmount
+    return () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+      }
+    };
+  }, [config.socials?.github, config.theme, config.useSvgCard, config.compactMode, config.hideBorder, config.hideTitle]);  // Generate markdown for the widget and notify parent
   useEffect(() => {
     if (onMarkdownGenerated) {
       const markdown = generateMarkdown(config, stats);
       onMarkdownGenerated(markdown);
     }
-    // Only depend on config, stats, and onMarkdownGenerated
-  }, [config, stats, onMarkdownGenerated]);
+  }, [config, stats, onMarkdownGenerated, debounceTimer]);
+
+  // Copy to clipboard function
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   /**
    * Render social icons for preview
@@ -242,8 +334,7 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
         {/* Other social icons can be added here */}
       </div>
     );
-  };
-  /**
+  };  /**
    * Render GitHub stats for preview
    */
   const renderGitHubStats = () => {
@@ -251,6 +342,66 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
     
     const displayTitle = config.hideTitle ? null : (config.customTitle || `${stats.github.name || 'GitHub'} Stats`);
     
+    // If SVG card is enabled, render the SVG image
+    if (config.useSvgCard && svgPreviewUrl) {
+      return (
+        <div className={`mt-6 p-4 rounded-lg ${config.hideBorder ? '' : 'border border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800`}>
+          {displayTitle && (
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">{displayTitle}</h3>
+          )}
+          <div className="flex justify-center">
+            <div className="relative">              <Image                src={svgPreviewUrl}
+                alt="GitHub Stats SVG"
+                width={500}
+                height={200}
+                className="max-w-full h-auto rounded-md"
+                onError={(e) => {
+                  console.error('SVG loading failed:', e);
+                  // Try up to 3 times to generate the SVG
+                  if (retryCount < 3) {
+                    setRetryCount(count => count + 1);
+                    setError(`SVG generation failed, retrying (${retryCount + 1}/3)...`);
+                    // Trigger a reload of the SVG with a slight delay
+                    setTimeout(() => {
+                      if (config.socials?.github) {
+                        setSvgLoading(true);
+                        const svgParams = new URLSearchParams({
+                          username: config.socials.github,
+                          theme: config.theme || 'light',
+                          layout: config.compactMode ? 'compact' : 'default'
+                        });
+                        
+                        if (config.hideBorder) svgParams.append('hideBorder', 'true');
+                        if (config.hideTitle) svgParams.append('hideTitle', 'true');
+                        
+                        setSvgPreviewUrl(createAbsoluteUrl(`/api/github-stats-svg?${svgParams.toString()}&retry=${Date.now()}`));
+                      }
+                    }, 1000);
+                  } else {
+                    // After 3 retries, show fallback view
+                    setError('SVG generation failed after multiple attempts, showing regular stats');
+                  }
+                }}
+                onLoad={() => {
+                  setSvgLoading(false);
+                  setRetryCount(0); // Reset retry count on successful load
+                }}
+              />
+              {(loading || svgLoading) && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 dark:bg-gray-800 dark:bg-opacity-75 rounded-md">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+            </div>
+          </div>
+          {stats.github.bio && (
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-3 text-center">{stats.github.bio}</p>
+          )}
+        </div>
+      );
+    }
+    
+    // Regular stats display
     return (
       <div className={`mt-6 p-4 rounded-lg ${config.hideBorder ? '' : 'border border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800`}>
         {displayTitle && (
@@ -333,15 +484,27 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
             )}
           </div>
         </div>
-      </div>
+      </div>    );
+  };  /**
+   * Render configuration panel
+   */
+  const renderConfigPanel = () => {
+    if (!showConfig) return null;
+
+    return (
+      <ConfigPanel
+        config={config as any} // Type cast to resolve compatibility issue
+        onChange={(newConfig) => onConfigChange && onConfigChange(newConfig as SocialStatsWidgetConfig)}
+        widgetType="social-stats"
+        title="Social Stats Widget Configuration"
+      />
     );
   };
 
   return (
     <div className="social-stats-widget">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Social Stats</h3>
-        <div className="flex gap-2">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Social Stats</h3>        <div className="flex gap-2">
           <button
             className={`px-2.5 py-1.5 text-xs font-medium rounded ${viewMode === 'preview' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
             onClick={() => setViewMode('preview')}
@@ -354,8 +517,19 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
           >
             Markdown
           </button>
-        </div>
-      </div>
+          <button
+            className={`px-2.5 py-1.5 text-xs font-medium rounded flex items-center gap-1 ${showConfig ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
+            onClick={() => setShowConfig(!showConfig)}
+            title="Widget Configuration"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+            </svg>
+            Config
+          </button>
+        </div>      </div>
+
+      {renderConfigPanel()}
 
       {loading ? (
         <div className="flex justify-center items-center p-8">
@@ -369,10 +543,39 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
         <div className="space-y-6">
           {renderSocialIcons()}
           {config.showDetails && renderGitHubStats()}
-        </div>
-      ) : (
-        <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-4 font-mono text-sm text-gray-800 dark:text-gray-200 overflow-auto">
-          <pre className="whitespace-pre-wrap">{generateMarkdown(config, stats)}</pre>
+        </div>      ) : (
+        <div className="relative">
+          <div className="absolute top-2 right-2 z-10">
+            <button
+              onClick={() => copyToClipboard(generateMarkdown(config, stats))}
+              className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                copied 
+                  ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' 
+                  : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+              title="Copy to clipboard"
+            >
+              {copied ? (
+                <>
+                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                  </svg>
+                  Copy
+                </>
+              )}
+            </button>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-4 font-mono text-sm text-gray-800 dark:text-gray-200 overflow-auto">
+            <pre className="whitespace-pre-wrap">{generateMarkdown(config, stats)}</pre>
+          </div>
         </div>
       )}
     </div>
