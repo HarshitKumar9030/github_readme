@@ -525,8 +525,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {headingId && (
                         <a 
                           href={`#${headingId}`} 
-                          className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                          aria-label="Direct link"
+                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline"
+                          aria-label="Direct link to heading"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(headingId);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', `#${headingId}`);
+                            }
+                          }}
                         >
                           #
                         </a>
@@ -546,8 +554,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {headingId && (
                         <a 
                           href={`#${headingId}`} 
-                          className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                          aria-label="Direct link"
+                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline"
+                          aria-label="Direct link to heading"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(headingId);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', `#${headingId}`);
+                            }
+                          }}
                         >
                           #
                         </a>
@@ -567,13 +583,20 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {headingId && (
                         <a 
                           href={`#${headingId}`} 
-                          className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                          aria-label="Direct link"
+                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline"
+                          aria-label="Direct link to heading"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(headingId);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', `#${headingId}`);
+                            }
+                          }}
                         >
                           #
                         </a>
-                      )}
-                    </h3>
+                      )}                    </h3>
                   );
                 },
                 h4: ({ children, id, ...props }) => {
@@ -588,8 +611,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {headingId && (
                         <a 
                           href={`#${headingId}`} 
-                          className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm"
-                          aria-label="Direct link"
+                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline text-sm"
+                          aria-label="Direct link to heading"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(headingId);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', `#${headingId}`);
+                            }
+                          }}
                         >
                           #
                         </a>
@@ -609,16 +640,23 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {headingId && (
                         <a 
                           href={`#${headingId}`} 
-                          className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm"
-                          aria-label="Direct link"
+                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline text-sm"
+                          aria-label="Direct link to heading"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(headingId);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', `#${headingId}`);
+                            }
+                          }}
                         >
                           #
                         </a>
                       )}
                     </h5>
                   );
-                },
-                h6: ({ children, id, ...props }) => {
+                },                h6: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h6 
@@ -630,8 +668,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {headingId && (
                         <a 
                           href={`#${headingId}`} 
-                          className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm"
-                          aria-label="Direct link"
+                          className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline text-sm"
+                          aria-label="Direct link to heading"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById(headingId);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                              window.history.pushState(null, '', `#${headingId}`);
+                            }
+                          }}
                         >
                           #
                         </a>

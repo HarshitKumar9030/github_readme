@@ -181,16 +181,30 @@ export default function CreatePage() {
         markdown += `## 📋 Table of Contents\n\n`;
         builderBlocks.forEach((block, index) => {
           if (block.type === "widget") {
-            const widgetName = block.widgetId === "github-stats" ? "GitHub Stats" :
-                             block.widgetId === "top-languages" ? "Top Languages" :
-                             block.widgetId === "social-stats" ? "Connect With Me" : "Widget";
-            markdown += `- [${widgetName}](#${widgetName.toLowerCase().replace(/\s+/g, '-')})\n`;
+            const widgetName =
+              block.widgetId === "github-stats"
+                ? "GitHub Stats"
+                : block.widgetId === "top-languages"
+                ? "Top Languages"
+                : block.widgetId === "social-stats"
+                ? "Connect With Me"
+                : "Widget";
+            markdown += `- [${widgetName}](#${widgetName
+              .toLowerCase()
+              .replace(/\s+/g, "-")})\n`;
           } else if (block.type === "template") {
-            const templateName = (block as TemplateBlock).templateId === "classic" ? "About Me" : "Profile";
-            markdown += `- [${templateName}](#${templateName.toLowerCase().replace(/\s+/g, '-')})\n`;
+            const templateName =
+              (block as TemplateBlock).templateId === "classic"
+                ? "About Me"
+                : "Profile";
+            markdown += `- [${templateName}](#${templateName
+              .toLowerCase()
+              .replace(/\s+/g, "-")})\n`;
           } else if (block.type === "content") {
             const contentTitle = `Section ${index + 1}`;
-            markdown += `- [${contentTitle}](#${contentTitle.toLowerCase().replace(/\s+/g, '-')})\n`;
+            markdown += `- [${contentTitle}](#${contentTitle
+              .toLowerCase()
+              .replace(/\s+/g, "-")})\n`;
           }
         });
         markdown += `\n`;
@@ -208,16 +222,15 @@ export default function CreatePage() {
             if (block.widgetId === "github-stats" && username?.trim()) {
               markdown += `\n## 📊 GitHub Stats\n\n`;
               markdown += `<div align="center">\n\n`;
-              
+
               const statsUrl = `/api/github-stats-svg?username=${username}&theme=${
                 widgetConfig.theme || "light"
               }&hideBorder=${widgetConfig.hideBorder || false}&hideTitle=${
                 widgetConfig.hideTitle || false
               }&layout=${widgetConfig.layoutCompact ? "compact" : "default"}`;
-              
+
               markdown += `<img src="${statsUrl}" alt="${username}'s GitHub Stats" width="400" />\n\n`;
               markdown += `</div>\n\n`;
-              
             } else if (block.widgetId === "top-languages" && username?.trim()) {
               markdown += `\n## 🚀 Top Languages\n\n`;
               markdown += `<div align="center">\n\n`;
@@ -225,27 +238,34 @@ export default function CreatePage() {
                 widgetConfig.theme || "light"
               }&hide_border=${widgetConfig.hideBorder || false})\n\n`;
               markdown += `</div>\n\n`;
-              
             } else if (block.widgetId === "social-stats") {
               markdown += `\n## 🌐 Connect With Me\n\n`;
               markdown += `<div align="center">\n\n`;
-              
+
               const socialLinks = [];
               if (socials.github?.trim()) {
-                socialLinks.push(`[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/${socials.github})`);
+                socialLinks.push(
+                  `[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/${socials.github})`
+                );
               }
               if (socials.linkedin?.trim()) {
-                socialLinks.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${socials.linkedin})`);
+                socialLinks.push(
+                  `[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${socials.linkedin})`
+                );
               }
               if (socials.twitter?.trim()) {
-                socialLinks.push(`[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${socials.twitter})`);
+                socialLinks.push(
+                  `[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${socials.twitter})`
+                );
               }
               if (socials.instagram?.trim()) {
-                socialLinks.push(`[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/${socials.instagram})`);
+                socialLinks.push(
+                  `[![Instagram](https://img.shields.io/badge/Instagram-E4405F?style=for-the-badge&logo=instagram&logoColor=white)](https://instagram.com/${socials.instagram})`
+                );
               }
-              
+
               if (socialLinks.length > 0) {
-                markdown += socialLinks.join(' ') + '\n\n';
+                markdown += socialLinks.join(" ") + "\n\n";
               } else {
                 markdown += `*Social links will appear here once you add them in the Social tab.*\n\n`;
               }
@@ -268,7 +288,7 @@ export default function CreatePage() {
             markdown += `🚀 **Passionate Developer** | 💡 **Problem Solver** | 🌟 **Technology Enthusiast**\n\n`;
             markdown += `</div>\n\n`;
             markdown += `I'm a dedicated developer who loves creating elegant solutions to complex problems. With a focus on clean code and user experience, I strive to build applications that make a difference.\n\n`;
-            
+
             markdown += `## 🛠️ Tech Stack & Skills\n\n`;
             markdown += `<div align="center">\n\n`;
             markdown += `![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)\n`;
@@ -276,13 +296,12 @@ export default function CreatePage() {
             markdown += `![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)\n`;
             markdown += `![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)\n\n`;
             markdown += `</div>\n\n`;
-            
+
             markdown += `## 🎯 Current Focus\n\n`;
             markdown += `- 🔭 Working on exciting open-source projects\n`;
             markdown += `- 🌱 Learning cutting-edge technologies\n`;
             markdown += `- 👯 Looking to collaborate on innovative solutions\n`;
             markdown += `- 💬 Ask me about web development and software architecture\n\n`;
-            
           } else if (templateId === "minimal") {
             markdown += `\n## 👋 Hello, I'm ${username || "a Developer"}!\n\n`;
             markdown += `<div align="center">\n\n`;
@@ -318,10 +337,19 @@ export default function CreatePage() {
 
       return markdown;
     } catch (error) {
-      console.error('Error generating preview:', error);
-      return `# ${projectName || 'My Project'}\n\n**Error generating preview. Please check your configuration and try again.**\n\n---\n\n*Generated with GitHub README Generator*`;
+      console.error("Error generating preview:", error);
+      return `# ${
+        projectName || "My Project"
+      }\n\n**Error generating preview. Please check your configuration and try again.**\n\n---\n\n*Generated with GitHub README Generator*`;
     }
-  }, [builderBlocks, projectName, username, socials, widgetConfig, markdownCache]);
+  }, [
+    builderBlocks,
+    projectName,
+    username,
+    socials,
+    widgetConfig,
+    markdownCache,
+  ]);
 
   // Live preview update effect
   useEffect(() => {
@@ -329,7 +357,17 @@ export default function CreatePage() {
       const newContent = generatePreview();
       setPreviewContent(newContent);
     }
-  }, [builderBlocks, projectName, username, socials, widgetConfig, markdownCache, livePreviewMode, showPreview, generatePreview]);
+  }, [
+    builderBlocks,
+    projectName,
+    username,
+    socials,
+    widgetConfig,
+    markdownCache,
+    livePreviewMode,
+    showPreview,
+    generatePreview,
+  ]);
 
   // Save current state as a project
   const saveProject = () => {
@@ -767,7 +805,6 @@ export default function CreatePage() {
             profile README
           </p>
         </div>
-
         {/* README Generator Builder Interface */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           {/* Top Header Bar with Project Name and GitHub Username */}
@@ -849,8 +886,8 @@ export default function CreatePage() {
             saveProject={saveProject}
           />
         </div>
-
-        {/* Preview Modal */}        {showPreview && (
+        {/* Preview Modal */}{" "}
+        {showPreview && (
           <ReadmePreview
             content={previewContent || generatePreview()}
             onClose={() => setShowPreview(false)}
@@ -874,15 +911,24 @@ export default function CreatePage() {
             }}
           />
         )}
-
         {/* Toast Notification */}
         {showToast && (
           <div className="fixed bottom-4 right-4 z-50">
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 max-w-sm">
               <div className="flex items-center gap-3">
                 <div className="flex-shrink-0">
-                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-green-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <div className="flex-1">
@@ -894,15 +940,24 @@ export default function CreatePage() {
                   onClick={() => setShowToast(false)}
                   className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
             </div>
           </div>
         )}
-
         {/* Import Modal */}
         {showImportModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -982,7 +1037,6 @@ export default function CreatePage() {
             </div>
           </div>
         )}
-
         {/* Toast notifications would go here */}
       </div>
     </div>
