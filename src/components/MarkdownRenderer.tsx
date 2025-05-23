@@ -52,6 +52,7 @@ interface MarkdownRendererProps {
   githubCompatible?: boolean;
   showLineNumbers?: boolean;
   enableMath?: boolean;
+  showAnchorLinks?: boolean;
 }
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
@@ -592,11 +593,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                               element.scrollIntoView({ behavior: 'smooth' });
                               window.history.pushState(null, '', `#${headingId}`);
                             }
-                          }}
-                        >
+                          }}                        >
                           #
                         </a>
-                      )}                    </h3>
+                      )}
+                    </h3>
                   );
                 },
                 h4: ({ children, id, ...props }) => {
@@ -653,10 +654,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                         >
                           #
                         </a>
-                      )}
-                    </h5>
+                      )}                    </h5>
                   );
-                },                h6: ({ children, id, ...props }) => {
+                },
+                h6: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h6 
