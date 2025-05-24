@@ -5,6 +5,7 @@ import { Block } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
 import SocialStatsWidget from '@/widgets/SocialStatsWidget';
 import TopLanguagesWidget from '@/widgets/TopLanguagesWidget';
+import ContributionGraphWidget from '@/widgets/ContributionGraphWidget';
 
 // Accept widgetConfig, username, socials as props
 interface BuilderAreaProps {
@@ -174,10 +175,10 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                       
                       {/* Block preview - you may need to create separate components for each block type for better maintainability */}
                       {block.type === 'widget' && (
-                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
                             {block.widgetId === 'github-stats' ? 'GitHub Stats Widget' : 
                              block.widgetId === 'top-languages' ? 'Top Languages Widget' : 
+                             block.widgetId === 'contribution-graph' ? 'Contribution Graph Widget' :
                              'Social Stats Widget'}
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">                            {block.widgetId === 'github-stats' && (                              <GitHubStatsWidget 
@@ -237,6 +238,25 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   excludeLangs: widgetConfig.excludeLangs || '',
                                   cardWidth: widgetConfig.cardWidth || 495,
                                 }}                                onMarkdownGenerated={(md: string) => {
+                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
+                                    handleWidgetMarkdownGenerated(block.id, md);
+                                  }
+                                }}
+                              />
+                            )}                            {block.widgetId === 'contribution-graph' && (
+                              <ContributionGraphWidget
+                                config={{
+                                  username: username,
+                                  theme: widgetConfig.contributionTheme || 'github',
+                                  showArea: widgetConfig.showArea || false,
+                                  showDots: widgetConfig.showDots || true,
+                                  height: widgetConfig.height || 180,
+                                  graphType: widgetConfig.graphType || 'line',
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || ''
+                                }}
+                                onMarkdownGenerated={(md: string) => {
                                   if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
                                     handleWidgetMarkdownGenerated(block.id, md);
                                   }

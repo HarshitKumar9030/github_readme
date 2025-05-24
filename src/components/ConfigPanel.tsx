@@ -14,7 +14,7 @@ interface ConfigPanelProps {
   config: Partial<WidgetConfig>;
   onChange: (config: Partial<WidgetConfig>) => void;
   title?: string;
-  widgetType?: 'github-stats' | 'social-stats' | 'top-languages';
+  widgetType?: 'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph';
 }
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ 
@@ -195,8 +195,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       label: 'Custom Title',
       type: 'text',
       defaultValue: ''
-    },
-    {
+    },    {
       id: 'badgeStyle',
       label: 'Badge Style',
       type: 'select',
@@ -210,6 +209,92 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     }
   ];
 
+  // Contribution Graph specific options
+  const contributionGraphOptions: ConfigOption[] = [
+    {
+      id: 'contributionTheme',
+      label: 'Contribution Theme',
+      type: 'select',
+      defaultValue: 'github',
+      options: [
+        { value: 'github', label: 'GitHub Default' },
+        { value: 'github-dark', label: 'GitHub Dark' },
+        { value: 'radical', label: 'Radical' },
+        { value: 'tokyonight', label: 'Tokyo Night' },
+        { value: 'highcontrast', label: 'High Contrast' },
+        { value: 'ocean', label: 'Ocean' },
+        { value: 'vue', label: 'Vue' },
+        { value: 'dracula', label: 'Dracula' },
+        { value: 'gruvbox', label: 'Gruvbox' },
+        { value: 'nord', label: 'Nord' },
+        { value: 'merko', label: 'Merko' },
+        { value: 'gotham', label: 'Gotham' },
+        { value: 'material', label: 'Material' },
+        { value: 'graywhite', label: 'Gray White' },
+        { value: 'moltack', label: 'Moltack' },
+        { value: 'xcode', label: 'XCode' },
+        { value: 'react', label: 'React' },
+        { value: 'chartreuse-dark', label: 'Chartreuse Dark' },
+        { value: 'lime', label: 'Lime' },
+        { value: 'purple-dark', label: 'Purple Dark' }
+      ]
+    },
+    {
+      id: 'showArea',
+      label: 'Show Area Graph',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'showDots',
+      label: 'Show Data Points',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'height',
+      label: 'Graph Height',
+      type: 'select',
+      defaultValue: '180',
+      options: [
+        { value: '120', label: '120px' },
+        { value: '150', label: '150px' },
+        { value: '180', label: '180px' },
+        { value: '200', label: '200px' },
+        { value: '220', label: '220px' },
+        { value: '250', label: '250px' }
+      ]
+    },
+    {
+      id: 'graphType',
+      label: 'Graph Type',
+      type: 'select',
+      defaultValue: 'line',
+      options: [
+        { value: 'line', label: 'Line Graph' },
+        { value: 'area', label: 'Area Graph' },
+        { value: 'bar', label: 'Bar Graph' }
+      ]
+    },
+    {
+      id: 'hideTitle',
+      label: 'Hide Title',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'hideBorder',
+      label: 'Hide Border',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'customTitle',
+      label: 'Custom Title',
+      type: 'text',
+      defaultValue: ''
+    }
+  ];
   // Get options based on widget type
   const getOptionsForWidgetType = () => {
     switch (widgetType) {
@@ -217,6 +302,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         return [...commonOptions, ...githubStatsOptions];
       case 'top-languages':
         return [...commonOptions, ...topLanguagesOptions];
+      case 'contribution-graph':
+        return [...commonOptions, ...contributionGraphOptions];
       case 'social-stats':
         return [...commonOptions, ...socialStatsOptions];
       default:

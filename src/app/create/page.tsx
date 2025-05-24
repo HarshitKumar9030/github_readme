@@ -53,12 +53,17 @@ export default function CreatePage() {
       type: "widget",
       label: "Top Languages",
       widgetId: "top-languages",
-    },
-    {
+    },    {
       id: "widget-3",
       type: "widget",
       label: "Social Stats",
       widgetId: "social-stats",
+    },
+    {
+      id: "widget-4",
+      type: "widget",
+      label: "Contribution Graph",
+      widgetId: "contribution-graph",
     },
     {
       id: "block-1",

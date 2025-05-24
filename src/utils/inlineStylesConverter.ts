@@ -420,7 +420,7 @@ export function generateGitHubStatsLayout(
 
 | ![GitHub Stats](${statsUrl}) | ![Top Languages](${languagesUrl}) |
 |----------------------------------------|--------------------------------------------|
-| ![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme}) |
+| ![Contributions Graph](https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=${theme === 'light' ? 'default' : theme}&area=true&hide_border=true) |
 
 </div>`;
       break;

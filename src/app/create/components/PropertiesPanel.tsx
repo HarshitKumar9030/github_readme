@@ -201,9 +201,9 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-blue-500 focus:border-blue-500"
                     value={(selectedBlock as WidgetBlock).widgetId}
                     onChange={(e) => updateWidgetProperty(selectedBlock.id, 'widgetId', e.target.value)}
-                  >
-                    <option value="github-stats">GitHub Stats</option>
+                  >                    <option value="github-stats">GitHub Stats</option>
                     <option value="top-languages">Top Languages</option>
+                    <option value="contribution-graph">Contribution Graph</option>
                     <option value="social-stats">Social Stats</option>
                   </select>
                 </div>
@@ -214,7 +214,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     config={widgetConfig}
                     onChange={setWidgetConfig}
                     title="Widget Settings"
-                    widgetType={(selectedBlock as WidgetBlock).widgetId as 'github-stats' | 'top-languages' | 'social-stats'}
+                    widgetType={(selectedBlock as WidgetBlock).widgetId as 'github-stats' | 'top-languages' | 'contribution-graph' | 'social-stats'}
                   />
                 </div>
               </div>

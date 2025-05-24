@@ -123,7 +123,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 <tr>
 <td colspan="2">
 
-![Contributions Graph](https://activity-graph.herokuapp.com/graph?username=${username}&theme=${theme === 'light' ? 'minimal' : theme})
+![Contributions Graph](https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=${theme === 'light' ? 'default' : theme}&area=true&hide_border=true)
 
 </td>
 </tr>
