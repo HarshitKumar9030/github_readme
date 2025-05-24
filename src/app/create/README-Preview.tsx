@@ -1,10 +1,13 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { useState, useRef } from 'react';
-import MarkdownRenderer from '@/components/MarkdownRenderer';
-import { convertToGitHubCompatible } from '@/utils/inlineStylesConverter';
-import { copyGitHubMarkdown, downloadGitHubMarkdown } from '@/utils/clipboardUtils';
+import { motion } from "framer-motion";
+import { useState, useRef } from "react";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import { convertToGitHubCompatible } from "@/utils/inlineStylesConverter";
+import {
+  copyGitHubMarkdown,
+  downloadGitHubMarkdown,
+} from "@/utils/clipboardUtils";
 
 interface ReadmePreviewProps {
   content: string;
@@ -14,69 +17,77 @@ interface ReadmePreviewProps {
   onLiveModeToggle?: (enabled: boolean) => void;
 }
 
-export default function ReadmePreview({ content, onClose, onCopy, liveMode = false, onLiveModeToggle }: ReadmePreviewProps) {
-  const [viewMode, setViewMode] = useState<'preview' | 'raw'>('preview');
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied'>('idle');
+export default function ReadmePreview({
+  content,
+  onClose,
+  onCopy,
+  liveMode = false,
+  onLiveModeToggle,
+}: ReadmePreviewProps) {
+  const [viewMode, setViewMode] = useState<"preview" | "raw">("preview");
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copying" | "copied">(
+    "idle"
+  );
   const [isFullscreen, setIsFullscreen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const handleCopy = async () => {
-    setCopyStatus('copying');
-    try {      await copyGitHubMarkdown(content);
-      setCopyStatus('copied');
+    setCopyStatus("copying");
+    try {
+      await copyGitHubMarkdown(content);
+      setCopyStatus("copied");
       onCopy();
-      
-      setTimeout(() => setCopyStatus('idle'), 3000);    } catch (err) {
-      console.error('Failed to copy markdown:', err);
-      setCopyStatus('idle');
+
+      setTimeout(() => setCopyStatus("idle"), 3000);
+    } catch (err) {
+      console.error("Failed to copy markdown:", err);
+      setCopyStatus("idle");
     }
-  };  const downloadMarkdown = () => {
+  };
+  const downloadMarkdown = () => {
     try {
       downloadGitHubMarkdown(content);
     } catch (err) {
-      console.error('Failed to download markdown:', err);
+      console.error("Failed to download markdown:", err);
     }
   };
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
-  };
-
-  return (
-    <div className="fixed inset-0 bg-gray-900/50 dark:bg-black/70 flex items-center justify-center z-50">
-      <motion.div 
+  };  return (
+    <div className="fixed inset-0 bg-gray-900/75 dark:bg-black/75 flex items-center justify-center z-50 p-4">
+      <motion.div
         className={`bg-white dark:bg-gray-800 ${
-          isFullscreen 
-            ? 'h-full w-full max-w-[100vw] max-h-[100vh]' 
-            : 'h-[90vh] w-[95vw] max-w-7xl rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700'
+          isFullscreen
+            ? "h-full w-full max-w-[100vw] max-h-[100vh]"
+            : "h-[85vh] w-[90vw] max-w-6xl rounded-xl shadow-2xl border-2 border-gray-200 dark:border-gray-700"
         } overflow-hidden relative flex flex-col`}
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-      >
-        {/* Header Bar */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >        {/* Header Bar */}
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/50">
           <div className="flex items-center gap-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              README Preview
+              🔍 README Preview
             </h2>
-              {/* View Mode Toggle */}
+            {/* View Mode Toggle */}
             <div className="flex rounded-lg bg-gray-200 dark:bg-gray-700 p-1">
               <button
-                onClick={() => setViewMode('preview')}
+                onClick={() => setViewMode("preview")}
                 className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'preview'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  viewMode === "preview"
+                    ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 Preview
               </button>
               <button
-                onClick={() => setViewMode('raw')}
+                onClick={() => setViewMode("raw")}
                 className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'raw'
-                    ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  viewMode === "raw"
+                    ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 }`}
               >
                 Raw Markdown
@@ -94,7 +105,11 @@ export default function ReadmePreview({ content, onClose, onCopy, liveMode = fal
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="flex items-center gap-1">
-                    <span className={`w-2 h-2 rounded-full ${liveMode ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        liveMode ? "bg-green-500" : "bg-gray-400"
+                      }`}
+                    ></span>
                     Live Updates
                   </span>
                 </label>
@@ -107,51 +122,117 @@ export default function ReadmePreview({ content, onClose, onCopy, liveMode = fal
             <button
               onClick={toggleFullscreen}
               className="p-2 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
-              title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             >
               {isFullscreen ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                  />
                 </svg>
-              )}            </button>
-            
+              )}{" "}
+            </button>
+
             <button
               onClick={downloadMarkdown}
               className="p-2 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
               title="Download as README.md"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                />
               </svg>
             </button>
-            
+
             <button
               onClick={handleCopy}
-              disabled={copyStatus === 'copying'}
+              disabled={copyStatus === "copying"}
               className={`px-3 py-2 text-sm font-medium rounded-md flex items-center gap-2 transition-colors ${
-                copyStatus === 'copied'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                copyStatus === "copied"
+                  ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
               } disabled:opacity-50`}
               title="Copy GitHub-optimized markdown to clipboard"
             >
-              {copyStatus === 'copying' ? (
-                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              {copyStatus === "copying" ? (
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
-              ) : copyStatus === 'copied' ? (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              ) : copyStatus === "copied" ? (
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
-              ) : (                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              ) : (
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                  />
                 </svg>
               )}
-              {copyStatus === 'copied' ? 'Copied!' : copyStatus === 'copying' ? 'Copying...' : 'Copy for GitHub'}
+              {copyStatus === "copied"
+                ? "Copied!"
+                : copyStatus === "copying"
+                ? "Copying..."
+                : "Copy for GitHub"}
             </button>
 
             <button
@@ -159,45 +240,66 @@ export default function ReadmePreview({ content, onClose, onCopy, liveMode = fal
               className="p-2 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 transition-colors"
               title="Close preview"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
-        </div>
-
-        {/* Content Area */}
-        <div className="flex-1 overflow-hidden">
-          {viewMode === 'preview' ? (
-            <div 
+        </div>        {/* Content Area */}
+        <div className="flex-1 overflow-hidden min-h-0">
+          {viewMode === "preview" ? (
+            <div
               ref={contentRef}
               className="h-full overflow-auto bg-white dark:bg-gray-900"
             >
-              <div className="max-w-4xl mx-auto p-6">                <MarkdownRenderer 
-                  content={content} 
+              <div className="max-w-4xl mx-auto p-6">
+                {" "}
+                <MarkdownRenderer
+                  content={content}
                   className="w-full"
                   showAnchorLinks={false}
                 />
               </div>
-            </div>          ) : (
+            </div>
+          ) : (
             <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-900">
               <pre className="p-6 text-sm text-gray-800 dark:text-gray-200 font-mono whitespace-pre-wrap">
                 {convertToGitHubCompatible(content)}
               </pre>
             </div>
-          )}
-        </div>        {/* Status Bar */}
-        <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+          )}        </div>        {/* Status Bar */}
+        <div className="flex-shrink-0 px-4 py-2 border-t-2 border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/50">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-4">
-              <span>{content.length} characters</span>
-              <span>{content.split('\n').length} lines</span>
-              <span>{content.split(/\s+/).filter(word => word.length > 0).length} words</span>
+              <span>📊 {content.length} characters</span>
+              <span>{content.split("\n").length} lines</span>
+              <span>
+                {content.split(/\s+/).filter((word) => word.length > 0).length}{" "}
+                words
+              </span>
             </div>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1">
-                <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                <svg
+                  className="w-3 h-3 text-green-500"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 GitHub Compatible
               </span>
