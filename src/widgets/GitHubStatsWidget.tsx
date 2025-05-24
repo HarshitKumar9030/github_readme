@@ -128,59 +128,87 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
   const generateMarkdown = (): string => {
     if (!config.username) return '';
     let md = '';
-    // Title
+    
     if (!config.hideTitle && config.customTitle) {
       md += `## ${config.customTitle}\n\n`;
     } else if (!config.hideTitle) {
       md += `## GitHub Stats\n\n`;
     }
-      // GitHub compatible format - no styles or classes needed
-      // Layouts
+
     if (effectiveConfig.layoutStyle === 'side-by-side') {
       md += `<div align="center">\n\n`;
-      md += `<table>\n<tr>\n`;
-      md += `<td align="center" valign="top">\n`;
-      md += `<img src="${svgUrl}" alt="GitHub Stats" width="450" />\n`;
-      md += `</td>\n`;
-      if (trophyUrl) {
-        md += `<td align="center" valign="top">\n`;
-        md += `<img src="${trophyUrl}" alt="Trophies" width="450" />\n`;
-        md += `</td>\n`;
-      } else if (streakUrl) {
-        md += `<td align="center" valign="top">\n`;
-        md += `<img src="${streakUrl}" alt="Streak" width="450" />\n`;
+      
+      md += `<table border="0" cellspacing="10" cellpadding="0" style="border-collapse: separate; margin: 0 auto;">\n<tr>\n`;
+      
+      if (effectiveConfig.showStats && svgUrl) {
+        md += `<td align="center" valign="top" style="padding: 5px;">\n`;
+        md += `<img src="${svgUrl}" alt="GitHub Stats" width="420" height="195" style="border-radius: 8px;" />\n`;
         md += `</td>\n`;
       }
-      md += `</tr>\n</table>\n\n</div>\n`;    } else if (effectiveConfig.layoutStyle === 'grid') {
+      
+      if (trophyUrl && effectiveConfig.showTrophies) {
+        md += `<td align="center" valign="top" style="padding: 5px;">\n`;
+        md += `<img src="${trophyUrl}" alt="GitHub Trophies" width="420" height="195" style="border-radius: 8px;" />\n`;
+        md += `</td>\n`;
+      } else if (streakUrl && effectiveConfig.showStreaks) {
+        md += `<td align="center" valign="top" style="padding: 5px;">\n`;
+        md += `<img src="${streakUrl}" alt="GitHub Streak" width="420" height="195" style="border-radius: 8px;" />\n`;
+        md += `</td>\n`;
+      }
+      
+      md += `</tr>\n</table>\n\n</div>\n\n`;
+      
+    } else if (effectiveConfig.layoutStyle === 'grid') {
       md += `<div align="center">\n\n`;
-      md += `<table>\n<tr>\n`;
-      md += `<td align="center">\n`;
-      md += `<img src="${svgUrl}" alt="GitHub Stats" width="450" />\n`;
-      md += `</td>\n`;
-      if (trophyUrl) {
-        md += `<td align="center">\n`;
-        md += `<img src="${trophyUrl}" alt="Trophies" width="450" />\n`;
+      
+      md += `<table border="0" cellspacing="20" cellpadding="0" style="border-collapse: separate; margin: 0 auto;">\n`;
+      
+      md += `<tr>\n`;
+      if (effectiveConfig.showStats && svgUrl) {
+        md += `<td align="center" valign="top" style="padding: 10px;">\n`;
+        md += `<img src="${svgUrl}" alt="GitHub Stats" width="400" height="195" style="border-radius: 8px;" />\n`;
         md += `</td>\n`;
       }
-      md += `</tr>\n<tr>\n`;
-      if (streakUrl) {
-        md += `<td colspan="2" align="center">\n`;
-        md += `<img src="${streakUrl}" alt="Streak" width="500" />\n`;
+      if (trophyUrl && effectiveConfig.showTrophies) {
+        md += `<td align="center" valign="top" style="padding: 10px;">\n`;
+        md += `<img src="${trophyUrl}" alt="GitHub Trophies" width="400" height="195" style="border-radius: 8px;" />\n`;
         md += `</td>\n`;
       }
-      md += `</tr>\n</table>\n\n</div>\n`;    } else {
-      // vertical or fallback
-      md += `<div align="center">\n`;
-      md += `<img src="${svgUrl}" alt="GitHub Stats" width="500" /><br/>\n\n`;
-      if (trophyUrl) md += `<img src="${trophyUrl}" alt="Trophies" width="500" /><br/>\n\n`;
-      if (streakUrl) md += `<img src="${streakUrl}" alt="Streak" width="500" /><br/>\n\n`;
-      md += `</div>\n`;
+      md += `</tr>\n`;
+      
+      // Second row - Streak spanning full width
+      if (streakUrl && effectiveConfig.showStreaks) {
+        md += `<tr>\n`;
+        const colSpan = (effectiveConfig.showStats && effectiveConfig.showTrophies) ? '2' : '1';
+        md += `<td colspan="${colSpan}" align="center" style="padding: 10px;">\n`;
+        md += `<img src="${streakUrl}" alt="GitHub Streak" width="800" height="180" style="border-radius: 8px;" />\n`;
+        md += `</td>\n`;
+        md += `</tr>\n`;
+      }
+      
+      md += `</table>\n\n</div>\n\n`;
+      
+    } else {
+      md += `<div align="center">\n\n`;
+      
+      if (effectiveConfig.showStats && svgUrl) {
+        md += `<img src="${svgUrl}" alt="GitHub Stats" width="500" height="195" style="border-radius: 8px; margin: 10px 0;" />\n\n`;
+      }
+      
+      if (trophyUrl && effectiveConfig.showTrophies) {
+        md += `<img src="${trophyUrl}" alt="GitHub Trophies" width="500" height="160" style="border-radius: 8px; margin: 10px 0;" />\n\n`;
+      }
+      
+      if (streakUrl && effectiveConfig.showStreaks) {
+        md += `<img src="${streakUrl}" alt="GitHub Streak" width="500" height="180" style="border-radius: 8px; margin: 10px 0;" />\n\n`;
+      }
+      
+      md += `</div>\n\n`;
     }
     
     return md;
   };
 
-  // Helper to get theme-based styles
   const getThemeStyles = () => {
     switch (config.theme) {
       case 'dark':
@@ -207,7 +235,6 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     }
   };
   
-  // Copy markdown to clipboard
   const copyMarkdown = () => {
     const markdown = generateMarkdown();
     if (markdown && navigator.clipboard) {
@@ -219,51 +246,176 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
         });
     }
   };
-  
-  return (
+    return (
     <div className={`github-stats-widget rounded-lg border overflow-hidden ${getThemeStyles()}`}>
       {viewMode === 'preview' ? (
-        <div className="flex flex-col items-center w-full">
-          {!config.hideTitle && <h3 className="text-lg font-medium mb-2">{config.customTitle || 'GitHub Stats'}</h3>}
+        <div className="p-4">
+          {!config.hideTitle && (
+            <h3 className="text-lg font-medium mb-4 text-center">
+              {config.customTitle || 'GitHub Stats'}
+            </h3>
+          )}
+          
           {loading ? (
-            <div className="text-gray-500">Loading...</div>
+            <div className="flex justify-center items-center py-8">
+              <div className="text-gray-500">Loading...</div>
+            </div>
           ) : error ? (
-            <div className="text-red-500">{error}</div>
+            <div className="flex justify-center items-center py-8">
+              <div className="text-red-500">{error}</div>
+            </div>
           ) : (
-            <>
+            <div className="w-full">
               {effectiveConfig.layoutStyle === 'side-by-side' && (
-                <div className="flex flex-row gap-4 justify-center items-start w-full">
-                  <Image src={svgUrl} alt="GitHub Stats" width={400} height={200} unoptimized className="max-w-xs w-full" />
-                  {trophyUrl ? (
-                    <Image src={trophyUrl} alt="Trophies" width={400} height={200} unoptimized className="max-w-xs w-full" />
-                  ) : streakUrl ? (
-                    <Image src={streakUrl} alt="Streak" width={400} height={200} unoptimized className="max-w-xs w-full" />
-                  ) : null}
+                <div className="flex flex-col xl:flex-row gap-6 justify-center items-center">
+                  {effectiveConfig.showStats && svgUrl && (
+                    <div className="flex-shrink-0 w-full max-w-md xl:max-w-none">
+                      <Image 
+                        src={svgUrl} 
+                        alt="GitHub Stats" 
+                        width={420} 
+                        height={195} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                        style={{ maxWidth: '420px', height: 'auto' }}
+                      />
+                    </div>
+                  )}
+                  {trophyUrl && effectiveConfig.showTrophies && (
+                    <div className="flex-shrink-0 w-full max-w-md xl:max-w-none">
+                      <Image 
+                        src={trophyUrl} 
+                        alt="GitHub Trophies" 
+                        width={420} 
+                        height={195} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                        style={{ maxWidth: '420px', height: 'auto' }}
+                      />
+                    </div>
+                  )}
+                  {!trophyUrl && streakUrl && effectiveConfig.showStreaks && (
+                    <div className="flex-shrink-0 w-full max-w-md xl:max-w-none">
+                      <Image 
+                        src={streakUrl} 
+                        alt="GitHub Streak" 
+                        width={420} 
+                        height={195} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                        style={{ maxWidth: '420px', height: 'auto' }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
+              
               {effectiveConfig.layoutStyle === 'grid' && (
-                <div className="grid grid-cols-2 gap-4 w-full">
-                  <Image src={svgUrl} alt="GitHub Stats" width={400} height={200} unoptimized className="w-full" />
-                  {trophyUrl && <Image src={trophyUrl} alt="Trophies" width={400} height={200} unoptimized className="w-full" />}
-                  {streakUrl && <Image src={streakUrl} alt="Streak" width={800} height={200} unoptimized className="col-span-2 w-full" />}
+                <div className="space-y-6">
+                  {/* First row - Stats and Trophies */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {effectiveConfig.showStats && svgUrl && (
+                      <div className="flex justify-center">
+                        <Image 
+                          src={svgUrl} 
+                          alt="GitHub Stats" 
+                          width={400} 
+                          height={195} 
+                          unoptimized 
+                          className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                          style={{ maxWidth: '400px', height: 'auto' }}
+                        />
+                      </div>
+                    )}
+                    {trophyUrl && effectiveConfig.showTrophies && (
+                      <div className="flex justify-center">
+                        <Image 
+                          src={trophyUrl} 
+                          alt="GitHub Trophies" 
+                          width={400} 
+                          height={195} 
+                          unoptimized 
+                          className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                          style={{ maxWidth: '400px', height: 'auto' }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Second row - Streak spanning full width */}
+                  {streakUrl && effectiveConfig.showStreaks && (
+                    <div className="flex justify-center">
+                      <Image 
+                        src={streakUrl} 
+                        alt="GitHub Streak" 
+                        width={800} 
+                        height={180} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                        style={{ maxWidth: '800px', height: 'auto' }}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
+              
               {effectiveConfig.layoutStyle === 'vertical' && (
-                <div className="flex flex-col gap-4 items-center w-full">
-                  <Image src={svgUrl} alt="GitHub Stats" width={600} height={200} unoptimized className="w-full max-w-lg" />
-                  {trophyUrl && <Image src={trophyUrl} alt="Trophies" width={600} height={200} unoptimized className="w-full max-w-lg" />}
-                  {streakUrl && <Image src={streakUrl} alt="Streak" width={600} height={200} unoptimized className="w-full max-w-lg" />}
+                <div className="flex flex-col gap-6 items-center">
+                  {effectiveConfig.showStats && svgUrl && (
+                    <div className="w-full max-w-lg">
+                      <Image 
+                        src={svgUrl} 
+                        alt="GitHub Stats" 
+                        width={500} 
+                        height={195} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                      />
+                    </div>
+                  )}
+                  {trophyUrl && effectiveConfig.showTrophies && (
+                    <div className="w-full max-w-lg">
+                      <Image 
+                        src={trophyUrl} 
+                        alt="GitHub Trophies" 
+                        width={500} 
+                        height={160} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                      />
+                    </div>
+                  )}
+                  {streakUrl && effectiveConfig.showStreaks && (
+                    <div className="w-full max-w-lg">
+                      <Image 
+                        src={streakUrl} 
+                        alt="GitHub Streak" 
+                        width={500} 
+                        height={180} 
+                        unoptimized 
+                        className="w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700" 
+                      />
+                    </div>
+                  )}
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       ) : (
-        <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded text-xs whitespace-pre-wrap w-full">{generateMarkdown()}</pre>
+        <div className="p-4">
+          <pre className="bg-gray-100 dark:bg-gray-800 p-4 rounded text-xs whitespace-pre-wrap w-full overflow-x-auto">
+            {generateMarkdown()}
+          </pre>
+        </div>
       )}
-      <div className="flex justify-end mt-2">
+      
+      <div className="flex justify-between items-center px-4 py-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="text-xs text-gray-500">
+          {effectiveConfig.layoutStyle} layout
+        </div>
         <button
-          className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 dark:hover:bg-gray-600"
+          className="text-xs px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           onClick={() => setViewMode(viewMode === 'preview' ? 'markdown' : 'preview')}
         >
           {viewMode === 'preview' ? 'View Markdown' : 'View Preview'}

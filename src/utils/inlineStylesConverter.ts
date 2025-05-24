@@ -55,34 +55,74 @@ export interface LanguageStatsConfig {
  * @returns GitHub-compatible markdown content
  */
 export function convertToGitHubCompatible(markdown: string): string {
+  if (!markdown) return '';
+  
+  let processed = markdown;
+  
   // Replace any HTML comments with nothing
-  markdown = markdown.replace(/<!--[\s\S]*?-->/g, '');
+  processed = processed.replace(/<!--[\s\S]*?-->/g, '');
+  
+  // Normalize line endings for consistency
+  processed = processed.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   
   // Ensure proper spacing around headers for better rendering
-  markdown = markdown.replace(/\n(#{1,6})\s/g, '\n\n$1 ');
+  processed = processed.replace(/\n(#{1,6})\s/g, '\n\n$1 ');
+  processed = processed.replace(/^(#{1,6})\s/g, '$1 ');
   
   // Ensure images have proper spacing
-  markdown = markdown.replace(/!\[(.*?)\]\((.*?)\)(?!\n\n)/g, '![$1]($2)\n\n');
+  processed = processed.replace(/!\[(.*?)\]\((.*?)\)(?!\n\n)/g, '![$1]($2)\n\n');
   
-  // Ensure badges have consistent spacing
+  // Ensure badges have consistent spacing and proper formatting
   const badgePattern = /(?:\[!\[(.*?)\]\((.*?)\)\]\((.*?)\))+/g;
-  markdown = markdown.replace(badgePattern, match => {
+  processed = processed.replace(badgePattern, match => {
     return `\n${match}\n\n`;
   });
   
   // Clean HTML elements that are allowed in GitHub markdown
-  // Remove any class and style attributes, which GitHub sanitizes
-  markdown = markdown.replace(/<([a-z][a-z0-9]*)\s+class="[^"]*"/gi, '<$1');
-  markdown = markdown.replace(/<([a-z][a-z0-9]*)\s+style="[^"]*"/gi, '<$1');
-  markdown = markdown.replace(/<([a-z][a-z0-9]*)\s+id="[^"]*"/gi, '<$1');
+  // Remove any class, style, and id attributes, which GitHub sanitizes
+  processed = processed.replace(/<([a-z][a-z0-9]*)\s+class="[^"]*"/gi, '<$1');
+  processed = processed.replace(/<([a-z][a-z0-9]*)\s+style="[^"]*"/gi, '<$1');
+  processed = processed.replace(/<([a-z][a-z0-9]*)\s+id="[^"]*"/gi, '<$1');
+  processed = processed.replace(/<([a-z][a-z0-9]*)\s+onclick="[^"]*"/gi, '<$1');
+  
+  // Preserve align attributes which GitHub allows
+  processed = processed.replace(/<(div|p|h[1-6]|table|tr|td|th)\s+align="(left|center|right)"/gi, '<$1 align="$2"');
+  
+  // Ensure proper table formatting with GitHub standards
+  processed = processed.replace(/\|\s*\|/g, '| |');
+  processed = processed.replace(/\|([^|\n]+)\|/g, (match, content) => {
+    return `| ${content.trim()} |`;
+  });
+  
+  // Fix heading spacing (GitHub requires blank lines for proper rendering)
+  processed = processed.replace(/\n(#{1,6}\s[^\n]+)\n(?!\n)/g, '\n$1\n\n');
+  processed = processed.replace(/(?<!\n\n)(#{1,6}\s[^\n]+)/g, '\n\n$1');
+  
+  // Ensure proper list formatting
+  processed = processed.replace(/\n([*+-]\s)/g, '\n\n$1');
+  processed = processed.replace(/\n(\d+\.\s)/g, '\n\n$1');
+  
+  // Fix blockquote spacing
+  processed = processed.replace(/\n(>\s)/g, '\n\n$1');
   
   // Ensure HTML tags have proper spacing for better rendering
-  markdown = markdown.replace(/(<\/[a-z][a-z0-9]*>)(?!\n\n)/gi, '$1\n\n');
+  processed = processed.replace(/(<\/[a-z][a-z0-9]*>)(?!\n\n)/gi, '$1\n\n');
+  processed = processed.replace(/(<[a-z][a-z0-9]*[^>]*>)(?!\n)/gi, '$1\n');
   
-  // Fix common spacing issues
-  markdown = markdown.replace(/\n{3,}/g, '\n\n');
+  // Clean up excessive whitespace but preserve intentional spacing
+  processed = processed.replace(/\n{3,}/g, '\n\n');
+  processed = processed.replace(/^\n+/, '');
+  processed = processed.replace(/\n+$/, '\n');
   
-  return markdown;
+  // Fix inline code formatting (ensure proper backtick spacing)
+  processed = processed.replace(/([^`])`([^`\n]+)`([^`])/g, '$1`$2`$3');
+  
+  // Ensure proper spacing around code blocks
+  processed = processed.replace(/```([\s\S]*?)```/g, (match) => {
+    return `\n\n${match}\n\n`;
+  });
+  
+  return processed;
 }
 
 /**

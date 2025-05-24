@@ -202,3 +202,117 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* GitHub Stats Widget Specific Styles */
+.github-stats-widget {
+  container-type: inline-size;
+  width: 100%;
+}
+
+.github-stats-widget img {
+  height: auto !important;
+  max-width: 100%;
+  object-fit: contain;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.github-stats-widget .flex {
+  min-width: 0;
+}
+
+/* Grid layout improvements */
+.github-stats-widget .space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.github-stats-widget .grid {
+  place-items: center;
+}
+
+/* Image container improvements */
+.github-stats-widget [style*="max-width"] {
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 1280px) {
+  .github-stats-widget .xl\:flex-row {
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .github-stats-widget img {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .github-stats-widget .xl\:flex-row {
+    flex-direction: column !important;
+    gap: 1rem;
+  }
+}
+
+/* GitHub Stats Widget Specific Styles */
+.github-stats-widget {
+  /* Ensure proper container */
+  container-type: inline-size;
+  width: 100%;
+}
+
+.github-stats-widget img {
+  /* Ensure images are responsive and maintain aspect ratio */
+  height: auto !important;
+  max-width: 100%;
+  object-fit: contain;
+  /* Smooth transitions for loading */
+  transition: opacity 0.3s ease-in-out;
+}
+
+.github-stats-widget .flex {
+  /* Ensure flex containers don't overflow */
+  min-width: 0;
+}
+
+/* Side-by-side layout improvements */
+.github-stats-widget .xl\:flex-row {
+  /* Better spacing on larger screens */
+  @media (min-width: 1280px) {
+    gap: 2rem;
+  }
+}
+
+/* Grid layout improvements */
+.github-stats-widget .space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+.github-stats-widget .grid {
+  /* Ensure grid items are properly sized */
+  place-items: center;
+}
+
+/* Image container improvements */
+.github-stats-widget [style*="max-width"] {
+  /* Ensure containers respect max-width while being responsive */
+  width: 100%;
+  height: auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Better mobile responsiveness */
+@media (max-width: 768px) {
+  .github-stats-widget img {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .github-stats-widget .xl\:flex-row {
+    flex-direction: column !important;
+    gap: 1rem;
+  }
+}

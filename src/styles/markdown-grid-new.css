@@ -54,7 +54,7 @@
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* GitHub Stats card layouts */
+/* GitHub Stats card layouts - Enhanced for better alignment */
 .prose div[align="center"] img[src*="github-readme-stats"],
 .prose div[align="center"] img[src*="github-profile-trophy"],
 .prose div[align="center"] img[src*="github-readme-streak-stats"] {
@@ -63,6 +63,8 @@
   transition: all 0.3s ease;
   margin: 0.5rem !important;
   max-width: 100%;
+  vertical-align: top;
+  display: inline-block;
 }
 
 .dark .prose div[align="center"] img[src*="github-readme-stats"],
@@ -81,12 +83,13 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.35);
 }
 
-/* GitHub Markdown table-based layout for stats */
+/* GitHub Markdown table-based layout for stats - Enhanced for proper spacing */
 .prose div[align="center"] table {
-  border-spacing: 8px !important;
+  border-spacing: 15px !important;
   border-collapse: separate !important;
   margin: 0 auto;
   width: auto !important;
+  border: none !important;
 }
 
 .prose div[align="center"] table td {
@@ -116,13 +119,15 @@
   page-break-inside: avoid;
 }
 
-/* Special styling for GitHub Stats images in tables */
+/* Special styling for GitHub Stats images in tables - Enhanced responsiveness */
 .prose table img {
   width: 100%;
   border-radius: 0.5rem;
   margin: 0 !important;
   border: 1px solid rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
+  vertical-align: top;
+  max-width: none;
 }
 
 .dark .prose table img {
@@ -155,7 +160,7 @@
   grid-column: 1 / -1; 
 }
 
-/* Responsive adjustments for preview */
+/* Responsive adjustments for preview - Enhanced mobile handling */
 @media (max-width: 768px) {
   .grid-widget-layout:has(.widget-item) {
     grid-template-columns: 1fr;
@@ -172,10 +177,23 @@
   }
 
   /* Make GitHub stats cards stack on mobile */
+  .prose div[align="center"] table {
+    border-spacing: 10px !important;
+  }
+  
   .prose div[align="center"] table td {
     display: block;
     width: 100% !important;
     margin-bottom: 1rem;
+  }
+  
+  /* Mobile optimization for GitHub stats images */
+  .prose div[align="center"] img[src*="github-readme-stats"],
+  .prose div[align="center"] img[src*="github-profile-trophy"],
+  .prose div[align="center"] img[src*="github-readme-streak-stats"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
   }
 }
 
@@ -304,4 +322,43 @@
 .dark .markdown-body table th,
 .dark .markdown-body table td {
   border-color: #444;
+}
+
+/* GitHub Stats Widget specific styles */
+.github-stats-widget {
+  overflow: visible;
+}
+
+.github-stats-widget img {
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark .github-stats-widget img {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.github-stats-widget img:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .github-stats-widget img:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+/* Ensure proper alignment for side-by-side layout */
+.github-stats-widget .flex-row {
+  align-items: flex-start;
+}
+
+/* Grid layout improvements */
+.github-stats-widget .grid {
+  place-items: center;
+}
+
+/* Vertical layout spacing */
+.github-stats-widget .flex-col {
+  align-items: center;
 }
