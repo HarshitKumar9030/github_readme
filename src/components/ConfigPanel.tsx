@@ -1,5 +1,6 @@
 'use client';
 
+import { WidgetConfig } from '@/interfaces/WidgetConfig';
 
 interface ConfigOption {
   id: string;
@@ -7,30 +8,6 @@ interface ConfigOption {
   type: 'toggle' | 'select' | 'color' | 'text';
   defaultValue: any;
   options?: { value: string; label: string }[];
-}
-
-export interface WidgetConfig {
-  theme: 'light' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox';
-  showIcons: boolean;
-  includePrivate: boolean;
-  layout: 'default' | 'compact';
-  layoutStyle: 'side-by-side' | 'grid' | 'vertical';
-  locale: string;
-  includeAllCommits: boolean;
-  hideTitle: boolean;
-  hideBorder: boolean;
-  hideRank: boolean;
-  layoutCompact: boolean;
-  showTrophies: boolean;
-  showStreaks: boolean;
-  showLanguages: boolean;
-  showStats: boolean;
-  trophyTheme: string;
-  customTitle: string;
-  excludeRepos?: string;
-  excludeLangs?: string;
-  cardWidth?: number;
-  gridColumns?: 2 | 3 | 4; // Added to support SocialStatsWidget
 }
 
 interface ConfigPanelProps {
