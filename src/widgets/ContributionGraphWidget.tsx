@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
@@ -9,7 +9,7 @@ export interface ContributionGraphWidgetConfig extends Omit<BaseWidgetConfig, 't
   hideBorder?: boolean;
   hideTitle?: boolean;
   customTitle?: string;
-  theme?: 'default' | 'github' | 'minimal' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox' | 'chartreuse-dark' | 'high-contrast' | 'tokyo-night' | 'ocean-dark' | 'city-lights' | 'github-compact' | 'dracula' | 'monokai' | 'vue' | 'vue-dark' | 'shades-of-purple' | 'nightowl' | 'buefy' | 'blue-green' | 'algolia' | 'great-gatsby' | 'darcula' | 'bear' | 'solarized-dark' | 'solarized-light' | 'chartreuse-light' | 'nord' | 'gotham' | 'material-palenight' | 'graywhite' | 'vision-friendly-dark' | 'ayu-mirage' | 'midnight-purple' | 'calm' | 'flag-india' | 'omni' | 'react' | 'jolly' | 'maroongold' | 'yeblu' | 'blueberry' | 'slateorange' | 'kacho_ga';
+  theme?: 'default' | 'github' | 'github-compact' | 'react' | 'react-dark' | 'vue' | 'vue-dark' | 'dracula' | 'merko' | 'rogue' | 'tokyo-night' | 'high-contrast' | 'xcode' | 'chartreuse-dark' | 'minimal' | 'ocean-dark' | 'city-lights' | 'monokai' | 'shades-of-purple' | 'nightowl' | 'buefy' | 'blue-green' | 'algolia' | 'great-gatsby' | 'darcula' | 'bear' | 'solarized-dark' | 'solarized-light' | 'chartreuse-light' | 'nord' | 'gotham' | 'material-palenight' | 'graywhite' | 'vision-friendly-dark' | 'ayu-mirage' | 'midnight-purple' | 'calm' | 'flag-india' | 'omni' | 'jolly' | 'maroongold' | 'yeblu' | 'blueberry' | 'slateorange' | 'kacho_ga' | 'gruvbox' | 'radical' | 'onedark' | 'cobalt' | 'synthwave';
   showArea?: boolean;
   showDots?: boolean;
   height?: number;
@@ -33,8 +33,7 @@ const ContributionGraphWidget: React.FC<ContributionGraphWidgetProps> & Markdown
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
-
-  const generateUrl = (): string => {
+  const generateUrl = useCallback((): string => {
     if (!config.username) return '';
     
     const params = new URLSearchParams();
@@ -43,15 +42,14 @@ const ContributionGraphWidget: React.FC<ContributionGraphWidgetProps> & Markdown
       params.append('theme', config.theme);
     }
     
-    if (config.showArea !== false) params.append('area', 'true');
+    if (config.showArea === true) params.append('area', 'true');
     if (config.hideBorder) params.append('hide_border', 'true');
     if (config.hideTitle) params.append('hide_title', 'true');
     if (config.height) params.append('height', config.height.toString());
     
     return `https://github-readme-activity-graph.vercel.app/graph?username=${config.username}&${params.toString()}`;
-  };
-
-  const generateMarkdown = (): string => {
+  }, [config]);
+  const generateMarkdown = useCallback((): string => {
     if (!config.username) return '<!-- Add a GitHub username to display Contribution Graph -->';
     
     let md = '';
@@ -67,26 +65,29 @@ const ContributionGraphWidget: React.FC<ContributionGraphWidgetProps> & Markdown
     md += `</div>\n\n`;
     
     return md;
-  };
-
+  }, [config, generateUrl]);
   useEffect(() => {
     if (onMarkdownGenerated) {
       onMarkdownGenerated(generateMarkdown());
     }
-  }, [config, onMarkdownGenerated]);
-
+  }, [config, onMarkdownGenerated, generateMarkdown]);
   const getThemeStyles = () => {
     switch (config.theme) {
-      case 'dark':
+      case 'react-dark':
+      case 'dracula':
+      case 'tokyo-night':
         return 'bg-gray-900 border-gray-700 text-white';
       case 'radical':
         return 'bg-gradient-to-r from-purple-900 to-pink-900 border-purple-500 text-white';
-      case 'tokyonight':
-        return 'bg-gradient-to-r from-blue-900 to-purple-900 border-blue-500 text-white';
       case 'merko':
         return 'bg-gradient-to-r from-green-900 to-teal-900 border-green-500 text-white';
       case 'gruvbox':
         return 'bg-gradient-to-r from-amber-700 to-amber-600 border-amber-500 text-white';
+      case 'high-contrast':
+        return 'bg-black border-white text-white';
+      case 'github':
+      case 'github-compact':
+        return 'bg-gray-50 border-gray-200 text-gray-900';
       default:
         return 'bg-white border-gray-200 text-gray-900';
     }
@@ -187,7 +188,7 @@ ContributionGraphWidget.generateMarkdown = function(config?: ContributionGraphWi
   if (config.theme && config.theme !== 'default') {
     params.append('theme', config.theme);
   }
-  if (config.showArea !== false) params.append('area', 'true');
+  if (config.showArea === true) params.append('area', 'true');
   if (config.hideBorder) params.append('hide_border', 'true');
   if (config.hideTitle) params.append('hide_title', 'true');
   if (config.height) params.append('height', config.height.toString());
