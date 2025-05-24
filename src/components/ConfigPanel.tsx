@@ -30,6 +30,7 @@ export interface WidgetConfig {
   excludeRepos?: string;
   excludeLangs?: string;
   cardWidth?: number;
+  gridColumns?: 2 | 3 | 4; // Added to support SocialStatsWidget
 }
 
 interface ConfigPanelProps {

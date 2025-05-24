@@ -621,17 +621,16 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
   };  /**
    * Render configuration panel
    */  const renderConfigPanel = () => {
-    if (!showConfig) return null;
-
-    return (
+    if (!showConfig) return null;    return (
       <ConfigPanel
-        config={config as any} // Type cast to resolve compatibility issue
+        config={config}
         onChange={(newConfig) => {
           if (onConfigChange) {
             // Ensure gridColumns is properly passed if it exists
             const updatedConfig = {
+              ...config,
               ...newConfig,
-              gridColumns: newConfig.gridColumns || config.gridColumns
+              gridColumns: (newConfig as any).gridColumns ?? config.gridColumns
             } as SocialStatsWidgetConfig;
             
             onConfigChange(updatedConfig);

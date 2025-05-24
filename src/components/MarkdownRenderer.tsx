@@ -60,7 +60,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   className = '',
   githubCompatible = true,
   showLineNumbers = false,
-  enableMath = false
+  enableMath = false,
+  showAnchorLinks = true
 }) => {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -523,7 +524,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {...props}
                     >
                       {children}
-                      {headingId && (
+                      {headingId && showAnchorLinks && (
                         <a 
                           href={`#${headingId}`} 
                           className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline"
@@ -542,8 +543,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       )}
                     </h1>
                   );
-                },
-                h2: ({ children, id, ...props }) => {
+                },                h2: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h2 
@@ -552,7 +552,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {...props}
                     >
                       {children}
-                      {headingId && (
+                      {headingId && showAnchorLinks && (
                         <a 
                           href={`#${headingId}`} 
                           className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline"
@@ -571,8 +571,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       )}
                     </h2>
                   );
-                },
-                h3: ({ children, id, ...props }) => {
+                },                h3: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h3 
@@ -581,7 +580,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {...props}
                     >
                       {children}
-                      {headingId && (
+                      {headingId && showAnchorLinks && (
                         <a 
                           href={`#${headingId}`} 
                           className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline"
@@ -599,8 +598,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       )}
                     </h3>
                   );
-                },
-                h4: ({ children, id, ...props }) => {
+                },                h4: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h4 
@@ -609,7 +607,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {...props}
                     >
                       {children}
-                      {headingId && (
+                      {headingId && showAnchorLinks && (
                         <a 
                           href={`#${headingId}`} 
                           className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline text-sm"
@@ -628,8 +626,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       )}
                     </h4>
                   );
-                },
-                h5: ({ children, id, ...props }) => {
+                },                h5: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h5 
@@ -638,7 +635,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {...props}
                     >
                       {children}
-                      {headingId && (
+                      {headingId && showAnchorLinks && (
                         <a 
                           href={`#${headingId}`} 
                           className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline text-sm"
@@ -656,8 +653,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                         </a>
                       )}                    </h5>
                   );
-                },
-                h6: ({ children, id, ...props }) => {
+                },                h6: ({ children, id, ...props }) => {
                   const headingId = id || (typeof children === 'string' ? children.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') : undefined);
                   return (
                     <h6 
@@ -666,7 +662,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       {...props}
                     >
                       {children}
-                      {headingId && (
+                      {headingId && showAnchorLinks && (
                         <a 
                           href={`#${headingId}`} 
                           className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-all duration-200 no-underline text-sm"
