@@ -247,7 +247,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                               <ContributionGraphWidget
                                 config={{
                                   username: username,
-                                  theme: widgetConfig.contributionTheme || 'github',
+                                  theme: widgetConfig.theme || 'github',
                                   showArea: widgetConfig.showArea || false,
                                   showDots: widgetConfig.showDots || true,
                                   height: widgetConfig.height || 180,

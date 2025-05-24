@@ -23,4 +23,9 @@ export interface WidgetConfig {
   excludeLangs?: string;
   cardWidth?: number;
   gridColumns?: 2 | 3 | 4;
+  // Contribution graph specific properties
+  showArea?: boolean;
+  showDots?: boolean;
+  height?: number;
+  graphType?: 'line' | 'area' | 'compact';
 }
