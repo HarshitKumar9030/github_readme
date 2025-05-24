@@ -8,6 +8,7 @@ import { ThemeToggle } from './ThemeToggle'
 import Link from 'next/link';
 import { getRepositoryStats, getWeeklyStarCount } from '@/services/socialStats';
 import icon from 'react-syntax-highlighter/dist/esm/languages/prism/icon';
+import { AvatarWithFallback } from '../utils/avatarGenerator';
 
 const Hero = () => {
   const router = useRouter();
@@ -290,11 +291,20 @@ const Hero = () => {
                 >
                   {repoStats.loading ? '...' : repoStats.stars}
                 </motion.span>
-              </a>
-              <div className="flex items-center space-x-1">
+              </a>              <div className="flex items-center space-x-1">
                 <div className="flex -space-x-2">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-700 border border-white dark:border-gray-800"></div>
+                  {['Alex M', 'Emma K', 'Ryan T'].map((name, i) => (
+                    <div key={i} className="w-6 h-6 rounded-full border border-white dark:border-gray-800 overflow-hidden">
+                      <AvatarWithFallback
+                        src={`https://i.pravatar.cc/24?img=${i + 4}`}
+                        alt={name}
+                        name={name}
+                        width={24}
+                        height={24}
+                        className="w-full h-full object-cover"
+                        style="circle"
+                      />
+                    </div>
                   ))}
                 </div>
                 <span className="text-sm text-gray-600 dark:text-gray-400">+{repoStats.loading ? '...' : repoStats.weeklyStars} this week</span>
@@ -512,10 +522,17 @@ const Hero = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 * idx, duration: 0.5 }}
-            >
-              <div className="flex items-center mb-4">
+            >              <div className="flex items-center mb-4">
                 <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <Image src={testimonial.avatar} alt={testimonial.name} width={40} height={40} />
+                  <AvatarWithFallback 
+                    src={testimonial.avatar} 
+                    alt={testimonial.name} 
+                    name={testimonial.name}
+                    width={40} 
+                    height={40}
+                    className="w-full h-full object-cover"
+                    style="circle"
+                  />
                 </div>
                 <div>
                   <p className="font-medium">{testimonial.name}</p>
