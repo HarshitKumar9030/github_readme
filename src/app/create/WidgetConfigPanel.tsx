@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { WidgetConfig } from '@/components/ConfigPanel';
+import { WidgetConfig } from '@/interfaces/WidgetConfig';
 
 interface WidgetConfigPanelProps {
   widgetType: 'github-stats' | 'top-languages' | 'social-stats';

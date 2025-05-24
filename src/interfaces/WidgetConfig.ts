@@ -2,18 +2,25 @@
  * Configuration options for widgets
  */
 export interface WidgetConfig {
-  theme: "light" | "dark" | "radical" | "tokyonight" | "merko" | "gruvbox";
+  theme: 'light' | 'dark' | 'radical' | 'tokyonight' | 'merko' | 'gruvbox';
   showIcons: boolean;
-  includePrivateContributions: boolean;
   includePrivate: boolean;
+  layout: 'default' | 'compact';
+  layoutStyle: 'side-by-side' | 'grid' | 'vertical';
+  locale: string;
   includeAllCommits: boolean;
   hideTitle: boolean;
   hideBorder: boolean;
-  layoutCompact: boolean;
   hideRank: boolean;
-  layout?: 'compact' | 'default';
+  layoutCompact: boolean;
+  showTrophies: boolean;
+  showStreaks: boolean;
+  showLanguages: boolean;
+  showStats: boolean;
+  trophyTheme: string;
+  customTitle: string;
   excludeRepos?: string;
   excludeLangs?: string;
   cardWidth?: number;
-  customTitle?: string;
+  gridColumns?: 2 | 3 | 4;
 }
