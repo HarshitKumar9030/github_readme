@@ -1,5 +1,8 @@
 'use client';
 
+import React from 'react';
+import Image from 'next/image';
+
 /**
  * SVG Avatar Generator Utility
  * Creates colorful SVG avatars as fallbacks when user avatars fail to load
@@ -176,9 +179,5 @@ export function AvatarWithFallback({
       className={className}
       unoptimized
       onError={() => setHasError(true)}
-    />
-  );
+    />  );
 }
-
-import React from 'react';
-import Image from 'next/image';
