@@ -28,4 +28,29 @@ export interface WidgetConfig {
   showDots?: boolean;
   height?: number;
   graphType?: 'line' | 'area' | 'compact';
+
+  // Wave Animation SVG specific properties
+  waveColor?: string;
+  waveSecondaryColor?: string;
+  waveSpeed?: 'slow' | 'medium' | 'fast';
+  waveCount?: number;
+
+  // Language Chart SVG specific properties
+  showPercentages?: boolean;
+  chartType?: 'pie' | 'donut';
+  chartColors?: string[];
+
+  // Repository Showcase SVG specific properties
+  showcaseRepos?: string[]; // Array of repo names to showcase
+  showStars?: boolean;
+  showForks?: boolean;
+  showLanguage?: boolean;
+  showDescription?: boolean;
+
+   
+  // Animated Progress SVG specific properties
+  skills?: { name: string; level: number; color?: string }[];
+  animationDuration?: number;
+  showProgressText?: boolean;
+  progressBarHeight?: number;
 }

@@ -84,23 +84,17 @@ function generateProgressSvg(params: ProgressBarParams): string {
             '<stop offset="0%" style="stop-color:#3b82f6" /><stop offset="100%" style="stop-color:#8b5cf6" />' :
             `<stop offset="0%" style="stop-color:${styles.progressGradient}" />`
           }
-        </linearGradient>
-        ${animated ? `
+        </linearGradient>        ${animated ? `
         <style>
-          .progress-bar {
-            animation: fillProgress ${animationDuration} ease-in-out;
-          }
+          <![CDATA[
           .fade-in {
-            animation: fadeIn 1s ease-in-out ${animated ? '0.5s' : '0s'} both;
-          }
-          @keyframes fillProgress {
-            from { width: 0; }
-            to { width: var(--final-width); }
+            animation: fadeIn 1s ease-in-out 0.5s both;
           }
           @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
+          ]]>
         </style>
         ` : ''}
       </defs>
