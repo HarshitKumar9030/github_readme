@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
 
@@ -86,7 +86,13 @@ export default function CreatePage() {
   ];
 
   // State
-  const [builderBlocks, setBuilderBlocks] = useState<Block[]>([]);
+  const [builderBlocks, setBuilderBlocks] = useState<Block[]>([]);  // Undo/Redo state management
+  const [history, setHistory] = useState<Block[][]>([[]]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  
+  // Timeout for debouncing content updates in history
+  const contentUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const [draggedBlock, setDraggedBlock] = useState<Block | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null);
@@ -165,6 +171,16 @@ export default function CreatePage() {
       }
     }
   }, []);
+
+  // Initialize history when builderBlocks changes from loading saved data
+  useEffect(() => {
+    if (builderBlocks.length > 0 && history.length === 1 && history[0].length === 0) {
+      // Only initialize history if it's empty and we have blocks (from saved data)
+      setHistory([builderBlocks]);
+      setHistoryIndex(0);
+    }
+  }, [builderBlocks, history]);
+
   const generatePreview = useCallback(() => {
     try {
       let markdown = "";
@@ -477,12 +493,11 @@ export default function CreatePage() {
     e.preventDefault();
     setDragOver(true);
   };
-  const handleDragLeave = () => setDragOver(false);
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragLeave = () => setDragOver(false);  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     if (draggedBlock) {
-      setBuilderBlocks([
+      updateBuilderBlocksWithHistory([
         ...builderBlocks,
         { ...draggedBlock, id: `${draggedBlock.id}-${Date.now()}` },
       ]);
@@ -493,14 +508,12 @@ export default function CreatePage() {
   const handleBlockSelect = (id: string): void => {
     setSelectedBlockId(id === selectedBlockId ? null : id);
   };
-
   const handleRemoveBlock = (id: string): void => {
-    setBuilderBlocks(builderBlocks.filter((block) => block.id !== id));
+    updateBuilderBlocksWithHistory(builderBlocks.filter((block) => block.id !== id));
     if (selectedBlockId === id) {
       setSelectedBlockId(null);
     }
   };
-
   const handleMoveBlockUp = (id: string): void => {
     const index = builderBlocks.findIndex((block) => block.id === id);
     if (index > 0) {
@@ -509,7 +522,7 @@ export default function CreatePage() {
         newBlocks[index],
         newBlocks[index - 1],
       ];
-      setBuilderBlocks(newBlocks);
+      updateBuilderBlocksWithHistory(newBlocks);
     }
   };
 
@@ -521,16 +534,51 @@ export default function CreatePage() {
         newBlocks[index + 1],
         newBlocks[index],
       ];
-      setBuilderBlocks(newBlocks);
+      updateBuilderBlocksWithHistory(newBlocks);
     }
   };
 
+  // Undo/Redo functionality
+  const updateBuilderBlocksWithHistory = (newBlocks: Block[]): void => {
+    // Remove any future history when making a new change
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push([...newBlocks]);
+    
+    // Limit history to prevent memory issues (keep last 50 states)
+    if (newHistory.length > 50) {
+      newHistory.shift();
+    } else {
+      setHistoryIndex(historyIndex + 1);
+    }
+    
+    setHistory(newHistory);
+    setBuilderBlocks(newBlocks);
+  };
+  const handleUndo = useCallback((): void => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setBuilderBlocks([...history[newIndex]]);
+    }
+  }, [historyIndex, history]);
+
+  const handleRedo = useCallback((): void => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setBuilderBlocks([...history[newIndex]]);
+    }
+  }, [historyIndex, history]);
+
+  // Check if undo/redo is available
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
   function loadTemplate(templateType: string): void {
-    setBuilderBlocks([]);
+    let newBlocks: Block[] = [];
 
     switch (templateType) {
       case "classic":
-        setBuilderBlocks([
+        newBlocks = [
           {
             id: `template-classic-${Date.now()}`,
             type: "template",
@@ -557,11 +605,11 @@ export default function CreatePage() {
             label: "GitHub Stats",
             widgetId: "github-stats",
           },
-        ]);
+        ];
         break;
 
       case "minimal":
-        setBuilderBlocks([
+        newBlocks = [
           {
             id: `template-minimal-${Date.now()}`,
             type: "template",
@@ -582,11 +630,11 @@ export default function CreatePage() {
             label: "Top Languages",
             widgetId: "top-languages",
           },
-        ]);
+        ];
         break;
 
       case "social":
-        setBuilderBlocks([
+        newBlocks = [
           {
             id: `widget-social-${Date.now()}`,
             type: "widget",
@@ -601,7 +649,7 @@ export default function CreatePage() {
               username || "[Your Name]"
             }\n\nWelcome to my GitHub profile!`,
           },
-        ]);
+        ];
         break;
 
       default:
@@ -609,6 +657,8 @@ export default function CreatePage() {
         setShowToast(true);
         return;
     }
+
+    updateBuilderBlocksWithHistory(newBlocks);
 
     setToastMessage(
       `${
@@ -620,66 +670,64 @@ export default function CreatePage() {
     setTimeout(() => {
       setShowToast(false);
     }, 3000);
-  }
-
-  function updateBlockContent(id: string, content: string): void {
-    setBuilderBlocks((prevBlocks) =>
-      prevBlocks.map((block) =>
-        block.id === id && block.type === "content"
-          ? { ...block, content }
-          : block
-      )
+  }  function updateBlockContent(id: string, content: string): void {
+    const newBlocks = builderBlocks.map((block) =>
+      block.id === id && block.type === "content"
+        ? { ...block, content }
+        : block
     );
+    setBuilderBlocks(newBlocks);
+    
+    // Debounce history updates for content to avoid too many history entries
+    if (contentUpdateTimeout.current) {
+      clearTimeout(contentUpdateTimeout.current);
+    }
+    contentUpdateTimeout.current = setTimeout(() => {
+      updateBuilderBlocksWithHistory(newBlocks);
+    }, 1000);
   }
-
   function updateWidgetProperty<K extends keyof WidgetBlock>(
     id: string,
     property: K,
     value: WidgetBlock[K]
   ): void {
-    setBuilderBlocks((prevBlocks) =>
-      prevBlocks.map((block) =>
-        block.id === id && block.type === "widget"
-          ? { ...block, [property]: value }
-          : block
-      )
+    const newBlocks = builderBlocks.map((block) =>
+      block.id === id && block.type === "widget"
+        ? { ...block, [property]: value }
+        : block
     );
+    updateBuilderBlocksWithHistory(newBlocks);
   }
-
   // Add this function to fix the error
   function updateTemplateProperty<K extends keyof TemplateBlock>(
     id: string,
     property: K,
     value: TemplateBlock[K]
   ): void {
-    setBuilderBlocks((prevBlocks) =>
-      prevBlocks.map((block) =>
-        block.id === id && block.type === "template"
-          ? { ...block, [property]: value }
-          : block
-      )
+    const newBlocks = builderBlocks.map((block) =>
+      block.id === id && block.type === "template"
+        ? { ...block, [property]: value }
+        : block
     );
-  }
-  function updateBlockLayout(
+    updateBuilderBlocksWithHistory(newBlocks);
+  }  function updateBlockLayout(
     id: string,
     layout: "grid" | "flow" | "inline"
   ): void {
-    setBuilderBlocks((prevBlocks) =>
-      prevBlocks.map((block) =>
-        block.id === id ? { ...block, layout } : block
-      )
+    const newBlocks = builderBlocks.map((block) =>
+      block.id === id ? { ...block, layout } : block
     );
+    updateBuilderBlocksWithHistory(newBlocks);
   }
 
   function updateBlockContainerLayout(
     id: string,
     blockLayout: "default" | "side-by-side" | "grid"
   ): void {
-    setBuilderBlocks((prevBlocks) =>
-      prevBlocks.map((block) =>
-        block.id === id ? { ...block, blockLayout } : block
-      )
+    const newBlocks = builderBlocks.map((block) =>
+      block.id === id ? { ...block, blockLayout } : block
     );
+    updateBuilderBlocksWithHistory(newBlocks);
   }
 
   const AUTOSAVE_KEY = "readme-generator-autosave";
@@ -749,8 +797,7 @@ export default function CreatePage() {
   ]);
 
   // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
+  useEffect(() => {    const handleKeyDown = (event: KeyboardEvent) => {
       // Preview: Ctrl+P (or Cmd+P on Mac)
       if ((event.ctrlKey || event.metaKey) && event.key === "p") {
         event.preventDefault();
@@ -763,15 +810,26 @@ export default function CreatePage() {
         saveProject();
       }
 
+      // Undo: Ctrl+Z (or Cmd+Z on Mac)
+      if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
+        event.preventDefault();
+        handleUndo();
+      }
+
+      // Redo: Ctrl+Y or Ctrl+Shift+Z (or Cmd+Y or Cmd+Shift+Z on Mac)
+      if (((event.ctrlKey || event.metaKey) && event.key === "y") || 
+          ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "Z")) {
+        event.preventDefault();
+        handleRedo();
+      }
+
       // Close preview: Escape
       if (event.key === "Escape" && showPreview) {
         setShowPreview(false);
       }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
+    };    document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [showPreview, saveProject]);
+  }, [showPreview, saveProject, handleUndo, handleRedo]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
@@ -847,8 +905,7 @@ export default function CreatePage() {
               setWidgetConfig={setWidgetConfig}
               username={username}
             /> */}
-            {/* Main Builder Area */}{" "}
-            <BuilderArea
+            {/* Main Builder Area */}{" "}            <BuilderArea
               builderBlocks={builderBlocks}
               dragOver={dragOver}
               handleDragOver={handleDragOver}
@@ -864,6 +921,10 @@ export default function CreatePage() {
               username={username}
               socials={socials}
               handleWidgetMarkdownGenerated={handleWidgetMarkdownGenerated}
+              handleUndo={handleUndo}
+              handleRedo={handleRedo}
+              canUndo={canUndo}
+              canRedo={canRedo}
             />
             {/* Right Sidebar - Properties */}
             <PropertiesPanel

@@ -24,6 +24,10 @@ interface BuilderAreaProps {
   username: string;
   socials: any;
   handleWidgetMarkdownGenerated?: (blockId: string, markdown: string) => void;
+  handleUndo: () => void;
+  handleRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 const BuilderArea: React.FC<BuilderAreaProps> = ({
@@ -41,7 +45,11 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   widgetConfig,
   username,
   socials,
-  handleWidgetMarkdownGenerated
+  handleWidgetMarkdownGenerated,
+  handleUndo,
+  handleRedo,
+  canUndo,
+  canRedo
 }) => {
   // Memoize the markdown generation callback to prevent infinite re-renders
   const handleMarkdownGenerated = useCallback((blockId: string) => {
@@ -60,15 +68,32 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
           README Builder
-        </h3>
-        <div className="flex space-x-2">
-          <button className="px-3 py-1.5 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center hover:bg-gray-200 dark:hover:bg-gray-600">
+        </h3>        <div className="flex space-x-2">
+          <button 
+            className={`px-3 py-1.5 text-xs rounded-md flex items-center transition ${
+              canUndo 
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' 
+                : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+            }`}
+            onClick={handleUndo}
+            disabled={!canUndo}
+            title={canUndo ? 'Undo (Ctrl+Z)' : 'Nothing to undo'}
+          >
             <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Undo
           </button>
-          <button className="px-3 py-1.5 text-xs rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center hover:bg-gray-200 dark:hover:bg-gray-600">
+          <button 
+            className={`px-3 py-1.5 text-xs rounded-md flex items-center transition ${
+              canRedo 
+                ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600' 
+                : 'bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+            }`}
+            onClick={handleRedo}
+            disabled={!canRedo}
+            title={canRedo ? 'Redo (Ctrl+Y)' : 'Nothing to redo'}
+          >
             <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
             </svg>
