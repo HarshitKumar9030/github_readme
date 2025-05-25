@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Block } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
-import SocialStatsWidget from '@/widgets/SocialStatsWidget';
+import EnhancedSocialStatsWidget from '@/app/create/SocialStatsWidget-Redesigned';
 import TopLanguagesWidget from '@/widgets/TopLanguagesWidget';
 import ContributionGraphWidget from '@/widgets/ContributionGraphWidget';
 
@@ -43,6 +43,15 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   socials,
   handleWidgetMarkdownGenerated
 }) => {
+  // Memoize the markdown generation callback to prevent infinite re-renders
+  const handleMarkdownGenerated = useCallback((blockId: string) => {
+    return (md: string) => {
+      if (typeof window !== 'undefined' && blockId && handleWidgetMarkdownGenerated) {
+        handleWidgetMarkdownGenerated(blockId, md);
+      }
+    };
+  }, [handleWidgetMarkdownGenerated]);
+
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
       <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -200,33 +209,22 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   trophyTheme: widgetConfig.trophyTheme || widgetConfig.theme || 'flat',
                                   customTitle: widgetConfig.customTitle
                                 }}
-                                onMarkdownGenerated={(md: string) => {
-                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
-                                    handleWidgetMarkdownGenerated(block.id, md);
-                                  }
-                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
                               />
-                            )}
-                            {block.widgetId === 'social-stats' && (                              <SocialStatsWidget 
-                                config={{
-                                  socials: socials,
-                                  displayLayout: widgetConfig.layout === 'compact' ? 'inline' : 'horizontal',
-                                  showDetails: true,
-                                  showImages: true,
-                                  hideBorder: widgetConfig.hideBorder || false,
-                                  hideTitle: widgetConfig.hideTitle || false,
-                                  theme: widgetConfig.theme || 'light',
-                                  compactMode: widgetConfig.layoutCompact || false,
-                                  customTitle: widgetConfig.customTitle
-                                }}
-                                onMarkdownGenerated={(md: string) => {
-                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
-                                    handleWidgetMarkdownGenerated(block.id, md);
-                                  }
-                                }}
+                            )}                            {block.widgetId === 'social-stats' && (
+                              <EnhancedSocialStatsWidget 
+                                socials={socials}
+                                theme={widgetConfig.theme || 'default'}
+                                layout={widgetConfig.layout === 'compact' ? 'compact' : 'default'}
+                                showAvatar={true}
+                                showBio={false}
+                                hideStats={[]}
+                                customTitle={widgetConfig.customTitle}
+                                enableAnimations={true}
+                                showBorder={!widgetConfig.hideBorder}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
                               />
-                            )}                            {block.widgetId === 'top-languages' && (
-                              <TopLanguagesWidget
+                            )}{block.widgetId === 'top-languages' && (                              <TopLanguagesWidget
                                 config={{
                                   username: username,
                                   theme: widgetConfig.theme || 'light',
@@ -237,11 +235,8 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   excludeRepos: widgetConfig.excludeRepos || '',
                                   excludeLangs: widgetConfig.excludeLangs || '',
                                   cardWidth: widgetConfig.cardWidth || 495,
-                                }}                                onMarkdownGenerated={(md: string) => {
-                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
-                                    handleWidgetMarkdownGenerated(block.id, md);
-                                  }
                                 }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
                               />
                             )}                            {block.widgetId === 'contribution-graph' && (
                               <ContributionGraphWidget
@@ -256,11 +251,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   hideTitle: widgetConfig.hideTitle || false,
                                   customTitle: widgetConfig.customTitle || ''
                                 }}
-                                onMarkdownGenerated={(md: string) => {
-                                  if (typeof window !== 'undefined' && block.id && handleWidgetMarkdownGenerated) {
-                                    handleWidgetMarkdownGenerated(block.id, md);
-                                  }
-                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
                               />
                             )}
                           </div>
