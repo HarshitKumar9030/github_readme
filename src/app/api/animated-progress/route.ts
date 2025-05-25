@@ -51,6 +51,19 @@ function getThemeStyles(theme: string) {
   }
 }
 
+function escapeXml(unsafe: string): string {
+  return unsafe.replace(/[<>&'"]/g, function (c) {
+    switch (c) {
+      case '<': return '&lt;';
+      case '>': return '&gt;';
+      case '&': return '&amp;';
+      case '\'': return '&apos;';
+      case '"': return '&quot;';
+      default: return c;
+    }
+  });
+}
+
 function generateProgressSvg(params: ProgressBarParams): string {
   const {
     skills,
@@ -88,11 +101,7 @@ function generateProgressSvg(params: ProgressBarParams): string {
         <style>
           <![CDATA[
           .fade-in {
-            animation: fadeIn 1s ease-in-out 0.5s both;
-          }
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            opacity: 1;
           }
           ]]>
         </style>
@@ -100,33 +109,26 @@ function generateProgressSvg(params: ProgressBarParams): string {
       </defs>
       
       <!-- Background -->
-      <rect width="100%" height="100%" fill="url(#bgGradient)" rx="10" />
-      
-      <!-- Title -->
+      <rect width="100%" height="100%" fill="url(#bgGradient)" rx="10" />      <!-- Title -->
       <text x="20" y="35" font-family="'Segoe UI', Arial, sans-serif" font-size="18" font-weight="600" 
-            fill="${styles.title}" class="fade-in">${title}</text>
+            fill="${styles.title}">${escapeXml(title)}</text>
       
       ${skills.map((skill, index) => {
         const y = startY + (index * spacing);
         const percentage = Math.round((values[index] / maxValue) * 100);
-        const barWidth = (values[index] / maxValue) * (width - 120);
-        
-        return `
-          <!-- Skill: ${skill} -->
-          <g class="fade-in" style="animation-delay: ${index * 0.1}s">
+        const barWidth = (values[index] / maxValue) * (width - 120);          return `
+          <!-- Skill: ${escapeXml(skill)} -->
+          <g>
             <!-- Skill Label -->
             <text x="20" y="${y - 5}" font-family="'Segoe UI', Arial, sans-serif" 
-                  font-size="12" font-weight="500" fill="${styles.text}">${skill}</text>
+                  font-size="12" font-weight="500" fill="${styles.text}">${escapeXml(skill)}</text>
             
             <!-- Background Bar -->
             <rect x="20" y="${y}" width="${width - 120}" height="${barHeight}" 
                   fill="${styles.barBg}" rx="10" />
-            
-            <!-- Progress Bar -->
-            <rect x="20" y="${y}" width="0" height="${barHeight}" 
-                  fill="url(#progressGradient)" rx="10"
-                  class="progress-bar" 
-                  style="--final-width: ${barWidth}px; width: ${animated ? '0' : barWidth + 'px'}; ${glowEffect}">
+              <!-- Progress Bar -->
+            <rect x="20" y="${y}" width="${animated ? '0' : barWidth}" height="${barHeight}" 
+                  fill="url(#progressGradient)" rx="10" style="${glowEffect}">
               ${animated ? `
                 <animate attributeName="width" 
                          from="0" to="${barWidth}" 

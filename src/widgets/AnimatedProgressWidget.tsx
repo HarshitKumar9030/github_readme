@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
 interface Skill {
@@ -28,8 +27,7 @@ interface AnimatedProgressWidgetProps extends BaseWidgetProps {
 const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
   config,
   onConfigChange
-}) => {
-  const [svgUrl, setSvgUrl] = useState<string>('');
+}) => {  const [svgContent, setSvgContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [newSkillName, setNewSkillName] = useState<string>('');
@@ -40,33 +38,55 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
     animationDuration: config.animationDuration || 2000,
     showProgressText: config.showProgressText ?? true,
     progressBarHeight: config.progressBarHeight || 20
-  };
-  const generateSvgUrl = useCallback(() => {
+  };  const generateSvgContent = useCallback(async () => {
     if (!progressConfig.skills || progressConfig.skills.length === 0) {
-      setSvgUrl('');
+      setSvgContent('');
       return;
     }
 
-    const skillsParam = progressConfig.skills
-      .map((skill: Skill) => `${encodeURIComponent(skill.name)}:${skill.level}`)
-      .join(',');    const params = new URLSearchParams({
-      skills: skillsParam,
-      animated: 'true',
-      show_progress_text: (progressConfig.showProgressText ?? true).toString(),
-      theme: 'default',
-      width: '400',
-      height: '300'
-    });
+    setIsLoading(true);
+    setError('');
 
-    const url = `${window.location.origin}/api/animated-progress?${params.toString()}`;
-    setSvgUrl(url);  }, [
+    try {
+      const skillsParam = progressConfig.skills
+        .map((skill: Skill) => `${encodeURIComponent(skill.name)}:${skill.level}`)
+        .join(',');
+
+      const params = new URLSearchParams({
+        skills: skillsParam,
+        animated: 'true',
+        show_progress_text: (progressConfig.showProgressText ?? true).toString(),
+        theme: 'default',
+        width: '400',
+        height: '300'
+      });
+
+      const url = `${window.location.origin}/api/animated-progress?${params.toString()}`;
+      console.log('Fetching animated progress from:', url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const svgText = await response.text();
+      setSvgContent(svgText);
+      console.log('SVG content loaded successfully');
+    } catch (err) {
+      console.error('Error loading animated progress:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load animated progress');
+      setSvgContent('');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
     progressConfig.skills,
     progressConfig.showProgressText
   ]);
-
   useEffect(() => {
-    generateSvgUrl();
-  }, [generateSvgUrl]);
+    generateSvgContent();
+  }, [generateSvgContent]);
+
   const handleConfigChange = (updates: Partial<AnimatedProgressWidgetConfig>) => {
     const newConfig = {
       ...config,
@@ -76,31 +96,6 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
       onConfigChange(newConfig);
     }
   };
-  const loadPreview = useCallback(async () => {
-    if (!svgUrl) return;
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(svgUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      // URL is valid, keep it as is
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load animated progress');
-      setSvgUrl('');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [svgUrl]);
-
-  useEffect(() => {
-    if (svgUrl) {
-      loadPreview();
-    }
-  }, [svgUrl, loadPreview]);
   const addSkill = () => {
     const skills = progressConfig.skills || [];
     if (newSkillName.trim() && !skills.some(skill => skill.name === newSkillName.trim())) {
@@ -256,20 +251,15 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
         ) : isLoading ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Loading animated progress...
-          </div>
-        ) : error ? (
+          </div>        ) : error ? (
           <div className="text-center py-8 text-red-500 dark:text-red-400">
             Error: {error}
-          </div>        ) : svgUrl ? (
+          </div>
+        ) : svgContent ? (
           <div className="flex justify-center">
-            <Image
-              src={svgUrl}
-              alt="Animated Progress"
-              width={400}
-              height={300}
+            <div 
+              dangerouslySetInnerHTML={{ __html: svgContent }}
               className="max-w-full h-auto"
-              onError={() => setError('Failed to load animated progress image')}
-              unoptimized
             />
           </div>
         ) : null}
@@ -299,7 +289,9 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
     height: '300'
   });
 
-  const url = `https://your-domain.com/api/animated-progress?${params.toString()}`;
+  // Use the deployed domain or localhost for development
+  const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000';
+  const url = `${baseUrl}/api/animated-progress?${params.toString()}`;
   
   return `![Animated Progress](${url})`;
 };
