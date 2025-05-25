@@ -159,10 +159,50 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
                 </svg>
               </div>
             ))}
+          </div>        </div>
+
+        {/* SVG Animations & Visual Elements */}
+        <div className="mb-7">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between mb-4">
+            <h4 className="flex items-center text-sm font-bold text-gray-800 dark:text-gray-200 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-purple-500 flex items-center justify-center mr-3 flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <span className="truncate">SVG Animations</span>
+            </h4>
+            <span className="text-xs font-medium px-2 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex-shrink-0 self-start sm:self-auto">
+              {availableBlocks.filter(b => b.type === "widget" && (b.widgetId?.includes('wave') || b.widgetId?.includes('language-chart') || b.widgetId?.includes('repo-showcase') || b.widgetId?.includes('animated-progress') || b.widgetId?.includes('typing-animation'))).length}
+            </span>
+          </div>
+          <div className="space-y-3">
+            {availableBlocks.filter(b => b.type === "widget" && (b.widgetId?.includes('wave') || b.widgetId?.includes('language-chart') || b.widgetId?.includes('repo-showcase') || b.widgetId?.includes('animated-progress') || b.widgetId?.includes('typing-animation'))).map(block => (
+              <div
+                key={block.id}
+                className="group flex items-center cursor-move bg-white dark:bg-gray-800 rounded-xl p-4 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all duration-200 border border-gray-200/60 dark:border-gray-700/60 shadow-sm hover:shadow-md hover:scale-[1.01]"
+                draggable
+                onDragStart={() => handleDragStart(block)}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="w-9 h-9 rounded-lg bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <span className="font-semibold text-gray-900 dark:text-white text-sm">{block.label}</span>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Interactive SVG widgets</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                </svg>
+              </div>
+            ))}
           </div>
         </div>
       
-        {/* Content Sections */}        <div className="mb-7">
+        {/* Content Sections */}<div className="mb-7">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:justify-between mb-4">
             <h4 className="flex items-center text-sm font-bold text-gray-800 dark:text-gray-200 min-w-0">
               <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center mr-3 flex-shrink-0">

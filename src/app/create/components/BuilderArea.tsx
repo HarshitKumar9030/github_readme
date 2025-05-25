@@ -1,11 +1,14 @@
-'use client';
-
 import React, { useCallback } from 'react';
 import { Block } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
 import EnhancedSocialStatsWidget from '@/app/create/SocialStatsWidget-Redesigned';
 import TopLanguagesWidget from '@/widgets/TopLanguagesWidget';
 import ContributionGraphWidget from '@/widgets/ContributionGraphWidget';
+import WaveAnimationWidget from '@/widgets/WaveAnimationWidget';
+import LanguageChartWidget from '@/widgets/LanguageChartWidget';
+import RepositoryShowcaseWidget from '@/widgets/RepositoryShowcaseWidget';
+import AnimatedProgressWidget from '@/widgets/AnimatedProgressWidget';
+import TypingAnimationWidget from '@/widgets/TypingAnimationWidget';
 
 // Accept widgetConfig, username, socials as props
 interface BuilderAreaProps {
@@ -209,10 +212,14 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                       
                       {/* Block preview - you may need to create separate components for each block type for better maintainability */}
                       {block.type === 'widget' && (
-                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-                            {block.widgetId === 'github-stats' ? 'GitHub Stats Widget' : 
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">                            {block.widgetId === 'github-stats' ? 'GitHub Stats Widget' : 
                              block.widgetId === 'top-languages' ? 'Top Languages Widget' : 
                              block.widgetId === 'contribution-graph' ? 'Contribution Graph Widget' :
+                             block.widgetId === 'wave-animation' ? 'Wave Animation Widget' :
+                             block.widgetId === 'language-chart' ? 'Language Chart Widget' :
+                             block.widgetId === 'repo-showcase' ? 'Repository Showcase Widget' :
+                             block.widgetId === 'animated-progress' ? 'Animated Progress Widget' :
+                             block.widgetId === 'typing-animation' ? 'Typing Animation Widget' :
                              'Social Stats Widget'}
                           </div>
                           <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">                            {block.widgetId === 'github-stats' && (                              <GitHubStatsWidget 
@@ -272,6 +279,92 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                   showDots: widgetConfig.showDots || true,
                                   height: widgetConfig.height || 180,
                                   graphType: widgetConfig.graphType || 'line',
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || ''
+                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+                              />
+                            )}                            {block.widgetId === 'wave-animation' && (
+                              <WaveAnimationWidget
+                                config={{
+                                  theme: widgetConfig.theme || 'light',
+                                  waveColor: widgetConfig.waveColor || '#0066cc',
+                                  waveSecondaryColor: widgetConfig.waveSecondaryColor,
+                                  waveSpeed: widgetConfig.waveSpeed || 'medium',
+                                  waveCount: widgetConfig.waveCount || 3,
+                                  width: widgetConfig.cardWidth || 800,
+                                  height: widgetConfig.height || 120,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || ''
+                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+                              />
+                            )}                            {block.widgetId === 'language-chart' && (
+                              <LanguageChartWidget
+                                config={{
+                                  username: username,
+                                  theme: widgetConfig.theme || 'light',
+                                  showPercentages: widgetConfig.showPercentages !== false,
+                                  size: widgetConfig.cardWidth || 300,
+                                  minPercentage: 5,
+                                  maxLanguages: 8,
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || ''
+                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+                              />
+                            )}                            {block.widgetId === 'repo-showcase' && (
+                              <RepositoryShowcaseWidget
+                                config={{
+                                  username: username,
+                                  theme: widgetConfig.theme || 'default',
+                                  showcaseRepos: widgetConfig.showcaseRepos || [],
+                                  showStars: widgetConfig.showStars !== false,
+                                  showForks: widgetConfig.showForks !== false,
+                                  showLanguage: widgetConfig.showLanguage !== false,
+                                  showDescription: widgetConfig.showDescription !== false,
+                                  width: widgetConfig.cardWidth || 400,
+                                  height: widgetConfig.height || 200,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || ''
+                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+                              />
+                            )}                            {block.widgetId === 'animated-progress' && (
+                              <AnimatedProgressWidget
+                                config={{
+                                  theme: widgetConfig.theme || 'default',
+                                  skills: widgetConfig.skills || [
+                                    { name: 'JavaScript', level: 90, color: '#f1e05a' },
+                                    { name: 'TypeScript', level: 85, color: '#3178c6' },
+                                    { name: 'React', level: 80, color: '#61dafb' }
+                                  ],
+                                  animationDuration: widgetConfig.animationDuration || 2000,
+                                  showProgressText: widgetConfig.showProgressText !== false,
+                                  progressBarHeight: widgetConfig.progressBarHeight || 20,
+                                  hideBorder: widgetConfig.hideBorder || false,
+                                  hideTitle: widgetConfig.hideTitle || false,
+                                  customTitle: widgetConfig.customTitle || ''
+                                }}
+                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+                              />
+                            )}
+
+                            {block.widgetId === 'typing-animation' && (
+                              <TypingAnimationWidget
+                                config={{
+                                  theme: widgetConfig.theme || 'default',
+                                  text: 'Hello, I am a developer!',
+                                  font: 'monospace',
+                                  size: 20,
+                                  color: '#0066cc',
+                                  duration: 3000,
+                                  loop: true,
+                                  cursor: true,
+                                  width: 600,
+                                  height: 100,
                                   hideBorder: widgetConfig.hideBorder || false,
                                   hideTitle: widgetConfig.hideTitle || false,
                                   customTitle: widgetConfig.customTitle || ''
