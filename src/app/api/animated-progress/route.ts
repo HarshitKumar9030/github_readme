@@ -167,20 +167,50 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
+    // Handle both formats: skills=JS:90,TS:85 or skills=JS,TS&values=90,85
     const skillsParam = searchParams.get('skills') || 'JavaScript,TypeScript,React,Node.js,Python';
-    const valuesParam = searchParams.get('values') || '90,85,95,80,75';
+    const valuesParam = searchParams.get('values');
     const theme = searchParams.get('theme') || 'default';
     const width = parseInt(searchParams.get('width') || '400');
     const height = parseInt(searchParams.get('height') || '300');
     const animated = searchParams.get('animated') !== 'false';
-    const showPercentage = searchParams.get('showPercentage') !== 'false';
+    const showPercentage = searchParams.get('show_progress_text') !== 'false' && searchParams.get('showPercentage') !== 'false';
     const title = searchParams.get('title') || 'Skills & Technologies';
 
-    const skills = skillsParam.split(',').map(s => s.trim());
-    const values = valuesParam.split(',').map(v => parseInt(v.trim()));
+    let skills: string[];
+    let values: number[];
+
+    // Check if skills param contains values (format: "skill:value,skill:value")
+    if (skillsParam.includes(':') && !valuesParam) {
+      const skillValuePairs = skillsParam.split(',').map(s => s.trim());
+      skills = [];
+      values = [];
+      
+      for (const pair of skillValuePairs) {
+        const [skill, value] = pair.split(':').map(s => s.trim());
+        if (skill && value && !isNaN(parseInt(value))) {
+          skills.push(skill);
+          values.push(parseInt(value));
+        }
+      }
+    } else {
+      // Traditional format: separate skills and values
+      skills = skillsParam.split(',').map(s => s.trim());
+      const defaultValues = '90,85,95,80,75';
+      values = (valuesParam || defaultValues).split(',').map(v => parseInt(v.trim()));
+    }
+
+    if (skills.length === 0 || values.length === 0) {
+      return new NextResponse('No valid skills or values provided', { status: 400 });
+    }
 
     if (skills.length !== values.length) {
-      return new NextResponse('Skills and values arrays must have the same length', { status: 400 });
+      // If values array is shorter, pad with default values
+      while (values.length < skills.length) {
+        values.push(75); // Default value
+      }
+      // If values array is longer, truncate it
+      values = values.slice(0, skills.length);
     }
 
     const svg = generateProgressSvg({

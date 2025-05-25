@@ -58,12 +58,39 @@ export default function CreatePage() {
       type: "widget",
       label: "Social Stats",
       widgetId: "social-stats",
-    },
-    {
+    },    {
       id: "widget-4",
       type: "widget",
       label: "Contribution Graph",
       widgetId: "contribution-graph",
+    },
+    {
+      id: "widget-5",
+      type: "widget",
+      label: "Wave Animation",
+      widgetId: "wave-animation",
+    },
+    {
+      id: "widget-6",
+      type: "widget",
+      label: "Language Chart",
+      widgetId: "language-chart",
+    },    {
+      id: "widget-7",
+      type: "widget",
+      label: "Repository Showcase",
+      widgetId: "repo-showcase",
+    },    {
+      id: "widget-8",
+      type: "widget",
+      label: "Animated Progress",
+      widgetId: "animated-progress",
+    },
+    {
+      id: "widget-9",
+      type: "widget",
+      label: "Typing Animation",
+      widgetId: "typing-animation",
     },
     {
       id: "block-1",

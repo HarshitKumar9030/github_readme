@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useReducer } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { createAbsoluteUrl } from "@/utils/urlHelpers";
@@ -107,6 +107,45 @@ const fetchGitHubStats = async (username: string): Promise<EnhancedSocialStats['
   }
 };
 
+// Widget state reducer to batch updates and prevent flickering
+interface WidgetState {
+  stats: EnhancedSocialStats;
+  loading: boolean;
+  error: string | null;
+  svgUrl: string;
+  viewMode: "card" | "svg";
+}
+
+type WidgetAction = 
+  | { type: 'FETCH_START' }
+  | { type: 'FETCH_SUCCESS'; payload: { stats: EnhancedSocialStats; svgUrl: string } }
+  | { type: 'FETCH_ERROR'; payload: string }
+  | { type: 'TOGGLE_VIEW_MODE' }
+  | { type: 'RESET' };
+
+const widgetReducer = (state: WidgetState, action: WidgetAction): WidgetState => {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null };
+    case 'FETCH_SUCCESS':
+      return { 
+        ...state, 
+        loading: false, 
+        error: null, 
+        stats: action.payload.stats, 
+        svgUrl: action.payload.svgUrl 
+      };
+    case 'FETCH_ERROR':
+      return { ...state, loading: false, error: action.payload, stats: {}, svgUrl: "" };
+    case 'TOGGLE_VIEW_MODE':
+      return { ...state, viewMode: state.viewMode === "card" ? "svg" : "card" };
+    case 'RESET':
+      return { stats: {}, loading: false, error: null, svgUrl: "", viewMode: "card" };
+    default:
+      return state;
+  }
+};
+
 // Theme configuration
 const getThemeConfig = (theme: string) => {
   const themes = {
@@ -205,7 +244,7 @@ const getThemeConfig = (theme: string) => {
   return themes[theme as keyof typeof themes] || themes.default;
 };
 
-export default function EnhancedSocialStatsWidget({
+function EnhancedSocialStatsWidget({
   socials,
   theme = "default",
   layout = "default",
@@ -218,87 +257,129 @@ export default function EnhancedSocialStatsWidget({
   showBorder = true,
   onMarkdownGenerated,
 }: EnhancedSocialStatsWidgetProps) {
-  const [stats, setStats] = useState<EnhancedSocialStats>({});
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [svgUrl, setSvgUrl] = useState<string>("");
-  const [viewMode, setViewMode] = useState<"card" | "svg">("card");
-  const themeConfig = getThemeConfig(theme);
+  // Use reducer for batched state updates to prevent flickering
+  const [state, dispatch] = useReducer(widgetReducer, {
+    stats: {},
+    loading: false,
+    error: null,
+    svgUrl: "",
+    viewMode: "card"
+  });
+
+  // Memoize theme configuration to prevent recreation
+  const themeConfig = useMemo(() => getThemeConfig(theme), [theme]);
 
   // Memoize hideStats to prevent infinite re-renders
   const memoizedHideStats = useMemo(() => hideStats || [], [hideStats]);
 
+  // Memoize animation configurations to prevent Framer Motion re-initialization
+  const animationConfig = useMemo(() => {
+    if (!enableAnimations) {
+      return {
+        initial: undefined,
+        animate: undefined,
+        transition: undefined
+      };
+    }
+    return {
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+      transition: { duration: 0.5 }
+    };
+  }, [enableAnimations]);
+
+  const itemAnimationConfig = useMemo(() => {
+    if (!enableAnimations) {
+      return {
+        initial: undefined,
+        animate: undefined,
+        transition: undefined
+      };
+    }
+    return {
+      initial: { opacity: 0, y: 10 },
+      animate: { opacity: 1, y: 0 }
+    };
+  }, [enableAnimations]);
+
   // Border radius classes
-  const borderRadiusClass = {
+  const borderRadiusClass = useMemo(() => ({
     none: "rounded-none",
     small: "rounded-lg",
     medium: "rounded-xl",
     large: "rounded-2xl",
-  }[borderRadius];
+  }[borderRadius]), [borderRadius]);
 
-  // Fetch GitHub stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!socials.github) {
-        setStats({});
-        setSvgUrl("");
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-
-      try {
-        const githubStats = await fetchGitHubStats(socials.github);
-        setStats({ github: githubStats });
-
-        // Generate SVG URL
-        const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&theme=${theme}&layout=${layout}&showAvatar=${showAvatar}&showBio=${showBio}&hideStats=${memoizedHideStats.join(',')}&borderRadius=${borderRadius}&showBorder=${showBorder}`;
-        setSvgUrl(createAbsoluteUrl(apiPath));
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch stats');
-        setStats({});
-        setSvgUrl("");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [socials.github, theme, layout, showAvatar, showBio, memoizedHideStats, borderRadius, showBorder]);
-    // Call onMarkdownGenerated when markdown changes (removed onMarkdownGenerated from deps to prevent infinite loop)
-  useEffect(() => {
-    if (onMarkdownGenerated && svgUrl && socials.github) {
-      const markdown = `![GitHub Stats for @${socials.github}](${svgUrl})`;
-      onMarkdownGenerated(markdown);
+  // Stable fetch function to prevent useEffect retriggering
+  const fetchStats = useCallback(async () => {
+    if (!socials.github) {
+      dispatch({ type: 'RESET' });
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [svgUrl, socials.github]); // Intentionally omitting onMarkdownGenerated to prevent infinite loops
 
-  // Generate markdown
-  const generateMarkdown = () => {
-    if (!svgUrl || !socials.github) return "";
-    return `![GitHub Stats for @${socials.github}](${svgUrl})`;
-  };
+    dispatch({ type: 'FETCH_START' });
 
-  // Copy to clipboard
-  const copyToClipboard = async (text: string) => {
+    try {
+      const githubStats = await fetchGitHubStats(socials.github);
+      
+      // Generate SVG URL
+      const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&theme=${theme}&layout=${layout}&showAvatar=${showAvatar}&showBio=${showBio}&hideStats=${memoizedHideStats.join(',')}&borderRadius=${borderRadius}&showBorder=${showBorder}`;
+      const svgUrl = createAbsoluteUrl(apiPath);
+
+      // Batch update to prevent multiple re-renders
+      dispatch({ 
+        type: 'FETCH_SUCCESS', 
+        payload: { 
+          stats: { github: githubStats }, 
+          svgUrl 
+        } 
+      });
+    } catch (err) {
+      dispatch({ 
+        type: 'FETCH_ERROR', 
+        payload: err instanceof Error ? err.message : 'Failed to fetch stats' 
+      });
+    }
+  }, [socials.github, theme, layout, showAvatar, showBio, memoizedHideStats, borderRadius, showBorder]);
+
+  // Stable toggle function
+  const toggleViewMode = useCallback(() => {
+    dispatch({ type: 'TOGGLE_VIEW_MODE' });
+  }, []);
+
+  // Stable copy function
+  const copyToClipboard = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
       // Could add toast notification here
     } catch (err) {
       console.error('Failed to copy to clipboard:', err);
     }
-  };
+  }, []);
 
+  // Generate markdown - memoized to prevent recreation
+  const markdown = useMemo(() => {
+    if (!state.svgUrl || !socials.github) return "";
+    return `![GitHub Stats for @${socials.github}](${state.svgUrl})`;
+  }, [state.svgUrl, socials.github]);
+
+  // Fetch GitHub stats
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  // Call onMarkdownGenerated when markdown changes - stabilized to prevent infinite loops
+  useEffect(() => {
+    if (onMarkdownGenerated && markdown) {
+      onMarkdownGenerated(markdown);
+    }
+  }, [onMarkdownGenerated, markdown]);
   // Render loading state
-  if (loading) {
+  if (state.loading) {
     return (
       <motion.div
         className={`${themeConfig.background} ${themeConfig.text} ${borderRadiusClass} ${showBorder ? `border ${themeConfig.border}` : ''} shadow-lg overflow-hidden`}
-        initial={enableAnimations ? { opacity: 0, y: 20 } : undefined}
-        animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
-        transition={enableAnimations ? { duration: 0.5 } : undefined}
+        {...animationConfig}
       >
         <div className="p-6">
           <div className="flex items-center justify-center h-40">
@@ -316,20 +397,18 @@ export default function EnhancedSocialStatsWidget({
   }
 
   // Render error state
-  if (error) {
+  if (state.error) {
     return (
       <motion.div
         className={`${themeConfig.background} ${themeConfig.text} ${borderRadiusClass} ${showBorder ? `border ${themeConfig.border}` : ''} shadow-lg overflow-hidden`}
-        initial={enableAnimations ? { opacity: 0, y: 20 } : undefined}
-        animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
-        transition={enableAnimations ? { duration: 0.5 } : undefined}
+        {...animationConfig}
       >
         <div className="p-6">
           <div className="flex items-center justify-center h-40">
             <div className="text-center">
               <div className="text-red-500 text-4xl mb-4">⚠️</div>
               <div className={`${themeConfig.secondaryText} text-sm`}>
-                Error: {error}
+                Error: {state.error}
               </div>
             </div>
           </div>
@@ -337,14 +416,11 @@ export default function EnhancedSocialStatsWidget({
       </motion.div>
     );
   }
-
   // Render main component
   return (
     <motion.div
       className={`${themeConfig.background} ${themeConfig.text} ${borderRadiusClass} ${showBorder ? `border ${themeConfig.border}` : ''} shadow-lg overflow-hidden relative`}
-      initial={enableAnimations ? { opacity: 0, y: 20 } : undefined}
-      animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
-      transition={enableAnimations ? { duration: 0.5 } : undefined}
+      {...animationConfig}
     >
       {/* Background gradient overlay for gradient themes */}
       {themeConfig.gradient && (
@@ -358,18 +434,18 @@ export default function EnhancedSocialStatsWidget({
             {customTitle || `${socials.github ? '@' + socials.github : 'Social'} Stats`}
           </h3>
           
-          {socials.github && stats.github && (
+          {socials.github && state.stats.github && (
             <div className="flex gap-2">
               <button
-                onClick={() => setViewMode(viewMode === "card" ? "svg" : "card")}
+                onClick={toggleViewMode}
                 className={`px-3 py-1 text-xs ${themeConfig.statsBg} ${themeConfig.text} rounded-lg hover:opacity-80 transition-all`}
               >
-                {viewMode === "card" ? "📊 SVG" : "🃏 Card"}
+                {state.viewMode === "card" ? "📊 SVG" : "🃏 Card"}
               </button>
               
-              {viewMode === "svg" && svgUrl && (
+              {state.viewMode === "svg" && state.svgUrl && (
                 <button
-                  onClick={() => copyToClipboard(generateMarkdown())}
+                  onClick={() => copyToClipboard(markdown)}
                   className={`px-3 py-1 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all`}
                 >
                   📋 Copy MD
@@ -380,15 +456,15 @@ export default function EnhancedSocialStatsWidget({
         </div>
 
         {/* Content */}
-        {viewMode === "card" ? (
+        {state.viewMode === "card" ? (
           <div className="space-y-6">
             {/* GitHub Stats */}
-            {stats.github && (
+            {state.stats.github && (
               <div className="space-y-4">
                 {/* Profile section */}
                 {(showAvatar || showBio) && (
                   <div className="flex items-start gap-4">
-                    {showAvatar && stats.github.avatar && (
+                    {showAvatar && state.stats.github.avatar && (
                       <motion.div
                         className="shrink-0"
                         initial={enableAnimations ? { scale: 0 } : undefined}
@@ -396,36 +472,37 @@ export default function EnhancedSocialStatsWidget({
                         transition={enableAnimations ? { delay: 0.2, type: "spring", stiffness: 200 } : undefined}
                       >
                         <Image
-                          src={stats.github.avatar}
+                          src={state.stats.github.avatar}
                           alt={`${socials.github} avatar`}
                           width={layout === "compact" ? 48 : 64}
                           height={layout === "compact" ? 48 : 64}
                           className={`${layout === "compact" ? "w-12 h-12" : "w-16 h-16"} rounded-full border-2 ${themeConfig.border} shadow-lg`}
+                          key={`avatar-${socials.github}`}
                         />
                       </motion.div>
                     )}
                     
                     {showBio && (
                       <div className="flex-1 min-w-0">
-                        {stats.github.name && (
+                        {state.stats.github.name && (
                           <h4 className={`font-semibold ${themeConfig.text} truncate`}>
-                            {stats.github.name}
+                            {state.stats.github.name}
                           </h4>
                         )}
-                        {stats.github.bio && (
+                        {state.stats.github.bio && (
                           <p className={`text-sm ${themeConfig.secondaryText} mt-1 line-clamp-2`}>
-                            {stats.github.bio}
+                            {state.stats.github.bio}
                           </p>
                         )}
                         <div className={`flex items-center gap-3 mt-2 text-xs ${themeConfig.secondaryText}`}>
-                          {stats.github.company && (
+                          {state.stats.github.company && (
                             <span className="flex items-center gap-1">
-                              🏢 {stats.github.company}
+                              🏢 {state.stats.github.company}
                             </span>
                           )}
-                          {stats.github.location && (
+                          {state.stats.github.location && (
                             <span className="flex items-center gap-1">
-                              📍 {stats.github.location}
+                              📍 {state.stats.github.location}
                             </span>
                           )}
                         </div>
@@ -439,12 +516,11 @@ export default function EnhancedSocialStatsWidget({
                   {!hideStats.includes('followers') && (
                     <motion.div
                       className={`${themeConfig.statsBg} p-4 ${borderRadiusClass}`}
-                      initial={enableAnimations ? { opacity: 0, y: 10 } : undefined}
-                      animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
+                      {...itemAnimationConfig}
                       transition={enableAnimations ? { delay: 0.3 } : undefined}
                     >
                       <div className={`text-2xl font-bold ${themeConfig.accent}`}>
-                        {stats.github.followers.toLocaleString()}
+                        {state.stats.github.followers.toLocaleString()}
                       </div>
                       <div className={`text-sm ${themeConfig.secondaryText}`}>Followers</div>
                     </motion.div>
@@ -453,12 +529,11 @@ export default function EnhancedSocialStatsWidget({
                   {!hideStats.includes('repositories') && (
                     <motion.div
                       className={`${themeConfig.statsBg} p-4 ${borderRadiusClass}`}
-                      initial={enableAnimations ? { opacity: 0, y: 10 } : undefined}
-                      animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
+                      {...itemAnimationConfig}
                       transition={enableAnimations ? { delay: 0.4 } : undefined}
                     >
                       <div className={`text-2xl font-bold ${themeConfig.accent}`}>
-                        {stats.github.repositories.toLocaleString()}
+                        {state.stats.github.repositories.toLocaleString()}
                       </div>
                       <div className={`text-sm ${themeConfig.secondaryText}`}>Repositories</div>
                     </motion.div>
@@ -467,12 +542,11 @@ export default function EnhancedSocialStatsWidget({
                   {!hideStats.includes('stars') && (
                     <motion.div
                       className={`${themeConfig.statsBg} p-4 ${borderRadiusClass}`}
-                      initial={enableAnimations ? { opacity: 0, y: 10 } : undefined}
-                      animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
+                      {...itemAnimationConfig}
                       transition={enableAnimations ? { delay: 0.5 } : undefined}
                     >
                       <div className={`text-2xl font-bold ${themeConfig.accent}`}>
-                        {stats.github.stars.toLocaleString()}
+                        {state.stats.github.stars.toLocaleString()}
                       </div>
                       <div className={`text-sm ${themeConfig.secondaryText}`}>Total Stars</div>
                     </motion.div>
@@ -481,12 +555,11 @@ export default function EnhancedSocialStatsWidget({
                   {!hideStats.includes('following') && (
                     <motion.div
                       className={`${themeConfig.statsBg} p-4 ${borderRadiusClass}`}
-                      initial={enableAnimations ? { opacity: 0, y: 10 } : undefined}
-                      animate={enableAnimations ? { opacity: 1, y: 0 } : undefined}
+                      {...itemAnimationConfig}
                       transition={enableAnimations ? { delay: 0.6 } : undefined}
                     >
                       <div className={`text-2xl font-bold ${themeConfig.accent}`}>
-                        {stats.github.following.toLocaleString()}
+                        {state.stats.github.following.toLocaleString()}
                       </div>
                       <div className={`text-sm ${themeConfig.secondaryText}`}>Following</div>
                     </motion.div>
@@ -498,19 +571,19 @@ export default function EnhancedSocialStatsWidget({
                   <div className="grid grid-cols-3 gap-4 mt-4">
                     <div className={`${themeConfig.statsBg} p-3 ${borderRadiusClass} text-center`}>
                       <div className={`text-lg font-semibold ${themeConfig.accent}`}>
-                        {stats.github.commits}
+                        {state.stats.github.commits}
                       </div>
                       <div className={`text-xs ${themeConfig.secondaryText}`}>Recent Commits</div>
                     </div>
                     <div className={`${themeConfig.statsBg} p-3 ${borderRadiusClass} text-center`}>
                       <div className={`text-lg font-semibold ${themeConfig.accent}`}>
-                        {stats.github.issues}
+                        {state.stats.github.issues}
                       </div>
                       <div className={`text-xs ${themeConfig.secondaryText}`}>Issues</div>
                     </div>
                     <div className={`${themeConfig.statsBg} p-3 ${borderRadiusClass} text-center`}>
                       <div className={`text-lg font-semibold ${themeConfig.accent}`}>
-                        {stats.github.pullRequests}
+                        {state.stats.github.pullRequests}
                       </div>
                       <div className={`text-xs ${themeConfig.secondaryText}`}>Pull Requests</div>
                     </div>
@@ -531,36 +604,40 @@ export default function EnhancedSocialStatsWidget({
           </div>
         ) : (
           /* SVG View */
-          <div className="space-y-4">            {svgUrl && (
+          <div className="space-y-4">
+            {state.svgUrl && (
               <div className="bg-white rounded-lg p-4">
                 <Image
-                  src={svgUrl}
+                  src={state.svgUrl}
                   alt={`GitHub stats for ${socials.github}`}
                   width={495}
                   height={250}
                   className="w-full h-auto"
                   unoptimized
+                  key={`svg-${socials.github}-${theme}`}
                 />
               </div>
             )}
             
             <div className="flex gap-2 text-xs">
               <button
-                onClick={() => copyToClipboard(svgUrl)}
+                onClick={() => copyToClipboard(state.svgUrl)}
                 className={`flex-1 px-3 py-2 ${themeConfig.statsBg} ${themeConfig.text} rounded-lg hover:opacity-80 transition-all`}
               >
                 📋 Copy SVG URL
               </button>
               <button
-                onClick={() => copyToClipboard(generateMarkdown())}
+                onClick={() => copyToClipboard(markdown)}
                 className="flex-1 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
               >
                 📝 Copy Markdown
               </button>
             </div>
           </div>
-        )}
-      </div>
+        )}      </div>
     </motion.div>
   );
 }
+
+// Memoized export to prevent unnecessary re-renders
+export default React.memo(EnhancedSocialStatsWidget);
