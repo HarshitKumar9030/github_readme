@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
 import { convertToGitHubCompatible } from "@/utils/inlineStylesConverter";
@@ -37,14 +38,16 @@ const InlineMarkdownRenderer = ({ content }: { content: string }) => {
     
     return () => observer.disconnect();
   }, []);
-
   return (
-    <div className="prose prose-gray dark:prose-invert max-w-none">
-      <ReactMarkdown
+    <div className="prose prose-gray dark:prose-invert max-w-none">      <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        components={{          code({ node, className, children, ...props }: any) {
+        rehypePlugins={[rehypeRaw]}
+        skipHtml={false}
+        allowedElements={undefined}
+        disallowedElements={[]}
+        components={{code({ node, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
-            const isInline = !match;
+            const isInline = !className || !match;
             return !isInline ? (
               <SyntaxHighlighter
                 style={tomorrow}
@@ -148,12 +151,59 @@ const InlineMarkdownRenderer = ({ content }: { content: string }) => {
                 {children}
               </ol>
             );
-          },
-          p({ children, ...props }) {
+          },          p({ children, ...props }) {
             return (
               <p className="my-4 text-gray-800 dark:text-gray-200 leading-relaxed" {...props}>
                 {children}
               </p>
+            );
+          },
+          // GFM-specific components
+          input({ type, checked, ...props }) {
+            if (type === 'checkbox') {
+              return (
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  readOnly
+                  className="mr-2 accent-blue-600"
+                  {...props}
+                />
+              );
+            }
+            return <input type={type} {...props} />;
+          },
+          li({ children, ...props }) {
+            return (
+              <li className="my-1 text-gray-800 dark:text-gray-200" {...props}>
+                {children}
+              </li>
+            );
+          },
+          del({ children, ...props }) {
+            return (
+              <del className="line-through text-gray-600 dark:text-gray-400" {...props}>
+                {children}
+              </del>
+            );
+          },
+          hr({ ...props }) {
+            return (
+              <hr className="my-8 border-t border-gray-300 dark:border-gray-600" {...props} />
+            );
+          },
+          strong({ children, ...props }) {
+            return (
+              <strong className="font-bold text-gray-900 dark:text-white" {...props}>
+                {children}
+              </strong>
+            );
+          },
+          em({ children, ...props }) {
+            return (
+              <em className="italic text-gray-800 dark:text-gray-200" {...props}>
+                {children}
+              </em>
             );
           },
         }}
