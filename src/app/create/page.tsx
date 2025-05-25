@@ -830,22 +830,28 @@ export default function CreatePage() {
     };    document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [showPreview, saveProject, handleUndo, handleRedo]);
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-purple-900/20 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+      </div>
+
       {/* Mobile warning popup */}
       {showMobileWarning && (
         <MobileWarning onDismiss={() => setShowMobileWarning(false)} />
       )}
 
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 py-12">
-        <div className="mb-8 text-center">
+      <div className="relative z-10 max-w-8xl mx-auto px-4 sm:px-6 py-8 lg:py-12">
+        <div className="mb-8 lg:mb-12 text-center">
           <Link
             href="/"
-            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-6"
+            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-6 lg:mb-8 group transition-all duration-300 text-sm font-medium"
           >
             <svg
-              className="w-5 h-5 mr-2"
+              className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -860,88 +866,100 @@ export default function CreatePage() {
             </svg>
             Back to Home
           </Link>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 lg:mb-6 bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 dark:from-white dark:via-blue-100 dark:to-purple-100 bg-clip-text text-transparent leading-tight">
             Create Your README
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Choose a template and customize it to create your perfect GitHub
-            profile README
+          <p className="text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed font-light">
+            Design stunning GitHub profile READMEs with our intuitive drag-and-drop builder
           </p>
-        </div>
-        {/* README Generator Builder Interface */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          {/* Top Header Bar with Project Name and GitHub Username */}
-          <HeaderBar
-            projectName={projectName}
-            setProjectName={setProjectName}
-            username={username}
-            setUsername={setUsername}
-          />
+          <div className="mt-6 flex justify-center">
+            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span>Real-time preview • Auto-save enabled</span>
+            </div>
+          </div>
+        </div>        {/* README Generator Builder Interface */}
+        <div className="relative">
+          {/* Glass container with enhanced styling */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden transition-all duration-500 hover:shadow-3xl">
+            {/* Subtle gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
+            
+            <div className="relative z-10">
+              {/* Top Header Bar with Project Name and GitHub Username */}
+              <HeaderBar
+                projectName={projectName}
+                setProjectName={setProjectName}
+                username={username}
+                setUsername={setUsername}
+              />
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[700px]">
-            {/* Left sidebar with tabs */}
-            <BuilderSidebar
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              availableBlocks={availableBlocks}
-              handleDragStart={handleDragStart}
-              handleDragEnd={handleDragEnd}
-              socials={socials}
-              setSocials={setSocials}
-              widgetConfig={widgetConfig}
-              setWidgetConfig={setWidgetConfig}
-              loadTemplate={loadTemplate}
-            />
-            {/* No idea why there were two prope panels here fixed it  */}
-            {/* <PropertiesPanel 
-              selectedBlock={builderBlocks.find(block => block.id === selectedBlockId) || null}
-              selectedBlockId={selectedBlockId}
-              setSelectedBlockId={setSelectedBlockId}
-              updateBlockContent={updateBlockContent}
-              updateBlockLayout={updateBlockLayout}
-              updateTemplateProperty={updateTemplateProperty}
-              updateWidgetProperty={updateWidgetProperty}
-              widgetConfig={widgetConfig}
-              setWidgetConfig={setWidgetConfig}
-              username={username}
-            /> */}
-            {/* Main Builder Area */}{" "}            <BuilderArea
-              builderBlocks={builderBlocks}
-              dragOver={dragOver}
-              handleDragOver={handleDragOver}
-              handleDragLeave={handleDragLeave}
-              handleDrop={handleDrop}
-              selectedBlockId={selectedBlockId}
-              handleBlockSelect={handleBlockSelect}
-              handleRemoveBlock={handleRemoveBlock}
-              handleMoveBlockUp={handleMoveBlockUp}
-              handleMoveBlockDown={handleMoveBlockDown}
-              loadTemplate={loadTemplate}
-              widgetConfig={widgetConfig}
-              username={username}
-              socials={socials}
-              handleWidgetMarkdownGenerated={handleWidgetMarkdownGenerated}
-              handleUndo={handleUndo}
-              handleRedo={handleRedo}
-              canUndo={canUndo}
-              canRedo={canRedo}
-            />
-            {/* Right Sidebar - Properties */}
-            <PropertiesPanel
-              selectedBlock={builderBlocks.find(
-                (block) => block.id === selectedBlockId
-              )}
-              selectedBlockId={selectedBlockId}
-              setSelectedBlockId={setSelectedBlockId}
-              updateBlockContent={updateBlockContent}
-              updateBlockLayout={updateBlockLayout}
-              updateBlockContainerLayout={updateBlockContainerLayout}
-              updateTemplateProperty={updateTemplateProperty}
-              updateWidgetProperty={updateWidgetProperty}
-              widgetConfig={widgetConfig}
-              setWidgetConfig={setWidgetConfig}
-              username={username}
-            />
+              <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[700px] lg:min-h-[800px]">
+                {/* Left sidebar with tabs */}
+                <BuilderSidebar
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  availableBlocks={availableBlocks}
+                  handleDragStart={handleDragStart}
+                  handleDragEnd={handleDragEnd}
+                  socials={socials}
+                  setSocials={setSocials}
+                  widgetConfig={widgetConfig}
+                  setWidgetConfig={setWidgetConfig}
+                  loadTemplate={loadTemplate}
+                />
+                {/* No idea why there were two prope panels here fixed it  */}
+                {/* <PropertiesPanel 
+                  selectedBlock={builderBlocks.find(block => block.id === selectedBlockId) || null}
+                  selectedBlockId={selectedBlockId}
+                  setSelectedBlockId={setSelectedBlockId}
+                  updateBlockContent={updateBlockContent}
+                  updateBlockLayout={updateBlockLayout}
+                  updateTemplateProperty={updateTemplateProperty}
+                  updateWidgetProperty={updateWidgetProperty}
+                  widgetConfig={widgetConfig}
+                  setWidgetConfig={setWidgetConfig}
+                  username={username}
+                /> */}
+                {/* Main Builder Area */}{" "}            <BuilderArea
+                  builderBlocks={builderBlocks}
+                  dragOver={dragOver}
+                  handleDragOver={handleDragOver}
+                  handleDragLeave={handleDragLeave}
+                  handleDrop={handleDrop}
+                  selectedBlockId={selectedBlockId}
+                  handleBlockSelect={handleBlockSelect}
+                  handleRemoveBlock={handleRemoveBlock}
+                  handleMoveBlockUp={handleMoveBlockUp}
+                  handleMoveBlockDown={handleMoveBlockDown}
+                  loadTemplate={loadTemplate}
+                  widgetConfig={widgetConfig}
+                  username={username}
+                  socials={socials}
+                  handleWidgetMarkdownGenerated={handleWidgetMarkdownGenerated}
+                  handleUndo={handleUndo}
+                  handleRedo={handleRedo}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                />
+                {/* Right Sidebar - Properties */}
+                <PropertiesPanel
+                  selectedBlock={builderBlocks.find(
+                    (block) => block.id === selectedBlockId
+                  )}
+                  selectedBlockId={selectedBlockId}
+                  setSelectedBlockId={setSelectedBlockId}
+                  updateBlockContent={updateBlockContent}
+                  updateBlockLayout={updateBlockLayout}
+                  updateBlockContainerLayout={updateBlockContainerLayout}
+                  updateTemplateProperty={updateTemplateProperty}
+                  updateWidgetProperty={updateWidgetProperty}
+                  widgetConfig={widgetConfig}
+                  setWidgetConfig={setWidgetConfig}
+                  username={username}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Footer Actions */}
