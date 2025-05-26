@@ -50,6 +50,30 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
     return createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
   }, [config.username, config.theme, config.size, config.chartType, config.maxLanguages, config.minPercentage]);
 
+  // Memoize markdown generation to prevent unnecessary re-renders
+  const generateMarkdown = useMemo(() => {
+    if (!config.username?.trim()) {
+      return '<!-- Language Chart: Please configure username -->';
+    }
+    const params = new URLSearchParams({
+      username: config.username,
+      theme: config.theme || 'dark',
+      size: (config.size || 400).toString(),
+      chartType: config.chartType || 'donut',
+      maxLanguages: Math.min(config.maxLanguages || 8, 8).toString()
+    });
+
+    if (config.minPercentage) {
+      params.set('minPercentage', config.minPercentage.toString());
+    }
+
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000';
+    const url = `${baseUrl}/api/language-chart?${params.toString()}`;
+    
+    const chartTypeEmoji = config.chartType === 'pie' ? '🥧' : config.chartType === 'bar' ? '📊' : '🍩';
+    return `![${chartTypeEmoji} ${config.username}'s Language Chart](${url})`;
+  }, [config.username, config.theme, config.size, config.chartType, config.maxLanguages, config.minPercentage]);
+
   // Load preview with proper error handling and debouncing
   useEffect(() => {
     if (!svgUrl) {
@@ -68,11 +92,9 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
         if (!response.ok) {
           throw new Error(`Failed to generate chart: ${response.status}`);
         }
-        
-        // Generate markdown when successful
+          // Generate markdown when successful
         if (onMarkdownGenerated) {
-          const markdown = (LanguageChartWidget as any).generateMarkdown(config);
-          onMarkdownGenerated(markdown);
+          onMarkdownGenerated(generateMarkdown);
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
@@ -81,10 +103,8 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
       } finally {
         setIsLoading(false);
       }
-    }, 500); // 500ms debounce
-
-    return () => clearTimeout(timeoutId);
-  }, [svgUrl, onMarkdownGenerated, config]);
+    }, 500); // 500ms debounce    return () => clearTimeout(timeoutId);
+  }, [svgUrl, onMarkdownGenerated, generateMarkdown]);
 
   const handleConfigChange = useCallback((updates: Partial<LanguageChartWidgetConfig>) => {
     if (onConfigChange) {

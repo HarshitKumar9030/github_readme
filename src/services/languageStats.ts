@@ -103,21 +103,20 @@ export async function GET(request: Request) {
           'X-Cache-Source': 'mongodb'
         }
       });
-    }
+    }    // Parallel fetch: Get user repos and user info simultaneously
+    const githubToken = process.env.GITHUB_TOKEN;
+    const headers = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'GitHub-README-Generator',
+      ...(githubToken && { 'Authorization': `token ${githubToken}` })
+    };
 
-    // Parallel fetch: Get user repos and user info simultaneously
     const [reposResponse, userResponse] = await Promise.all([
       fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated&type=owner`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'GitHub-README-Generator'
-        }
+        headers
       }),
       fetch(`https://api.github.com/users/${username}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'GitHub-README-Generator'
-        }
+        headers
       })
     ]);
 
@@ -133,15 +132,11 @@ export async function GET(request: Request) {
 
     // Filter out forks and get language data in parallel
     const ownRepos = repos.filter(repo => !repo.fork && repo.language);
-    
-    // Parallel language data fetching with concurrency control
+      // Parallel language data fetching with concurrency control
     const languagePromises = ownRepos.map(async (repo) => {
       try {
         const response = await fetch(repo.languages_url, {
-          headers: {
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'GitHub-README-Generator'
-          }
+          headers
         });
         if (response.ok) {
           const languages = await response.json();
