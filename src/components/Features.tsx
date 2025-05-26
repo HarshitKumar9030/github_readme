@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
-// Tab interface
 type FeatureTab = {
   id: string;
   label: string;
@@ -15,7 +15,9 @@ type FeatureTab = {
   bulletPoints: string[];
 };
 
-const Features = () => {  // Feature tabs data
+const Features = () => {
+  const router = useRouter();
+
   const featureTabs: FeatureTab[] = [
     {
       id: 'templates',
@@ -80,8 +82,6 @@ const Features = () => {  // Feature tabs data
   // Get the currently active feature
   const activeFeature = featureTabs.find(tab => tab.id === activeTab) || featureTabs[0];
 
-  // test test test
-
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -102,30 +102,75 @@ const Features = () => {  // Feature tabs data
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
+
   return (
-    <section className="w-full py-20 md:py-32 bg-gradient-to-b from-white to-gray-50/30 dark:from-gray-900 dark:to-gray-800/50 relative overflow-hidden">
-      {/* Subtle background decoration */}
-      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-blue-500/3 to-transparent" />
-      <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-purple-500/3 to-transparent" />
-      
-      {/* Main content container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section header */}
+    <motion.section 
+      className="relative py-20 overflow-hidden bg-gradient-to-br from-gray-50 via-white to-blue-50/30 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
+      variants={containerVariants}
+    >
+      {/* Enhanced background elements */}
+      <div className="absolute inset-0">
+        <motion.div 
+          className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-blue-500/5 to-purple-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 30, 0],
+            y: [0, -20, 0],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-purple-500/5 to-pink-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, -30, 0],
+            y: [0, 20, 0],
+            scale: [1, 0.9, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Enhanced section header */}
         <motion.div 
           className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-        >          <motion.h2 
-            className="text-3xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-gray-100"
+          variants={itemVariants}
+        >
+          <motion.div
+            className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50 mb-6"
+            whileHover={{ scale: 1.05 }}
+          >
+            <motion.span
+              animate={{ rotate: [0, 10, -10, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="mr-2"
+            >
+              🚀
+            </motion.span>
+            Powerful Features for Every Developer
+          </motion.div>
+          
+          <motion.h2 
+            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1 }}
+            transition={{ duration: 0.7 }}
           >
-            Powerful Features for Perfect READMEs
+            Everything you need to create stunning GitHub profiles
           </motion.h2>
+          
           <motion.p 
             className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
@@ -133,60 +178,80 @@ const Features = () => {  // Feature tabs data
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Everything you need to create stunning GitHub profiles that get you noticed
+            From professional templates to powerful customization tools, we&apos;ve got everything covered to make your GitHub profile shine
           </motion.p>
         </motion.div>
 
-        {/* Feature tabs */}
+        {/* Enhanced Feature tabs */}
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start mb-16">
-          {/* Tab selection */}
+          {/* Tab selection with enhanced styling */}
           <motion.div 
-            className="w-full lg:w-64 flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0"
+            className="w-full lg:w-80 flex lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 gap-2"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-          >            {featureTabs.map((tab) => (              <motion.button
+          >
+            {featureTabs.map((tab) => (
+              <motion.button
                 key={tab.id}
                 variants={itemVariants}
-                className={`flex items-center p-4 rounded-xl min-w-40 lg:w-full text-left mb-2 transition-all duration-300 ${
+                className={`flex items-center p-6 rounded-2xl min-w-60 lg:w-full text-left transition-all duration-500 group ${
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/30 dark:to-blue-800/20 border-l-4 border-blue-500 shadow-sm'
-                    : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 dark:hover:from-gray-800/20 dark:hover:to-gray-700/20 hover:shadow-sm'
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-xl border border-blue-500'
+                    : 'bg-white/70 dark:bg-gray-800/40 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-blue-100/50 dark:hover:from-blue-900/20 dark:hover:to-blue-800/10 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600'
                 }`}
                 whileHover={{ scale: 1.02, x: 5 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab(tab.id)}
               >
-                <div className="w-6 h-6 mr-3 relative">
+                <motion.div 
+                  className="w-8 h-8 mr-4 relative"
+                  whileHover={{ rotate: 10, scale: 1.1 }}
+                >
                   <Image
                     src={tab.icon}
                     alt={tab.label}
                     fill
-                    className="object-contain"
+                    className={`object-contain transition-all duration-300 ${
+                      activeTab === tab.id ? 'brightness-0 invert' : 'group-hover:brightness-75'
+                    }`}
                   />
+                </motion.div>
+                <div>
+                  <span className={`font-semibold text-lg block transition-colors duration-300 ${
+                    activeTab === tab.id
+                      ? 'text-white'
+                      : 'text-gray-800 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                  }`}>
+                    {tab.label}
+                  </span>
+                  <span className={`text-sm block mt-1 transition-colors duration-300 ${
+                    activeTab === tab.id
+                      ? 'text-blue-100'
+                      : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-300'
+                  }`}>
+                    Click to explore
+                  </span>
                 </div>
-                <span className={`font-medium ${
-                  activeTab === tab.id
-                    ? 'text-blue-700 dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300'
-                }`}>{tab.label}</span>
               </motion.button>
             ))}
-          </motion.div>          {/* Feature content */}
+          </motion.div>
+
+          {/* Enhanced Feature content */}
           <motion.div 
-            className="flex-1 bg-white/70 dark:bg-gray-800/40 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50"
+            className="flex-1 bg-white/80 dark:bg-gray-800/50 backdrop-blur-sm rounded-3xl p-8 md:p-10 shadow-2xl border border-gray-200/50 dark:border-gray-700/50"
             key={activeTab}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, type: "spring" }}
             whileHover={{ 
-              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" 
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15)" 
             }}
           >
-            {/* Feature content header */}
-            <div className="mb-8">              <motion.h3 
-                className="text-2xl md:text-3xl font-bold mb-4 text-gray-800 dark:text-gray-100"
+            <div className="mb-10">
+              <motion.h3 
+                className="text-3xl md:text-4xl font-bold mb-6 text-gray-800 dark:text-gray-100"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
@@ -194,7 +259,7 @@ const Features = () => {  // Feature tabs data
                 {activeFeature.title}
               </motion.h3>
               <motion.p 
-                className="text-gray-600 dark:text-gray-300 text-lg"
+                className="text-gray-600 dark:text-gray-300 text-xl leading-relaxed"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
@@ -204,60 +269,83 @@ const Features = () => {  // Feature tabs data
             </div>
 
             {/* Feature content grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Feature image */}              <motion.div 
-                className="bg-gray-50 dark:bg-gray-800/50 rounded-lg overflow-hidden relative h-64 border border-gray-100 dark:border-gray-700"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              {/* Enhanced Feature image */}
+              <motion.div 
+                className="bg-gradient-to-br from-gray-50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-700/30 rounded-2xl overflow-hidden relative h-80 border border-gray-200/50 dark:border-gray-600/30 shadow-inner"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
+                whileHover={{ scale: 1.02 }}
               >
-                <div className="absolute inset-0 flex items-center justify-center">
+                <div className="absolute inset-0 flex items-center justify-center p-6">
                   <Image
                     src={activeFeature.imageSrc}
                     alt={activeFeature.title}
-                    width={400}
-                    height={300}
-                    className="object-contain p-4"
+                    width={500}
+                    height={400}
+                    className="object-contain max-w-full max-h-full"
                   />
                 </div>
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent pointer-events-none" />
               </motion.div>
 
-              {/* Feature bullet points */}
               <motion.div 
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
+                className="space-y-6"
               >
-                <ul className="space-y-4">
-                  {activeFeature.bulletPoints.map((point, idx) => (
-                    <motion.li 
-                      key={idx}
-                      variants={itemVariants}
-                      className="flex items-start"
+                {activeFeature.bulletPoints.map((point, idx) => (
+                  <motion.div 
+                    key={idx}
+                    variants={itemVariants}
+                    className="flex items-start group"
+                    whileHover={{ x: 5 }}
+                  >
+                    <motion.div
+                      className="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-white mr-4 shadow-lg"
+                      whileHover={{ scale: 1.2, rotate: 10 }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2 + idx * 0.1 }}
                     >
-                      <motion.span
-                        className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 mr-3"
-                        whileHover={{ scale: 1.2, rotate: 10 }}
-                      >
-                        ✓
-                      </motion.span>
-                      <span className="text-gray-700 dark:text-gray-300">{point}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+                      <span className="text-sm font-bold">✓</span>
+                    </motion.div>
+                    <span className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed group-hover:text-gray-900 dark:group-hover:text-gray-100 transition-colors">
+                      {point}
+                    </span>
+                  </motion.div>
+                ))}
               </motion.div>
             </div>
           </motion.div>
-        </div>        {/* Call to action */}
+        </div>
+
         <motion.div 
-          className="text-center bg-blue-500 text-white rounded-2xl p-8 md:p-12"
+          className="text-center bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 text-white rounded-3xl p-10 md:p-16 shadow-2xl border border-blue-500/50"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
+          whileHover={{ scale: 1.02 }}
         >
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-3xl blur-2xl"
+            animate={{
+              opacity: [0.5, 0.8, 0.5],
+              scale: [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
           <motion.h3 
-            className="text-2xl md:text-3xl font-bold mb-4"
+            className="text-3xl md:text-4xl font-bold mb-6 relative z-10"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -265,24 +353,44 @@ const Features = () => {  // Feature tabs data
           >
             Ready to create your perfect README?
           </motion.h3>
+          
           <motion.p 
-            className="text-xl mb-8 max-w-2xl mx-auto"
+            className="text-xl mb-10 max-w-2xl mx-auto opacity-90 relative z-10"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Join thousands of developers who have improved their GitHub profiles
-          </motion.p>          <motion.button
-            className="px-8 py-4 rounded-lg bg-white text-blue-600 font-medium shadow-md hover:shadow-lg transition-all"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            Join thousands of developers who have improved their GitHub profiles with our powerful tools
+          </motion.p>
+          
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center relative z-10"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.3 }}
           >
-            Get Started for Free
-          </motion.button>
+            <motion.button
+              className="px-10 py-4 rounded-2xl bg-white text-blue-600 font-semibold shadow-xl hover:shadow-2xl transition-all text-lg"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push('/create')}
+            >
+              Get Started for Free
+            </motion.button>
+            <motion.button
+              className="px-10 py-4 rounded-2xl border-2 border-white/30 text-white font-semibold hover:bg-white/10 backdrop-blur-sm transition-all text-lg"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push('/templates')}
+            >
+              Browse Templates
+            </motion.button>
+          </motion.div>
         </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 };
 
