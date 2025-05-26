@@ -146,8 +146,7 @@ const Features = () => {
         <motion.div 
           className="text-center mb-16"
           variants={itemVariants}
-        >
-          <motion.div
+        >          <motion.div
             className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50 mb-6"
             whileHover={{ scale: 1.05 }}
           >
@@ -158,27 +157,23 @@ const Features = () => {
             >
               🚀
             </motion.span>
-            Powerful Features for Every Developer
-          </motion.div>
-          
-          <motion.h2 
+            Made for HackClub&apos;s Shipwrecked Event
+          </motion.div>            <motion.h2 
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            Everything you need to create stunning GitHub profiles
-          </motion.h2>
-          
-          <motion.p 
+            Create Amazing READMEs for Your Projects
+          </motion.h2>            <motion.p 
             className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            From professional templates to powerful customization tools, we&apos;ve got everything covered to make your GitHub profile shine
+            Build your development portfolio with professional templates and powerful tools to make your projects stand out and showcase your skills effectively.
           </motion.p>
         </motion.div>
 

@@ -185,16 +185,15 @@ const Hero = () => {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-            >
-              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50">
+            >              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50">
                 <motion.span
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                   className="mr-2"
                 >
-                  ✨
+                  🚢
                 </motion.span>
-                New: Markdown Export & GitHub Integration
+                Made for HackClub&apos;s Shipwrecked Event
               </span>
             </motion.div>
           </div>          {/* Enhanced main heading with improved typing animation */}

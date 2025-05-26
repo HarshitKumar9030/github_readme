@@ -2,8 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Image from 'next/image';
+import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
+import { getGithubStats } from '@/services/socialStats';
 
 // GitHub user interface
 interface GitHubUser {
@@ -20,584 +23,1088 @@ interface GitHubUser {
   blog: string | null;
 }
 
+// GitHub username constant
+const GITHUB_USERNAME = 'harshitkumar9030';
+
 export default function AboutPage() {
   const [githubUser, setGithubUser] = useState<GitHubUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-
-  useEffect(() => {
-    // This data would typically come from a GitHub API call
-    // For now, we'll use mock data to avoid API rate limits
-    const mockUser: GitHubUser = {
-      name: "Harshit Kumar",
-      login: "harshitkumar9030",
-      avatar_url: "https://avatars.githubusercontent.com/u/93194961",
-      html_url: "https://github.com/harshitkumar9030",
-      bio: "Full Stack Developer | ML Enthusiast | Open Source Contributor",
-      public_repos: 34,
-      followers: 86,
-      following: 25,
-      company: "@NxC3",
-      location: "India",
-      blog: "https://leoncyriac.me"
+  const { scrollYProgress } = useScroll();
+  
+  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  const textY = useTransform(scrollYProgress, [0, 1], ['0%', '50%']);  useEffect(() => {
+    const fetchGithubData = async () => {
+      setLoading(true);
+      setError(false);
+      
+      try {
+        // Check localStorage for cached data (valid for 1 hour)
+        const cacheKey = `github_user_${GITHUB_USERNAME}`;
+        const cachedData = localStorage.getItem(cacheKey);
+        const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+        
+        if (cachedData && cacheTimestamp) {
+          const isValidCache = (Date.now() - parseInt(cacheTimestamp)) < 3600000; // 1 hour
+          if (isValidCache) {
+            setGithubUser(JSON.parse(cachedData));
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Fetch fresh data from GitHub API
+        const githubStats = await getGithubStats(GITHUB_USERNAME);
+        
+        const userData: GitHubUser = {
+          name: githubStats.name || "Harshit Kumar",
+          login: GITHUB_USERNAME,
+          avatar_url: githubStats.avatar_url,
+          html_url: `https://github.com/${GITHUB_USERNAME}`,
+          bio: githubStats.bio || "Full Stack Developer | ML Enthusiast | Open Source Contributor",
+          public_repos: githubStats.public_repos,
+          followers: githubStats.followers,
+          following: githubStats.following,
+          company: null,
+          location: null,
+          blog: null
+        };
+        
+        setGithubUser(userData);
+        
+        // Cache the data in localStorage
+        localStorage.setItem(cacheKey, JSON.stringify(userData));
+        localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        
+      } catch (error) {
+        console.error('Failed to fetch GitHub data:', error);
+        setError(true);
+        
+        // Fallback to default data if API fails
+        const fallbackUser: GitHubUser = {
+          name: "Harshit Kumar",
+          login: GITHUB_USERNAME,
+          avatar_url: "https://avatars.githubusercontent.com/u/93194961",
+          html_url: `https://github.com/${GITHUB_USERNAME}`,
+          bio: "Full Stack Developer | ML Enthusiast | Open Source Contributor",
+          public_repos: 34,
+          followers: 86,
+          following: 25,
+          company: "@NxC3",
+          location: "India",
+          blog: "https://leoncyriac.me"
+        };
+        
+        setGithubUser(fallbackUser);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // Simulate API fetch delay
-    const timer = setTimeout(() => {
-      setGithubUser(mockUser);
-      setLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    fetchGithubData();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black relative overflow-hidden">
-      {/* Animated background elements */}
-      <div className="absolute inset-0 w-full h-full">
-        {[...Array(10)].map((_, i) => (
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 relative overflow-hidden">
+        {/* Enhanced background elements */}
+        <motion.div 
+          className="absolute inset-0"
+          style={{ y: backgroundY }}
+        >
+          {/* Animated gradient orbs */}
           <motion.div
-            key={i}
-            className={`absolute ${i % 5 === 0 ? 'w-16 h-16' : i % 3 === 0 ? 'w-24 h-24' : 'w-32 h-32'} 
-                        opacity-[0.03] dark:opacity-[0.05] rounded-full`}
-            style={{
-              background: i % 2 === 0 ? 'radial-gradient(circle, rgba(59,130,246,0.8) 0%, rgba(59,130,246,0) 70%)' 
-                                     : 'radial-gradient(circle, rgba(147,51,234,0.8) 0%, rgba(147,51,234,0) 70%)',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
+            className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl"
             animate={{
-              x: [0, Math.random() * 30 - 15],
-              y: [0, Math.random() * 30 - 15],
-              scale: [1, 1.1, 1],
+              x: [0, 50, 0],
+              y: [0, -30, 0],
+              scale: [1, 1.2, 1],
             }}
             transition={{
+              duration: 20,
               repeat: Infinity,
-              repeatType: "reverse",
-              duration: 8 + Math.random() * 7,
+              ease: "easeInOut"
             }}
           />
-        ))}
-      </div>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 relative z-10">
-        <motion.div 
-          className="mb-12 text-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Link 
-            href="/"
-            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mb-8 group"
-          >
-            <motion.svg 
-              className="w-5 h-5 mr-2" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24" 
-              xmlns="http://www.w3.org/2000/svg"
-              whileHover={{ x: -3 }}
-              transition={{ type: "spring", stiffness: 400 }}
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-              />
-            </motion.svg>
-            Back to Home
-          </Link>
-          <motion.h1 
-            className="text-4xl md:text-5xl font-bold mb-4 text-gray-900 dark:text-white"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            About <span className="text-blue-600 dark:text-blue-400">README</span> Generator
-          </motion.h1>
-          <motion.p 
-            className="text-xl text-gray-600 dark:text-gray-300"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            Learn more about our project and mission
-          </motion.p>
+          <motion.div
+            className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-r from-purple-500/8 to-pink-500/8 rounded-full blur-3xl"
+            animate={{
+              x: [0, -40, 0],
+              y: [0, 25, 0],
+              scale: [1, 0.9, 1],
+            }}
+            transition={{
+              duration: 25,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
           
-          {/* Hero graphic for about page */}
-          <motion.div 
-            className="mt-10 mb-16 relative h-40 sm:h-60 max-w-md mx-auto"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <svg className="w-full h-full" viewBox="0 0 500 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* README text with animated highlight */}
-              <motion.rect 
-                initial={{ width: 0 }}
-                animate={{ width: 300 }}
-                transition={{ duration: 1, delay: 0.8 }}
-                x="100" y="70" width="300" height="60" rx="10" 
-                fill="url(#blue-gradient)" fillOpacity="0.1" 
-              />
-              
-              <text x="120" y="115" fontFamily="monospace" fontSize="40" fontWeight="bold" fill="currentColor">
-                README.md
-              </text>
-              
-              {/* Code lines */}
-              
-              <motion.g
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 1.2 }}
-              >
-                <rect x="120" y="130" width="150" height="6" rx="3" fill="#3B82F6" fillOpacity="0.6" />
-                <rect x="120" y="145" width="200" height="6" rx="3" fill="#3B82F6" fillOpacity="0.4" />
-                <rect x="120" y="160" width="120" height="6" rx="3" fill="#3B82F6" fillOpacity="0.6" />
-              </motion.g>
-              
-              {/* Animated cursor */}
-              <motion.rect 
-                x="290" y="115" width="3" height="30" fill="#3B82F6"
-                animate={{ opacity: [1, 0, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-              />
-              
-              {/* Decorative elements */}
-              <motion.circle 
-                cx="70" cy="100" r="20" fill="#3B82F6" fillOpacity="0.1"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 3, repeat: Infinity }}
-              />
-              <motion.circle 
-                cx="430" cy="100" r="30" fill="#9333EA" fillOpacity="0.1"
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
-              />
-              
-              {/* Gradient definitions */}
-              <defs>
-                <linearGradient id="blue-gradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#9333EA" stopOpacity="0.2" />
-                </linearGradient>
-              </defs>
-            </svg>
-          </motion.div>
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className={`absolute w-2 h-2 rounded-full ${
+                i % 3 === 0 ? 'bg-blue-400/20' : i % 2 === 0 ? 'bg-purple-400/15' : 'bg-pink-400/10'
+              }`}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                x: [0, Math.random() * 100 - 50],
+                y: [0, Math.random() * 100 - 50],
+                opacity: [0.1, 0.5, 0.1],
+                scale: [1, 1.5, 1],
+              }}
+              transition={{
+                duration: 15 + Math.random() * 10,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
         </motion.div>
-        
-        <div className="space-y-12">
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
+          {/* Hero Section */}
+          <motion.div 
+            className="text-center mb-20"
+            style={{ y: textY }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
           >
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-              <svg className="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Our Mission
-            </h2>            <p className="text-gray-600 dark:text-gray-300">
-              README Generator is a hobby project created to help developers create beautiful, 
-              professional GitHub profile READMEs without having to write complex markdown or HTML. 
-              Our goal is to make it easier for developers to showcase their skills and projects 
-              in a visually appealing way using our intuitive drag-and-drop builder and integrated GitHub widgets.
-            </p>
-          </motion.section>
-          
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-              <svg className="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-              </svg>
-              How It Works
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Our README Generator provides an intuitive interface for creating custom GitHub profile 
-              READMEs. Simply choose a template, customize it with your information, and export the 
-              markdown to use in your GitHub profile.
-            </p>
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-800 rounded-lg p-6 relative overflow-hidden">
-              <motion.div 
-                className="absolute top-0 right-0 w-40 h-40 opacity-10"
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            {/* Shipwrecked Badge - Simple mention */}
+            <motion.div
+              className="inline-flex items-center px-6 py-3 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50 mb-8"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+            >
+              <motion.span
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                className="mr-3 text-lg"
               >
-                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M50 0 L100 50 L50 100 L0 50 Z" fill="currentColor" />
-                </svg>
-              </motion.div>
-              
-              <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 relative z-10">
-                <motion.li 
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.2 }}
-                  className="flex items-center"
-                >
-                  <span className="mr-2">Choose from our collection of professionally designed templates</span>
-                  <svg className="w-5 h-5 text-green-500 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </motion.li>
-                <motion.li 
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.3 }}
-                  className="flex items-center"
-                >
-                  <span className="mr-2">Customize the template with your personal information and preferences</span>
-                  <svg className="w-5 h-5 text-green-500 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </motion.li>
-                <motion.li 
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.4 }}
-                  className="flex items-center"
-                >
-                  <span className="mr-2">Preview your README in real-time as you make changes</span>
-                  <svg className="w-5 h-5 text-green-500 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </motion.li>
-                <motion.li 
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: 0.5 }}
-                  className="flex items-center"
-                >
-                  <span className="mr-2">Export the markdown and add it to your GitHub profile</span>
-                  <svg className="w-5 h-5 text-green-500 ml-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </motion.li>
-              </ol>
-            </div>
-          </motion.section>
-          
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-              <svg className="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Why Use README Generator?
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <motion.div 
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative overflow-hidden"
-                whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
+                🚀
+              </motion.span>
+              Made for HackClub&apos;s Shipwrecked Event
+              <motion.span
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                className="ml-3 text-lg"
               >
-                <div className="absolute top-0 right-0 w-20 h-20 -mt-10 -mr-10 bg-blue-500 opacity-10 rounded-full" />
-                <svg className="w-8 h-8 text-blue-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Save Time</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Create professional READMEs in minutes instead of hours with our easy-to-use templates.
-                </p>
-              </motion.div>
-              <motion.div 
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative overflow-hidden"
-                whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 -mt-10 -mr-10 bg-purple-500 opacity-10 rounded-full" />
-                <svg className="w-8 h-8 text-purple-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
-                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">No Coding Required</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Our intuitive interface means you don&apos;t need to write any markdown or HTML.
-                </p>
-              </motion.div>
-              <motion.div 
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative overflow-hidden"
-                whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4 }}
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 -mt-10 -mr-10 bg-indigo-500 opacity-10 rounded-full" />
-                <svg className="w-8 h-8 text-indigo-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Stand Out</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Make your GitHub profile stand out with a professionally designed README.
-                </p>
-              </motion.div>
-              <motion.div 
-                className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 relative overflow-hidden"
-                whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)" }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.5 }}
-              >
-                <div className="absolute top-0 right-0 w-20 h-20 -mt-10 -mr-10 bg-green-500 opacity-10 rounded-full" />
-                <svg className="w-8 h-8 text-green-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <h3 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Always Free</h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  This is a hobby project created with love and it will always be free to use.
-                </p>
-              </motion.div>
-            </div>
-          </motion.section>
-          
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-800/50 dark:to-indigo-900/30 p-8 rounded-2xl relative overflow-hidden"
-          >
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-10 rounded-full -mt-16 -mr-16" />
-            <div className="absolute bottom-0 left-0 w-32 h-32 bg-purple-500 opacity-10 rounded-full -mb-16 -ml-16" />
+                ⭐
+              </motion.span>
+            </motion.div>
+
+            <motion.h1 
+              className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.3 }}
+            >
+              About README 
+              <br />
+              Generator
+            </motion.h1>
             
-            <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white flex items-center">
-              <svg className="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              About the Creator
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6 relative z-10">
-              README Generator was created by Harshit as a hobby project to help fellow developers 
-              create better GitHub profiles. If you enjoy using this tool or have suggestions for 
-              improvement, feel free to contribute to the project or reach out!
-            </p>
-            
-            {/* GitHub Profile Card */}
+            <motion.p 
+              className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.4 }}
+            >
+              Create stunning GitHub profile READMEs effortlessly with our powerful, intuitive generator. 
+              Built with developers in mind to help showcase your projects and skills beautifully.
+            </motion.p>
+
+            {/* Stats Grid */}
             <motion.div 
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 max-w-lg mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mt-16"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.6 }}
+            >
+              {[
+                { value: '50+', label: 'Professional Templates', icon: '📋' },
+                { value: '25+', label: 'GitHub Widgets', icon: '🎨' },
+                { value: '500+', label: 'Projects Created', icon: '🚀' },
+                { value: '1000+', label: 'Happy Developers', icon: '👩‍💻' },
+              ].map((stat, idx) => (
+                <motion.div
+                  key={idx}
+                  className="text-center p-6 bg-white/60 dark:bg-gray-800/40 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 shadow-lg"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7 + idx * 0.1, duration: 0.5, type: "spring" }}
+                  whileHover={{ y: -5, scale: 1.05 }}
+                >
+                  <motion.div 
+                    className="text-3xl mb-2"
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: idx * 0.5 }}
+                  >
+                    {stat.icon}
+                  </motion.div>
+                  <motion.div 
+                    className="text-3xl md:text-4xl font-bold text-blue-600 dark:text-blue-400"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8 + idx * 0.1, duration: 0.5, type: "spring" }}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="text-sm font-medium text-gray-600 dark:text-gray-400 mt-1">{stat.label}</div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>          {/* Main Content Sections */}
+          <div className="max-w-5xl mx-auto space-y-20">
+            {/* Visual Breadcrumb Navigation */}
+            <motion.div
+              className="flex items-center justify-center mb-12"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <div className="flex items-center bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm px-6 py-3 rounded-full border border-gray-200/50 dark:border-gray-700/50 shadow-lg">
+                <Link 
+                  href="/"
+                  className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 group"
+                >
+                  <motion.div
+                    className="w-8 h-8 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/50 dark:to-purple-900/50 rounded-full flex items-center justify-center mr-3 group-hover:scale-105 transition-transform duration-200"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                      />
+                    </svg>
+                  </motion.div>
+                  <span className="font-medium">Home</span>
+                </Link>
+                
+                <motion.div
+                  className="mx-3 text-gray-400 dark:text-gray-500"
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                  </svg>
+                </motion.div>
+                
+                <div className="flex items-center">
+                  <motion.div
+                    className="w-8 h-8 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/50 dark:to-pink-900/50 rounded-full flex items-center justify-center mr-3"
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <svg
+                      className="w-4 h-4 text-purple-600 dark:text-purple-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </motion.div>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">About</span>
+                </div>
+              </div>
+            </motion.div>{/* Enhanced Mission Section */}
+            <motion.section
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              whileHover={{ 
-                boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-                y: -5
-              }}
+              transition={{ duration: 0.6 }}
+              className="relative"
             >
-              {/* GitHub header */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 h-20 relative">
-                <div className="absolute -bottom-10 left-6">
-                  {loading ? (
-                    <div className="w-20 h-20 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse"></div>
-                  ) : error ? (
-                    <div className="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                  ) : (
-                    <motion.div
-                      className="w-20 h-20 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-white"
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                    >
-                      <Image 
-                        src={githubUser?.avatar_url || ""}
-                        alt="GitHub profile picture"
-                        width={80}
-                        height={80}
-                        className="w-full h-full object-cover"
-                        unoptimized={true}
-                      />
-                    </motion.div>
-                  )}
-                </div>
+              <div className="text-center mb-12">
+                <motion.div
+                  className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-300 mb-6"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.span
+                    animate={{ rotate: [0, 10, -10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="mr-2"
+                  >
+                    ⚡
+                  </motion.span>
+                  Our Mission
+                </motion.div>
                 
-                {/* GitHub logo */}
-                <div className="absolute top-4 right-4">
-                  <svg className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
-                  </svg>
+                <motion.h2 
+                  className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.1 }}
+                >
+                  Empowering Developers
+                </motion.h2>
+                
+                <motion.p 
+                  className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.2 }}
+                >
+                  README Generator was created to help developers create beautiful, professional GitHub profile READMEs 
+                  without having to write complex markdown or HTML. Our goal is to make it easier for developers to 
+                  showcase their skills and projects in a visually appealing way using our intuitive drag-and-drop builder 
+                  and integrated GitHub widgets.
+                </motion.p>
+              </div>
+
+              {/* Mission Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+                {[
+                  {
+                    icon: "🎯",
+                    title: "Simplicity",
+                    description: "Making README creation accessible to developers of all skill levels",
+                    gradient: "from-blue-500 to-blue-600"
+                  },
+                  {
+                    icon: "⚡",
+                    title: "Speed",
+                    description: "Create professional READMEs in minutes, not hours",
+                    gradient: "from-purple-500 to-purple-600"
+                  },
+                  {
+                    icon: "🎨",
+                    title: "Customization",
+                    description: "Extensive templates and widgets to match your style",
+                    gradient: "from-indigo-500 to-indigo-600"
+                  }
+                ].map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="relative group"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.1 * idx }}
+                    whileHover={{ y: -10 }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl blur-xl from-blue-400/20 via-purple-400/20 to-indigo-400/20" />
+                    <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 text-center h-full">
+                      <motion.div
+                        className="text-4xl mb-4"
+                        animate={{ 
+                          scale: [1, 1.1, 1],
+                          rotate: [0, 5, -5, 0]
+                        }}
+                        transition={{ 
+                          duration: 3, 
+                          repeat: Infinity, 
+                          ease: "easeInOut",
+                          delay: idx * 0.5 
+                        }}
+                      >
+                        {item.icon}
+                      </motion.div>
+                      <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{item.title}</h3>
+                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{item.description}</p>
+                      
+                      {/* Animated bottom border */}
+                      <motion.div
+                        className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${item.gradient} rounded-b-2xl`}
+                        initial={{ width: "0%" }}
+                        whileInView={{ width: "100%" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: 0.3 + idx * 0.1 }}
+                      />
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+              {/* Enhanced How It Works Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="relative"
+            >
+              <div className="text-center mb-12">
+                <motion.div
+                  className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-800 dark:text-green-300 mb-6"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.span
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    className="mr-2"
+                  >
+                    ⚙️
+                  </motion.span>
+                  How It Works
+                </motion.div>
+                
+                <motion.h2 
+                  className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-green-800 to-emerald-800 dark:from-white dark:via-green-200 dark:to-emerald-200 bg-clip-text text-transparent"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.1 }}
+                >
+                  Simple. Fast. Effective.
+                </motion.h2>
+                
+                <motion.p 
+                  className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.2 }}
+                >
+                  Our README Generator provides an intuitive interface for creating custom GitHub profile 
+                  READMEs. Simply choose a template, customize it with your information, and export the 
+                  markdown to use in your GitHub profile.
+                </motion.p>
+              </div>
+
+              <div className="relative">
+                {/* Central animated element */}
+                <motion.div 
+                  className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 via-purple-500 to-green-500 rounded-full hidden lg:block"
+                  style={{ transform: 'translateX(-50%)' }}
+                  initial={{ height: 0 }}
+                  whileInView={{ height: '100%' }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 0.3 }}
+                />
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+                  {[
+                    {
+                      step: "01",
+                      title: "Choose Your Template",
+                      description: "Browse our collection of professionally designed templates and select the one that best fits your style.",
+                      icon: "📋",
+                      color: "blue",
+                      position: "left"
+                    },
+                    {
+                      step: "02", 
+                      title: "Customize Everything",
+                      description: "Add your personal information, skills, projects, and preferences using our intuitive interface.",
+                      icon: "✨",
+                      color: "purple",
+                      position: "right"
+                    },
+                    {
+                      step: "03",
+                      title: "Preview in Real-time", 
+                      description: "See your README come to life with our live preview feature as you make changes.",
+                      icon: "👀",
+                      color: "indigo",
+                      position: "left"
+                    },
+                    {
+                      step: "04",
+                      title: "Export & Deploy",
+                      description: "Download your generated markdown and add it to your GitHub profile to showcase your work.",
+                      icon: "🚀",
+                      color: "green", 
+                      position: "right"
+                    }
+                  ].map((item, idx) => {
+                    const isLeft = item.position === 'left';
+                    return (
+                      <motion.div
+                        key={idx}
+                        className={`flex items-center gap-6 ${isLeft ? 'lg:flex-row' : 'lg:flex-row-reverse'} ${
+                          isLeft ? 'lg:text-left' : 'lg:text-right'
+                        }`}
+                        initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.1 * idx }}
+                      >
+                        {/* Step card */}
+                        <motion.div
+                          className="flex-1 group"
+                          whileHover={{ scale: 1.02 }}
+                        >
+                          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-8 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 relative overflow-hidden">
+                            {/* Background gradient */}
+                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300 bg-gradient-to-br from-${item.color}-400 to-${item.color}-600`} />
+                            
+                            <div className="relative z-10">
+                              <div className="flex items-center gap-4 mb-4">
+                                <motion.div
+                                  className={`w-12 h-12 rounded-full bg-gradient-to-r from-${item.color}-500 to-${item.color}-600 flex items-center justify-center text-white font-bold text-lg`}
+                                  animate={{ scale: [1, 1.1, 1] }}
+                                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: idx * 0.5 }}
+                                >
+                                  {item.step}
+                                </motion.div>
+                                <motion.div
+                                  className="text-3xl"
+                                  animate={{ rotate: [0, 10, -10, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: idx * 0.3 }}
+                                >
+                                  {item.icon}
+                                </motion.div>
+                              </div>
+                              
+                              <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{item.title}</h3>
+                              <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{item.description}</p>
+                              
+                              {/* Check mark */}
+                              <motion.div
+                                className="mt-4 inline-flex items-center text-green-600 dark:text-green-400"
+                                initial={{ opacity: 0, scale: 0 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.5 + idx * 0.1, type: "spring" }}
+                              >
+                                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-sm font-medium">Easy & Quick</span>
+                              </motion.div>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* Timeline dot for large screens */}
+                        <motion.div
+                          className={`hidden lg:block w-4 h-4 rounded-full bg-gradient-to-r from-${item.color}-500 to-${item.color}-600 border-4 border-white dark:border-gray-900 relative z-10`}
+                          initial={{ scale: 0 }}
+                          whileInView={{ scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.3 + idx * 0.1, type: "spring" }}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
-              
-              {/* Profile info */}
-              <div className="pt-12 pb-6 px-6">
-                {loading ? (
-                  <div className="space-y-3">
-                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse"></div>
-                  </div>
-                ) : error ? (
-                  <p className="text-gray-500 dark:text-gray-400 text-center">Could not load GitHub profile</p>
-                ) : (
-                  <>
-                    <div className="space-y-1 mb-4">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">{githubUser?.name}</h3>
-                      <a 
-                        href={githubUser?.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+            </motion.section>
+              {/* Enhanced Why Choose Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="relative"
+            >
+              <div className="text-center mb-12">
+                <motion.div
+                  className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-800 dark:text-purple-300 mb-6"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="mr-2"
+                  >
+                    💎
+                  </motion.span>
+                  Why Choose Us
+                </motion.div>
+                
+                <motion.h2 
+                  className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-purple-800 to-pink-800 dark:from-white dark:via-purple-200 dark:to-pink-200 bg-clip-text text-transparent"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.1 }}
+                >
+                  Stand Out From The Crowd
+                </motion.h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  {
+                    icon: "⚡",
+                    title: "Lightning Fast",
+                    description: "Create professional READMEs in minutes instead of hours with our easy-to-use templates and intuitive interface.",
+                    gradient: "from-yellow-400 to-orange-500",
+                    bgGradient: "from-yellow-50 to-orange-50",
+                    darkBgGradient: "from-yellow-900/20 to-orange-900/20"
+                  },
+                  {
+                    icon: "🚀",
+                    title: "No Coding Required",
+                    description: "Our intuitive drag-and-drop interface means you don't need to write any markdown, HTML, or code.",
+                    gradient: "from-blue-400 to-purple-500",
+                    bgGradient: "from-blue-50 to-purple-50",
+                    darkBgGradient: "from-blue-900/20 to-purple-900/20"
+                  },
+                  {
+                    icon: "🎨",
+                    title: "Professional Design",
+                    description: "Make your GitHub profile stand out with beautifully designed templates that showcase your skills perfectly.",
+                    gradient: "from-pink-400 to-red-500",
+                    bgGradient: "from-pink-50 to-red-50",
+                    darkBgGradient: "from-pink-900/20 to-red-900/20"
+                  },
+                  {
+                    icon: "💎",
+                    title: "Always Free",
+                    description: "This powerful tool is completely free to use and will always remain so for all developers worldwide.",
+                    gradient: "from-green-400 to-emerald-500",
+                    bgGradient: "from-green-50 to-emerald-50",
+                    darkBgGradient: "from-green-900/20 to-emerald-900/20"
+                  }
+                ].map((feature, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="group relative"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.1 * idx }}
+                    whileHover={{ y: -10, scale: 1.02 }}
+                  >
+                    {/* Animated background glow */}
+                    <motion.div
+                      className={`absolute inset-0 bg-gradient-to-r ${feature.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-500 rounded-2xl blur-xl`}
+                      animate={{
+                        scale: [1, 1.05, 1],
+                        opacity: [0, 0.1, 0]
+                      }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: idx * 0.8
+                      }}
+                    />
+                    
+                    <div className={`relative bg-gradient-to-br ${feature.bgGradient} dark:bg-gradient-to-br dark:${feature.darkBgGradient} p-8 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm overflow-hidden h-full`}>
+                      {/* Top corner decoration */}
+                      <div className={`absolute top-0 right-0 w-20 h-20 bg-gradient-to-r ${feature.gradient} opacity-10 rounded-full -mt-10 -mr-10`} />
+                      
+                      {/* Icon with animation */}
+                      <motion.div
+                        className="text-5xl mb-6"
+                        animate={{ 
+                          rotate: [0, 10, -10, 0],
+                          scale: [1, 1.1, 1]
+                        }}
+                        transition={{ 
+                          duration: 3, 
+                          repeat: Infinity, 
+                          ease: "easeInOut",
+                          delay: idx * 0.4
+                        }}
                       >
-                        @{githubUser?.login}
-                      </a>
+                        {feature.icon}
+                      </motion.div>
+                      
+                      <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">{feature.title}</h3>
+                      <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-4">{feature.description}</p>
+                      
+                      {/* Feature highlight */}
+                      <motion.div
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${feature.gradient} text-white`}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: 0.3 + idx * 0.1 }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        <motion.span
+                          animate={{ x: [0, 3, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          ✨
+                        </motion.span>
+                        <span className="ml-1">Featured</span>
+                      </motion.div>
+                      
+                      {/* Bottom accent line */}
+                      <motion.div
+                        className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${feature.gradient} rounded-b-2xl`}
+                        initial={{ width: "0%" }}
+                        whileInView={{ width: "100%" }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.8, delay: 0.4 + idx * 0.1 }}
+                      />
                     </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+              {/* Enhanced Creator Section */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="relative"
+            >
+              <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-800/50 dark:via-indigo-900/20 dark:to-purple-900/20 p-10 md:p-12 rounded-3xl relative overflow-hidden backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
+                {/* Enhanced decorative elements */}
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full -mt-20 -mr-20" />
+                <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full -mb-20 -ml-20" />
+                <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-gradient-to-r from-indigo-500/5 to-blue-500/5 rounded-full transform -translate-x-1/2 -translate-y-1/2" />
+                
+                {/* Floating particles */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className={`absolute w-2 h-2 rounded-full ${
+                      i % 3 === 0 ? 'bg-blue-400/30' : i % 2 === 0 ? 'bg-purple-400/30' : 'bg-indigo-400/30'
+                    }`}
+                    style={{
+                      left: `${Math.random() * 100}%`,
+                      top: `${Math.random() * 100}%`,
+                    }}
+                    animate={{
+                      y: [0, -20, 0],
+                      opacity: [0.3, 0.8, 0.3],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 3 + Math.random() * 2,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: i * 0.3
+                    }}
+                  />
+                ))}
+                
+                <div className="relative z-10">
+                  <div className="text-center mb-8">
+                    <motion.div
+                      className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-800 dark:text-indigo-300 mb-6"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <motion.span
+                        animate={{ rotate: [0, 15, -15, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        className="mr-2"
+                      >
+                        👨‍💻
+                      </motion.span>
+                      Meet the Creator
+                    </motion.div>
+                    
+                    <motion.h2 
+                      className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-indigo-800 to-purple-800 dark:from-white dark:via-indigo-200 dark:to-purple-200 bg-clip-text text-transparent"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.7, delay: 0.1 }}
+                    >
+                      Built with Passion
+                    </motion.h2>
                     
                     <motion.p 
-                      className="text-gray-600 dark:text-gray-300 text-sm my-4"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.4 }}
+                      className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed mb-10"
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.7, delay: 0.2 }}
                     >
-                      {githubUser?.bio}
+                      README Generator was lovingly crafted by Harshit Kumar as a project for HackClub&apos;s Shipwrecked event. 
+                      If you enjoy using this tool or have suggestions for improvement, feel free to contribute to the project or reach out!
                     </motion.p>
-                    
-                    {/* User stats */}
-                    <motion.div 
-                      className="flex justify-between mt-4 pt-4 border-t border-gray-100 dark:border-gray-700"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5 }}
-                    >
-                      <div className="text-center">
-                        <span className="block text-lg font-bold text-gray-900 dark:text-white">{githubUser?.public_repos}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Repositories</span>
-                      </div>
-                      <div className="text-center">
-                        <span className="block text-lg font-bold text-gray-900 dark:text-white">{githubUser?.followers}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Followers</span>
-                      </div>
-                      <div className="text-center">
-                        <span className="block text-lg font-bold text-gray-900 dark:text-white">{githubUser?.following}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">Following</span>
-                      </div>
-                    </motion.div>
-                    
-                    {/* User details */}
-                    <motion.div 
-                      className="mt-6 space-y-2"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      {githubUser?.location && (
-                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          {githubUser.location}
-                        </div>
-                      )}
-                      
-                      {githubUser?.company && (
-                        <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                          {githubUser.company}
-                        </div>
-                      )}
-                      
-                      {githubUser?.blog && (
-                        <div className="flex items-center text-sm">
-                          <svg className="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                          </svg>
-                          <a 
-                            href={githubUser.blog.startsWith('http') ? githubUser.blog : `https://${githubUser.blog}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            {githubUser.blog.replace(/^https?:\/\//, '')}
-                          </a>
-                        </div>
-                      )}
-                    </motion.div>
-                  </>
-                )}
-              </div>
-              
-              {/* Card footer */}
-              <div className="bg-gray-50 dark:bg-gray-700/30 px-6 py-3 flex justify-between items-center">
-                <motion.a
-                  href="https://github.com/harshitkumar9030"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center"
-                  whileHover={{ x: 3 }}
-                  transition={{ type: "spring", stiffness: 400 }}
-                >
-                  View on GitHub
-                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-                </motion.a>
-                <span className="text-sm text-gray-500 dark:text-gray-400">GitHub Profile</span>
-              </div>
-            </motion.div>
-            
-            <motion.div 
-              className="flex justify-center mt-10"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Link 
-                  href="/create" 
-                  className="px-8 py-3 rounded-lg bg-blue-600 text-white font-medium flex items-center hover:bg-blue-700 transition-colors"
-                >
-                  Get Started
-                  <motion.svg 
-                    className="w-5 h-5 ml-2" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  </div>
+                  
+                  {/* Enhanced GitHub Profile Card */}
+                  <motion.div 
+                    className="bg-white/90 z-[40] dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 max-w-2xl mx-auto"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    whileHover={{ 
+                      y: -10,
+                      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                      scale: 1.02
+                    }}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </motion.svg>
-                </Link>
-              </motion.div>
-            </motion.div>
-          </motion.section>
+                    {/* Enhanced GitHub header */}
+                    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 h-24 relative overflow-hidden">
+                      {/* Animated background pattern */}
+                      <motion.div
+                        className="absolute inset-0 opacity-20"
+                        animate={{
+                          backgroundPosition: ['0% 0%', '100% 100%'],
+                        }}
+                        transition={{
+                          duration: 10,
+                          repeat: Infinity,
+                          repeatType: 'reverse',
+                          ease: 'linear'
+                        }}
+                        style={{
+                          backgroundImage: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+                          backgroundSize: '20px 20px'
+                        }}
+                      />
+                      
+                      {/* GitHub logo with animation */}
+                      <motion.div 
+                        className="absolute top-4 right-4"
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                      >
+                        <svg className="w-10 h-10 text-white" viewBox="0 0 24 24" fill="currentColor">
+                          <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+                        </svg>
+                      </motion.div>
+                      
+                      <div className="!absolute z-50 -bottom-12 left-8">
+                        {loading ? (
+                          <div className="w-24 h-24 bg-gray-300 dark:bg-gray-600 rounded-full animate-pulse border-4 border-white dark:border-gray-800"></div>
+                        ) : error ? (
+                          <div className="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center border-4 border-white dark:border-gray-800">
+                            <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>                        ) : (
+                          <motion.div
+                            className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-white shadow-lg"
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ delay: 0.5, type: "spring" }}
+                            whileHover={{ scale: 1.05 }}
+                          >
+                            <Image 
+                              src={githubUser?.avatar_url || "https://avatars.githubusercontent.com/u/93194961"}
+                              alt={`${githubUser?.name || 'GitHub'} profile picture`}
+                              width={96}
+                              height={96}
+                              className="w-full h-full object-cover"
+                              unoptimized={true}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = "https://avatars.githubusercontent.com/u/93194961";
+                              }}
+                            />
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Enhanced profile info */}
+                    <div className="pt-16 pb-8 px-8">
+                      {loading ? (
+                        <div className="space-y-4">
+                          <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse"></div>
+                          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full animate-pulse"></div>
+                          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 animate-pulse"></div>
+                        </div>
+                      ) : error ? (
+                        <p className="text-gray-500 dark:text-gray-400 text-center">Could not load GitHub profile</p>
+                      ) : (
+                        <>
+                          <div className="space-y-2 mb-6">
+                            <motion.h3 
+                              className="text-2xl font-bold text-gray-900 dark:text-white"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.6 }}
+                            >
+                              {githubUser?.name}
+                            </motion.h3>
+                            <motion.a 
+                              href={githubUser?.html_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors group"
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: 0.7 }}
+                              whileHover={{ x: 5 }}
+                            >
+                              @{githubUser?.login}
+                              <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                              </svg>
+                            </motion.a>
+                          </div>
+                          
+                          <motion.p 
+                            className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.8 }}
+                          >
+                            {githubUser?.bio}
+                          </motion.p>
+                          
+                          {/* Enhanced user stats */}
+                          <motion.div 
+                            className="grid grid-cols-3 gap-6 mt-6 pt-6 border-t border-gray-100 dark:border-gray-700"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.9 }}
+                          >
+                            {[
+                              { label: 'Repositories', value: githubUser?.public_repos, icon: '📚' },
+                              { label: 'Followers', value: githubUser?.followers, icon: '👥' },
+                              { label: 'Following', value: githubUser?.following, icon: '🤝' }
+                            ].map((stat, idx) => (
+                              <motion.div 
+                                key={idx}
+                                className="text-center group"
+                                whileHover={{ scale: 1.05 }}
+                                transition={{ type: "spring", stiffness: 400 }}
+                              >
+                                <motion.div 
+                                  className="text-2xl mb-1"
+                                  animate={{ rotate: [0, 10, -10, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: idx * 0.3 }}
+                                >
+                                  {stat.icon}
+                                </motion.div>
+                                <span className="block text-2xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                  {stat.value}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{stat.label}</span>
+                              </motion.div>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Enhanced card footer */}
+                    <div className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700/30 dark:to-blue-900/20 px-8 py-4 flex justify-between items-center">
+                      <motion.a
+                        href="https://github.com/harshitkumar9030"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium group transition-colors"
+                        whileHover={{ x: 5 }}
+                        transition={{ type: "spring", stiffness: 400 }}
+                      >
+                        View Full Profile
+                        <motion.svg 
+                          className="w-4 h-4 ml-2" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                          animate={{ x: [0, 3, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </motion.svg>
+                      </motion.a>
+                      <span className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                        <motion.span
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                          className="mr-1"
+                        >
+                          ⭐
+                        </motion.span>
+                        GitHub Profile
+                      </span>
+                    </div>
+                  </motion.div>
+                  
+                  {/* Enhanced CTA buttons */}
+                  <motion.div 
+                    className="flex flex-col sm:flex-row gap-4 justify-center mt-12"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 0.5 }}
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Link 
+                        href="/create" 
+                        className="inline-flex items-center px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium transition-all duration-300 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl group"
+                      >
+                        <motion.span
+                          animate={{ rotate: [0, 360] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          className="mr-3"
+                        >
+                          🚀
+                        </motion.span>
+                        Start Creating Now
+                        <motion.svg 
+                          className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </motion.svg>
+                      </Link>
+                    </motion.div>
+                    
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <a
+                        href="https://github.com/harshitkumar9030/github_readme"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-8 py-4 rounded-xl border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:shadow-lg"
+                      >
+                        <motion.span
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                          className="mr-3"
+                        >
+                          ⭐
+                        </motion.span>
+                        Star on GitHub
+                        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                    </motion.div>
+                  </motion.div>
+                </div>
+              </div>
+            </motion.section>
+          </div>
         </div>
       </div>
-    </div>
+      <Footer />
+    </>
   );
 }
