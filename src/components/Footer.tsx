@@ -185,16 +185,13 @@ const Footer = () => {
                   Generator
                 </span>
               </span>
-            </div>
-
-            <motion.p
+            </div>            <motion.p
               className="text-gray-600 dark:text-gray-400 text-center max-w-md text-lg"
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.6 }}
             >
-              Create stunning GitHub profiles that showcase your skills and
-              attract opportunities.
+              Made for HackClub&apos;s Shipwrecked - Create stunning GitHub profiles for your hackathon projects.
             </motion.p>
           </motion.div>
 
