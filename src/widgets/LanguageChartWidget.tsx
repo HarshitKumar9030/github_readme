@@ -14,7 +14,7 @@ export interface LanguageChartWidgetConfig extends BaseWidgetConfig {
   hideBorder?: boolean;
   hideTitle?: boolean;
   customTitle?: string;
-  chartType?: 'donut' | 'pie' | 'bar'; // New chart types
+  chartType?: 'donut' | 'pie' | 'bar'; 
 }
 
 interface LanguageChartWidgetProps extends BaseWidgetProps {
@@ -29,7 +29,6 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  // Memoize SVG URL to prevent unnecessary re-renders
   const svgUrl = useMemo(() => {
     if (!config.username?.trim()) {
       return '';
@@ -50,7 +49,6 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
     return createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
   }, [config.username, config.theme, config.size, config.chartType, config.maxLanguages, config.minPercentage]);
 
-  // Memoize markdown generation to prevent unnecessary re-renders
   const generateMarkdown = useMemo(() => {
     if (!config.username?.trim()) {
       return '<!-- Language Chart: Please configure username -->';
@@ -74,7 +72,6 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
     return `![${chartTypeEmoji} ${config.username}'s Language Chart](${url})`;
   }, [config.username, config.theme, config.size, config.chartType, config.maxLanguages, config.minPercentage]);
 
-  // Load preview with proper error handling and debouncing
   useEffect(() => {
     if (!svgUrl) {
       setError('');
@@ -85,17 +82,15 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
     setIsLoading(true);
     setError('');
     
-    // Debounce the API call
     const timeoutId = setTimeout(async () => {
       try {
-        const response = await fetch(svgUrl);
-        if (!response.ok) {
+        const response = await fetch(svgUrl);        if (!response.ok) {
           throw new Error(`Failed to generate chart: ${response.status}`);
         }
-          // Generate markdown when successful
         if (onMarkdownGenerated) {
           onMarkdownGenerated(generateMarkdown);
         }
+        setIsLoading(false);
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
         setError(errorMsg);
@@ -103,7 +98,9 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
       } finally {
         setIsLoading(false);
       }
-    }, 500); // 500ms debounce    return () => clearTimeout(timeoutId);
+    }, 500); 
+    
+    return () => clearTimeout(timeoutId);
   }, [svgUrl, onMarkdownGenerated, generateMarkdown]);
 
   const handleConfigChange = useCallback((updates: Partial<LanguageChartWidgetConfig>) => {
