@@ -14,6 +14,7 @@ export interface TopLanguagesWidgetConfig extends BaseWidgetConfig {
   excludeLangs?: string;
   cardWidth?: number;
 }
+ 
 
 interface TopLanguagesWidgetProps extends BaseWidgetProps {
   config: TopLanguagesWidgetConfig;
