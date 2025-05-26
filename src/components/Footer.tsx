@@ -12,10 +12,12 @@ const Footer = () => {
     initial: { y: 20, opacity: 0 },
     animate: { y: 0, opacity: 1 }
   };
-  
-  return (
-    <footer className="bg-gradient-to-b from-gray-50/80 to-gray-50 dark:from-gray-900/90 dark:to-gray-900 border-t border-gray-200 dark:border-gray-800 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    return (
+    <footer className="bg-gradient-to-t from-gray-100/50 to-white dark:from-gray-800/50 dark:to-gray-900 border-t border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
         <motion.div 
           className="flex flex-col items-center justify-center"
           initial="initial"

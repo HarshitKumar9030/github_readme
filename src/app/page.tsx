@@ -5,8 +5,8 @@ import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
-    <main className="min-h-screen w-full font-sans overflow-hidden bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-black">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--primary-rgb,0.05),transparent_50%)]"></div>
+    <main className="min-h-screen w-full font-sans bg-white dark:bg-gray-900">
+      <Navbar />
       <Hero />
       <Features />
       <Footer />

@@ -5,20 +5,17 @@ import Image from 'next/image'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { ThemeToggle } from './ThemeToggle'
-import Link from 'next/link';
-import { getRepositoryStats, getWeeklyStarCount } from '@/services/socialStats';
-import icon from 'react-syntax-highlighter/dist/esm/languages/prism/icon';
-import { AvatarWithFallback } from '../utils/avatarGenerator';
+import Link from 'next/link'
+import { getRepositoryStats, getWeeklyStarCount } from '@/services/socialStats'
+import { AvatarWithFallback } from '../utils/avatarGenerator'
 
 const Hero = () => {
-  const router = useRouter();
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const { scrollY } = useScroll({
-    container: scrollRef
-  });
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
-  const scale = useTransform(scrollY, [0, 300], [1, 0.9]);
+  const router = useRouter()
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const { scrollY } = useScroll()
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.8])
+  const scale = useTransform(scrollY, [0, 300], [1, 0.98])
   
   // GitHub repository stats
   const [repoStats, setRepoStats] = useState({
@@ -27,17 +24,17 @@ const Hero = () => {
     watchers: 0,
     weeklyStars: 0,
     loading: true
-  });
+  })
 
   // Fetch GitHub repository stats
   useEffect(() => {
     const fetchRepoStats = async () => {
       try {
-        const owner = 'harshitkumar9030';
-        const repo = 'github_readme';
+        const owner = 'harshitkumar9030'
+        const repo = 'github_readme'
         
-        const stats = await getRepositoryStats(owner, repo);
-        const weeklyStars = await getWeeklyStarCount(owner, repo);
+        const stats = await getRepositoryStats(owner, repo)
+        const weeklyStars = await getWeeklyStarCount(owner, repo)
         
         setRepoStats({
           stars: stats.stars,
@@ -45,121 +42,106 @@ const Hero = () => {
           watchers: stats.watchers,
           weeklyStars,
           loading: false
-        });
+        })
       } catch (error) {
-        console.error("Failed to fetch repository stats:", error);
-        setRepoStats(prev => ({ ...prev, loading: false }));
+        console.error("Failed to fetch repository stats:", error)
+        setRepoStats(prev => ({ ...prev, loading: false }))
       }
-    };
-    
-    fetchRepoStats();
-  }, []);
+    }
+
+    fetchRepoStats()
+  }, [])
 
   // Mouse parallax effect
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({
-        x: e.clientX,
-        y: e.clientY
-      });
-    };
+        x: e.clientX - window.innerWidth / 2,
+        y: e.clientY - window.innerHeight / 2,
+      })
+    }
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
   
   // Typing animation for the heading
-  const headingText = "GitHub README Generator";
-  const [displayedText, setDisplayedText] = useState('');
+  const headingText = "GitHub README Generator"
+  const [displayedText, setDisplayedText] = useState('')
   
   useEffect(() => {
-    let index = 0;
+    let i = 0
     const typingInterval = setInterval(() => {
-      if (index <= headingText.length) {
-        setDisplayedText(headingText.substring(0, index));
-        index++;
+      if (i < headingText.length) {
+        setDisplayedText(headingText.slice(0, i + 1))
+        i++
       } else {
-        clearInterval(typingInterval);
+        clearInterval(typingInterval)
       }
-    }, 100);
-    
-    return () => clearInterval(typingInterval);
-  }, []);
+    }, 100)
+
+    return () => clearInterval(typingInterval)
+  }, [])
   
   // Handle scroll visibility of elements
-  const [isScrolled, setIsScrolled] = useState(false);
-  
-  useEffect(() => {
+  const [isScrolled, setIsScrolled] = useState(false)
+    useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setIsScrolled(scrollPosition > 50);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-  
-  return (
+      setIsScrolled(window.scrollY > 50)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+    return (
     <motion.section 
-      className="w-full py-20 md:py-32 relative overflow-hidden"
+      className="relative w-full min-h-screen overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-purple-50/20 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"
       style={{ opacity, scale }}
       ref={scrollRef}
     >
-      {/* Animated gradient background */}
+      {/* Subtle animated gradient background */}
       <motion.div 
-        className="absolute inset-0 bg-gradient-radial from-blue-500/5 via-transparent to-purple-500/5"
+        className="absolute inset-0 opacity-60"
         animate={{
           background: [
-            'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.05) 0%, rgba(0, 0, 0, 0) 50%, rgba(147, 51, 234, 0.05) 100%)',
-            'radial-gradient(circle at 70% 70%, rgba(59, 130, 246, 0.05) 0%, rgba(0, 0, 0, 0) 50%, rgba(147, 51, 234, 0.05) 100%)',
-            'radial-gradient(circle at 30% 70%, rgba(59, 130, 246, 0.05) 0%, rgba(0, 0, 0, 0) 50%, rgba(147, 51, 234, 0.05) 100%)',
-            'radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.05) 0%, rgba(0, 0, 0, 0) 50%, rgba(147, 51, 234, 0.05) 100%)',
-            'radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.05) 0%, rgba(0, 0, 0, 0) 50%, rgba(147, 51, 234, 0.05) 100%)',
+            'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.03) 0%, transparent 50%)',
+            'radial-gradient(circle at 80% 20%, rgba(147, 51, 234, 0.03) 0%, transparent 50%)',
+            'radial-gradient(circle at 40% 40%, rgba(59, 130, 246, 0.03) 0%, transparent 50%)',
           ]
         }}
         transition={{
-          duration: 20,
+          duration: 15,
           repeat: Infinity,
-          ease: "linear"
+          ease: "easeInOut"
         }}
       />
       
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 w-full h-full bg-gradient-to-b from-transparent to-[rgba(var(--background-rgb),0.1)] pointer-events-none" />
-      
-      {/* Animated background dots with increased number and variety */}
-      <div className="absolute inset-0 w-full h-full">
-        {[...Array(60)].map((_, i) => (
+      {/* Simplified floating particles */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden">
+        {[...Array(12)].map((_, i) => (
           <motion.div
             key={i}
-            className={`absolute ${i % 5 === 0 ? 'w-2 h-2' : i % 3 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'} rounded-full ${
-              i % 4 === 0 ? 'bg-blue-500/20' : i % 3 === 0 ? 'bg-purple-500/15' : i % 2 === 0 ? 'bg-green-500/15' : 'bg-gray-500/10'
+            className={`absolute w-1 h-1 rounded-full ${
+              i % 3 === 0 ? 'bg-blue-400/20' : i % 2 === 0 ? 'bg-purple-400/15' : 'bg-indigo-400/10'
             }`}
             initial={{ 
               x: `${Math.random() * 100}%`, 
               y: `${Math.random() * 100}%`,
-              opacity: Math.random() * 0.2 + 0.1
+              opacity: 0.3
             }}
             animate={{
               x: `${Math.random() * 100}%`,
               y: `${Math.random() * 100}%`,
-              opacity: [0.1, 0.3, 0.1],
-              scale: [1, i % 5 === 0 ? 1.2 : 1, 1]
+              opacity: [0.1, 0.4, 0.1],
             }}
             transition={{
-              duration: 8 + Math.random() * 20,
+              duration: 15 + Math.random() * 10,
               repeat: Infinity,
               ease: "easeInOut"
             }}
           />
         ))}
-      </div>
-
-      {/* Animated code patterns in background */}
+      </div>      {/* Animated code patterns in background */}
       <div className="absolute top-1/4 -left-20 opacity-10 dark:opacity-5">
         <motion.div
           className="text-xs md:text-sm font-mono"
@@ -182,53 +164,19 @@ const Hero = () => {
         </motion.div>
       </div>
 
-      {/* Navigation bar */}
-      <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-md' : ''}`}>
-        <motion.div 
-          className="max-w-7xl mx-auto px-4 py-4 sm:px-6 flex items-center justify-between"
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          <motion.div className="flex items-center space-x-2" whileHover={{ scale: 1.05 }}>
-            <Image src="/file.svg" alt="Logo" width={28} height={28} />
-            <span className="font-bold text-xl">README Gen</span>
-          </motion.div>
-          
-          <div className="flex items-center space-x-6">            <motion.nav className="hidden md:flex space-x-6">
-              {[
-                { name: 'Home', path: '/' },
-                { name: 'Features', path: '/features' },
-                { name: 'Templates', path: '/templates' },
-                { name: 'Create', path: '/create' },
-                { name: 'About', path: '/about' }
-              ].map((item) => (
-                <motion.div key={item.name} whileHover={{ y: -2 }}>
-                  <Link href={item.path} className="text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400">
-                    {item.name}
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.nav>
-            <ThemeToggle variant="buttons" className="rounded-lg shadow-sm" />
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 mt-16">
-        <div className="flex flex-col items-center justify-center text-center">
-          {/* Header with theme toggle and badge */}
-          <div className="flex justify-between items-center w-full max-w-xl mx-auto mb-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 pt-20 pb-20">
+        <div className="flex flex-col items-center justify-center text-center">          {/* Header with theme toggle and badge */}
+          <div className="flex justify-center items-center w-full mb-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50">
                 <motion.span
                   animate={{ rotate: 360 }}
                   transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  className="mr-1.5"
+                  className="mr-2"
                 >
                   ✨
                 </motion.span>
@@ -264,22 +212,21 @@ const Hero = () => {
           >
             Create <span className="font-bold text-blue-600 dark:text-blue-400">stunning GitHub profile READMEs</span> with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets. Now with <span className="font-bold text-emerald-600 dark:text-emerald-400">enhanced GFM support</span> and <span className="font-bold text-purple-600 dark:text-purple-400">direct GitHub integration</span>.
           </motion.p>
-          
-          {/* GitHub stars badge - Now dynamic */}
+            {/* GitHub stars badge - Now dynamic */}
           <motion.div 
             className="mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
           >
-            <div className="flex items-center justify-center space-x-4">
-              <a href="https://github.com/harshitkumar9030/github_readme" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-4 py-1.5 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a href="https://github.com/harshitkumar9030/github_readme" target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-300 hover:shadow-md">
                 <svg className="w-4 h-4 mr-2 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                   <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
                 </svg>
                 <span>Star on GitHub</span>
                 <motion.span 
-                  className="ml-2 px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded-md"
+                  className="ml-2 px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded-md text-xs font-medium"
                   initial={{ scale: 1 }}
                   animate={{ 
                     scale: repoStats.loading ? [1, 1.1, 1] : 1,
@@ -291,16 +238,18 @@ const Hero = () => {
                 >
                   {repoStats.loading ? '...' : repoStats.stars}
                 </motion.span>
-              </a>              <div className="flex items-center space-x-1">
+              </a>
+              
+              <div className="flex items-center space-x-2">
                 <div className="flex -space-x-2">
                   {['Alex M', 'Emma K', 'Ryan T'].map((name, i) => (
-                    <div key={i} className="w-6 h-6 rounded-full border border-white dark:border-gray-800 overflow-hidden">
+                    <div key={i} className="w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 overflow-hidden">
                       <AvatarWithFallback
-                        src={`https://i.pravatar.cc/24?img=${i + 4}`}
+                        src={`https://i.pravatar.cc/28?img=${i + 4}`}
                         alt={name}
                         name={name}
-                        width={24}
-                        height={24}
+                        width={28}
+                        height={28}
                         className="w-full h-full object-cover"
                         style="circle"
                       />
@@ -342,8 +291,7 @@ const Hero = () => {
               </motion.div>
             ))}
           </motion.div>
-            
-          {/* CTA Buttons with enhanced hover effects */}
+              {/* CTA Buttons with enhanced hover effects */}
           <motion.div 
             className="flex flex-col sm:flex-row gap-4 mb-16"
             initial={{ opacity: 0, y: 20 }}
@@ -351,10 +299,10 @@ const Hero = () => {
             transition={{ duration: 0.7, delay: 0.4 }}
           >
             <motion.button
-              className="px-8 py-3.5 rounded-lg bg-blue-600 text-white font-medium flex items-center justify-center gap-2 shadow-md"
+              className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
               whileHover={{ 
                 scale: 1.02, 
-                backgroundColor: "#2563eb"
+                y: -2
               }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/create')}
@@ -365,9 +313,11 @@ const Hero = () => {
               >→</motion.span>
               Start Building Now
             </motion.button>
-            <motion.button              className="px-8 py-3.5 rounded-lg border border-gray-300 dark:border-gray-700 font-medium bg-transparent flex items-center justify-center"
+            <motion.button
+              className="px-8 py-3.5 rounded-lg border border-gray-300 dark:border-gray-700 font-medium bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg"
               whileHover={{ 
                 scale: 1.02, 
+                y: -2,
                 borderColor: "#3b82f6"
               }}
               whileTap={{ scale: 0.98 }}
@@ -376,29 +326,65 @@ const Hero = () => {
               Browse Templates
             </motion.button>
           </motion.div>
-          
-          {/* Demo preview image */}
+            {/* Demo preview image with enhanced styling */}
           <motion.div
-            className="relative w-full max-w-4xl mx-auto mb-10 rounded-xl overflow-hidden shadow-xl"
+            className="relative w-full max-w-5xl mx-auto mb-20 rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
+            whileHover={{ 
+              y: -10,
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+            }}
           >
-            <div className="bg-gray-800 h-8 w-full flex items-center px-4 space-x-2">
-              <div className="w-3 h-3 rounded-full bg-red-500"></div>
-              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-              <div className="w-3 h-3 rounded-full bg-green-500"></div>
-              <div className="text-xs text-gray-400 ml-2">README Preview</div>
+            {/* Browser header */}
+            <div className="bg-gradient-to-r from-gray-800 to-gray-900 h-10 w-full flex items-center px-4 space-x-2">
+              <div className="flex space-x-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="bg-gray-700 rounded px-3 py-1 text-xs text-gray-300">README Preview</div>
+              </div>
             </div>
-            <div className="bg-white dark:bg-gray-900 p-6 border border-gray-200 dark:border-gray-800">
+            
+            {/* Content area */}
+            <div className="bg-white dark:bg-gray-900 p-8 relative">
+              {/* Gradient overlay for depth */}
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-blue-500/5 dark:to-blue-500/10 pointer-events-none"></div>
+              
               <Image 
                 src="/preview-screen.svg" 
                 alt="README Preview" 
-                width={1000} 
-                height={600}
-                className="w-full h-auto"
+                width={1200} 
+                height={700}
+                className="w-full h-auto relative z-10"
                 priority
               />
+              
+              {/* Floating action button overlay */}
+              <motion.div 
+                className="absolute bottom-6 right-6 z-20"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.2, duration: 0.5 }}
+              >
+                <motion.button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-2 font-medium"
+                  whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(59, 130, 246, 0.4)" }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push('/create')}
+                >
+                  <span>Try It Now</span>
+                  <motion.span
+                    animate={{ x: [0, 3, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                  >
+                    →
+                  </motion.span>
+                </motion.button>
+              </motion.div>
             </div>
           </motion.div>
           

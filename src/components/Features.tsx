@@ -102,11 +102,11 @@ const Features = () => {  // Feature tabs data
       transition: { type: "spring", stiffness: 300, damping: 24 }
     }
   };
-
   return (
-    <section className="w-full py-20 md:py-32 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-black relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-blue-500/5 to-transparent" />
+    <section className="w-full py-20 md:py-32 bg-gradient-to-b from-white to-gray-50/30 dark:from-gray-900 dark:to-gray-800/50 relative overflow-hidden">
+      {/* Subtle background decoration */}
+      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-blue-500/3 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-purple-500/3 to-transparent" />
       
       {/* Main content container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -146,14 +146,16 @@ const Features = () => {  // Feature tabs data
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-          >            {featureTabs.map((tab) => (
-              <motion.button
+          >            {featureTabs.map((tab) => (              <motion.button
                 key={tab.id}
-                variants={itemVariants}                className={`flex items-center p-4 rounded-xl min-w-40 lg:w-full text-left mb-2 transition-all ${
+                variants={itemVariants}
+                className={`flex items-center p-4 rounded-xl min-w-40 lg:w-full text-left mb-2 transition-all duration-300 ${
                   activeTab === tab.id
-                    ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800/30'
+                    ? 'bg-gradient-to-r from-blue-50 to-blue-100/50 dark:from-blue-900/30 dark:to-blue-800/20 border-l-4 border-blue-500 shadow-sm'
+                    : 'hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100/50 dark:hover:from-gray-800/20 dark:hover:to-gray-700/20 hover:shadow-sm'
                 }`}
+                whileHover={{ scale: 1.02, x: 5 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveTab(tab.id)}
               >
                 <div className="w-6 h-6 mr-3 relative">
@@ -173,11 +175,14 @@ const Features = () => {  // Feature tabs data
             ))}
           </motion.div>          {/* Feature content */}
           <motion.div 
-            className="flex-1 bg-white dark:bg-gray-800/30 rounded-lg p-6 md:p-8 shadow-md border border-gray-100 dark:border-gray-700"
+            className="flex-1 bg-white/70 dark:bg-gray-800/40 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-lg border border-gray-200/50 dark:border-gray-700/50"
             key={activeTab}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, type: "spring" }}
+            whileHover={{ 
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)" 
+            }}
           >
             {/* Feature content header */}
             <div className="mb-8">              <motion.h3 
