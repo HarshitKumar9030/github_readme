@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { createAbsoluteUrl } from "@/utils/urlHelpers";
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
@@ -252,19 +252,20 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
   const [svgPreviewUrl, setSvgPreviewUrl] = useState<string>('');  const [copied, setCopied] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
   const [showConfig, setShowConfig] = useState<boolean>(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);// Fetch GitHub stats when username changes
+  // Fetch GitHub stats when username changes
   useEffect(() => {
     async function fetchData() {
       if (config.socials?.github) {
         setLoading(true);
         setError(null);
         
-        if (debounceTimer) {
-          clearTimeout(debounceTimer);
+        if (debounceTimerRef.current) {
+          clearTimeout(debounceTimerRef.current);
         }
         
-        const newTimer = setTimeout(async () => {
+        debounceTimerRef.current = setTimeout(async () => {
           try {
             const githubStats = await getGithubStats(config.socials.github);
             setStats(prev => ({
@@ -305,19 +306,17 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
             setSvgLoading(false);
           }
         }, 500); 
-        
-        setDebounceTimer(newTimer);
       }
     }
 
     fetchData();
     
     return () => {
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [config.socials?.github, config.theme, config.useSvgCard, config.compactMode, config.hideBorder, config.hideTitle, debounceTimer]);  // Generate markdown for the widget and notify parent
+  }, [config.socials?.github, config.theme, config.useSvgCard, config.compactMode, config.hideBorder, config.hideTitle]);// Generate markdown for the widget and notify parent
   useEffect(() => {
     if (onMarkdownGenerated) {
       const markdown = generateMarkdown(config, stats);

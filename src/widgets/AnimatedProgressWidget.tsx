@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
 interface Skill {
@@ -31,15 +31,21 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const [newSkillName, setNewSkillName] = useState<string>('');
-  const [newSkillLevel, setNewSkillLevel] = useState<number>(50);
-  const progressConfig: AnimatedProgressWidgetConfig = {
+  const [newSkillLevel, setNewSkillLevel] = useState<number>(50);  // Memoize the progressConfig to prevent unnecessary re-creation
+  const progressConfig: AnimatedProgressWidgetConfig = useMemo(() => ({
     ...config,
     skills: config.skills || [],
     animationDuration: config.animationDuration || 2000,
     showProgressText: config.showProgressText ?? true,
     progressBarHeight: config.progressBarHeight || 20
-  };  const generateSvgContent = useCallback(async () => {
-    if (!progressConfig.skills || progressConfig.skills.length === 0) {
+  }), [config]);
+
+  // Use direct config properties for better dependency tracking
+  const generateSvgContent = useCallback(async () => {
+    const skills = config.skills || [];
+    const showProgressText = config.showProgressText ?? true;
+    
+    if (!skills || skills.length === 0) {
       setSvgContent('');
       return;
     }
@@ -48,14 +54,14 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
     setError('');
 
     try {
-      const skillsParam = progressConfig.skills
+      const skillsParam = skills
         .map((skill: Skill) => `${encodeURIComponent(skill.name)}:${skill.level}`)
         .join(',');
 
       const params = new URLSearchParams({
         skills: skillsParam,
         animated: 'true',
-        show_progress_text: (progressConfig.showProgressText ?? true).toString(),
+        show_progress_text: showProgressText.toString(),
         theme: 'default',
         width: '400',
         height: '300'
@@ -79,10 +85,7 @@ const AnimatedProgressWidget: React.FC<AnimatedProgressWidgetProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [
-    progressConfig.skills,
-    progressConfig.showProgressText
-  ]);
+  }, [config.skills, config.showProgressText]);
   useEffect(() => {
     generateSvgContent();
   }, [generateSvgContent]);

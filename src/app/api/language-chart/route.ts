@@ -15,34 +15,65 @@ export async function GET(request: NextRequest) {
   if (!username) {
     return new NextResponse('Username is required', { status: 400 });
   }
-  
-  try {
-    // Fetch user's repositories
-    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`);
+    try {
+    // Fetch user's repositories with better error handling
+    const headers: HeadersInit = {
+      'User-Agent': 'GitHub-README-Generator'
+    };
+    
+    // Add GitHub token if available (optional)
+    if (process.env.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+    }
+    
+    console.log(`Fetching repositories for user: ${username}`);
+    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&type=owner`, {
+      headers
+    });
+    
     if (!reposResponse.ok) {
-      throw new Error('Failed to fetch repositories');
+      console.error(`GitHub API error: ${reposResponse.status} ${reposResponse.statusText}`);
+      if (reposResponse.status === 404) {
+        throw new Error(`User '${username}' not found on GitHub`);
+      } else if (reposResponse.status === 403) {
+        throw new Error('GitHub API rate limit exceeded. Please try again later.');
+      } else {
+        throw new Error(`GitHub API error: ${reposResponse.status}`);
+      }
     }
     
     const repos = await reposResponse.json();
-    const languageStats: { [key: string]: number } = {};
+    console.log(`Found ${repos.length} repositories for ${username}`);
     
-    // Fetch language data for each repository
+    if (!Array.isArray(repos) || repos.length === 0) {
+      console.log(`No repositories found for user: ${username}`);
+    }
+    
+    const languageStats: { [key: string]: number } = {};
+      // Fetch language data for each repository
+    let processedRepos = 0;
     for (const repo of repos) {
       if (repo.fork) continue; // Skip forked repositories
       
       try {
-        const langResponse = await fetch(repo.languages_url);
+        const langResponse = await fetch(repo.languages_url, { headers });
         if (langResponse.ok) {
           const languages = await langResponse.json();
           for (const [lang, bytes] of Object.entries(languages)) {
             languageStats[lang] = (languageStats[lang] || 0) + (bytes as number);
           }
+          processedRepos++;
+        } else {
+          console.warn(`Failed to fetch languages for repo ${repo.name}: ${langResponse.status}`);
         }
       } catch (error) {
+        console.warn(`Error fetching languages for repo ${repo.name}:`, error);
         // Continue if individual repo fails
         continue;
       }
     }
+    
+    console.log(`Processed ${processedRepos} repositories, found languages:`, Object.keys(languageStats));
     
     // Calculate percentages and filter
     const totalBytes = Object.values(languageStats).reduce((sum, bytes) => sum + bytes, 0);
@@ -189,9 +220,23 @@ export async function GET(request: NextRequest) {
         'Cache-Control': 'public, max-age=3600',
       },
     });
-    
-  } catch (error) {
+      } catch (error) {
     console.error('Error generating language chart:', error);
+    
+    let errorMessage = 'Error loading data';
+    let errorDetail = 'Please check username';
+    
+    if (error instanceof Error) {
+      if (error.message.includes('not found')) {
+        errorMessage = 'User not found';
+        errorDetail = `'${username}' doesn't exist on GitHub`;
+      } else if (error.message.includes('rate limit')) {
+        errorMessage = 'Rate limit exceeded';
+        errorDetail = 'Please try again later';
+      } else {
+        errorDetail = error.message;
+      }
+    }
     
     // Return error SVG
     const errorSvg = `
@@ -200,11 +245,11 @@ export async function GET(request: NextRequest) {
         <rect width="100%" height="100%" fill="#f8f9fa" rx="8"/>
         <text x="${size/2}" y="${size/2-10}" text-anchor="middle" fill="#d73a49" 
               font-size="14" font-family="Arial, sans-serif" font-weight="bold">
-          Error loading data
+          ${errorMessage}
         </text>
         <text x="${size/2}" y="${size/2+10}" text-anchor="middle" fill="#586069" 
               font-size="12" font-family="Arial, sans-serif">
-          Please check username
+          ${errorDetail}
         </text>
       </svg>
     `;

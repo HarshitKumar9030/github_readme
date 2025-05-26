@@ -308,38 +308,40 @@ function EnhancedSocialStatsWidget({
     small: "rounded-lg",
     medium: "rounded-xl",
     large: "rounded-2xl",
-  }[borderRadius]), [borderRadius]);
+  }[borderRadius]), [borderRadius]);  // Use useEffect to handle fetching with proper dependencies instead of useCallback
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!socials.github) {
+        dispatch({ type: 'RESET' });
+        return;
+      }
 
-  // Stable fetch function to prevent useEffect retriggering
-  const fetchStats = useCallback(async () => {
-    if (!socials.github) {
-      dispatch({ type: 'RESET' });
-      return;
-    }
+      dispatch({ type: 'FETCH_START' });
 
-    dispatch({ type: 'FETCH_START' });
+      try {
+        const githubStats = await fetchGitHubStats(socials.github);
+        
+        // Generate SVG URL
+        const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&theme=${theme}&layout=${layout}&showAvatar=${showAvatar}&showBio=${showBio}&hideStats=${memoizedHideStats.join(',')}&borderRadius=${borderRadius}&showBorder=${showBorder}`;
+        const svgUrl = createAbsoluteUrl(apiPath);
 
-    try {
-      const githubStats = await fetchGitHubStats(socials.github);
-      
-      // Generate SVG URL
-      const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&theme=${theme}&layout=${layout}&showAvatar=${showAvatar}&showBio=${showBio}&hideStats=${memoizedHideStats.join(',')}&borderRadius=${borderRadius}&showBorder=${showBorder}`;
-      const svgUrl = createAbsoluteUrl(apiPath);
+        // Batch update to prevent multiple re-renders
+        dispatch({ 
+          type: 'FETCH_SUCCESS', 
+          payload: { 
+            stats: { github: githubStats }, 
+            svgUrl 
+          } 
+        });
+      } catch (err) {
+        dispatch({ 
+          type: 'FETCH_ERROR', 
+          payload: err instanceof Error ? err.message : 'Failed to fetch stats' 
+        });
+      }
+    };
 
-      // Batch update to prevent multiple re-renders
-      dispatch({ 
-        type: 'FETCH_SUCCESS', 
-        payload: { 
-          stats: { github: githubStats }, 
-          svgUrl 
-        } 
-      });
-    } catch (err) {
-      dispatch({ 
-        type: 'FETCH_ERROR', 
-        payload: err instanceof Error ? err.message : 'Failed to fetch stats' 
-      });
-    }
+    fetchData();
   }, [socials.github, theme, layout, showAvatar, showBio, memoizedHideStats, borderRadius, showBorder]);
 
   // Stable toggle function
@@ -362,12 +364,6 @@ function EnhancedSocialStatsWidget({
     if (!state.svgUrl || !socials.github) return "";
     return `![GitHub Stats for @${socials.github}](${state.svgUrl})`;
   }, [state.svgUrl, socials.github]);
-
-  // Fetch GitHub stats
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
   // Call onMarkdownGenerated when markdown changes - stabilized to prevent infinite loops
   useEffect(() => {
     if (onMarkdownGenerated && markdown) {
