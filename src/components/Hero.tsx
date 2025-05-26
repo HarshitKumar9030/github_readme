@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import Image from 'next/image'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -63,25 +63,39 @@ const Hero = () => {
 
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
-  
-  // Typing animation for the heading
-  const headingText = "GitHub README Generator"
+  }, [])    // Enhanced typing animation for the heading
+  const headingTexts = useMemo(() => [
+    "GitHub README Generator",
+    "Create Beautiful Profiles", 
+    "Stand Out on GitHub"
+  ], [])
+  const [currentTextIndex, setCurrentTextIndex] = useState(0)
   const [displayedText, setDisplayedText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
   
   useEffect(() => {
-    let i = 0
-    const typingInterval = setInterval(() => {
-      if (i < headingText.length) {
-        setDisplayedText(headingText.slice(0, i + 1))
-        i++
+    const currentText = headingTexts[currentTextIndex]
+    
+    const typeText = () => {
+      if (!isDeleting) {
+        if (displayedText.length < currentText.length) {
+          setDisplayedText(currentText.slice(0, displayedText.length + 1))
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000) // Pause before deleting
+        }
       } else {
-        clearInterval(typingInterval)
+        if (displayedText.length > 0) {
+          setDisplayedText(currentText.slice(0, displayedText.length - 1))
+        } else {
+          setIsDeleting(false)
+          setCurrentTextIndex((prev) => (prev + 1) % headingTexts.length)
+        }
       }
-    }, 100)
+    }
 
-    return () => clearInterval(typingInterval)
-  }, [])
+    const timeout = setTimeout(typeText, isDeleting ? 50 : 100)
+    return () => clearTimeout(timeout)
+  }, [displayedText, isDeleting, currentTextIndex, headingTexts])
   
   // Handle scroll visibility of elements
   const [isScrolled, setIsScrolled] = useState(false)
@@ -183,34 +197,79 @@ const Hero = () => {
                 New: Markdown Export & GitHub Integration
               </span>
             </motion.div>
-          </div>
-
-          {/* Main heading with typing animation - minimal style */}
+          </div>          {/* Enhanced main heading with improved typing animation */}
           <motion.div 
-            className="relative mb-6"
+            className="relative mb-8"
           >
+            {/* Background glow effect */}
+            <motion.div
+              className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 rounded-2xl blur-2xl"
+              animate={{
+                opacity: [0.3, 0.6, 0.3],
+                scale: [0.8, 1.1, 0.8],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+            
             <motion.h1 
-              className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight inline-block pb-2 border-b-2 border-blue-500 dark:border-blue-400"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              className="relative text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7 }}
             >
-              {displayedText}
+              <span className="bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent">
+                {displayedText}
+              </span>
               <motion.span
                 animate={{ opacity: [0, 1, 0] }}
-                transition={{ duration: 1, repeat: Infinity, repeatDelay: 0 }}
-                className="typing-cursor"
+                transition={{ duration: 0.8, repeat: Infinity }}
+                className="text-blue-600 dark:text-blue-400 ml-1"
               >|</motion.span>
             </motion.h1>
-          </motion.div>
-            {/* Animated tagline */}
+            
+            {/* Animated underline */}
+            <motion.div
+              className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full mx-auto mt-4"
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(displayedText.length * 8, 400)}px` }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+            />
+          </motion.div>            {/* Enhanced tagline with better visual hierarchy */}
           <motion.p 
-            className="text-xl md:text-2xl mb-6 max-w-3xl text-gray-700 dark:text-gray-300"
+            className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            Create <span className="font-bold text-blue-600 dark:text-blue-400">stunning GitHub profile READMEs</span> with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets. Now with <span className="font-bold text-emerald-600 dark:text-emerald-400">enhanced GFM support</span> and <span className="font-bold text-purple-600 dark:text-purple-400">direct GitHub integration</span>.
+            <span className="text-gray-700 dark:text-gray-300">Create </span>
+            <motion.span 
+              className="font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              stunning GitHub profile READMEs
+            </motion.span>
+            <span className="text-gray-700 dark:text-gray-300"> with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets. Now with </span>
+            <motion.span 
+              className="font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              enhanced GFM support
+            </motion.span>
+            <span className="text-gray-700 dark:text-gray-300"> and </span>
+            <motion.span 
+              className="font-bold bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              direct GitHub integration
+            </motion.span>
+            <span className="text-gray-700 dark:text-gray-300">.</span>
           </motion.p>
             {/* GitHub stars badge - Now dynamic */}
           <motion.div 
@@ -290,40 +349,79 @@ const Hero = () => {
                 <div className="text-sm text-gray-600 dark:text-gray-400">{stat.label}</div>
               </motion.div>
             ))}
-          </motion.div>
-              {/* CTA Buttons with enhanced hover effects */}
+          </motion.div>              {/* Enhanced CTA Buttons with improved hover effects and micro-interactions */}
           <motion.div 
-            className="flex flex-col sm:flex-row gap-4 mb-16"
+            className="flex flex-col sm:flex-row gap-6 mb-16"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
           >
             <motion.button
-              className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="group relative px-8 py-4 rounded-xl bg-gradient-to-r from-blue-600 via-blue-700 to-purple-600 text-white font-semibold flex items-center justify-center gap-3 shadow-xl overflow-hidden"
               whileHover={{ 
-                scale: 1.02, 
-                y: -2
+                scale: 1.05, 
+                y: -3,
+                boxShadow: "0 20px 40px rgba(59, 130, 246, 0.4)"
               }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/create')}
             >
+              {/* Animated background overlay */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                initial={{ x: "-100%" }}
+                whileHover={{ x: "0%" }}
+                transition={{ duration: 0.6, ease: "easeInOut" }}
+              />
+              
+              {/* Content */}
               <motion.span
+                className="relative z-10"
                 animate={{ x: [0, 3, 0] }}
-                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-              >→</motion.span>
-              Start Building Now
+                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              >
+                🚀
+              </motion.span>
+              <span className="relative z-10 text-lg">Start Building Now</span>
+              <motion.span
+                className="relative z-10"
+                animate={{ x: [0, 4, 0] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
+              >
+                →
+              </motion.span>
             </motion.button>
+            
             <motion.button
-              className="px-8 py-3.5 rounded-lg border border-gray-300 dark:border-gray-700 font-medium bg-white/50 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:shadow-lg"
+              className="group relative px-8 py-4 rounded-xl border-2 border-gray-300 dark:border-gray-600 font-semibold bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm flex items-center justify-center gap-3 overflow-hidden"
               whileHover={{ 
-                scale: 1.02, 
-                y: -2,
-                borderColor: "#3b82f6"
+                scale: 1.05, 
+                y: -3,
+                borderColor: "#3b82f6",
+                boxShadow: "0 15px 30px rgba(0, 0, 0, 0.1)"
               }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push('/templates')}
             >
-              Browse Templates
+              {/* Animated background overlay */}
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                initial={{ scale: 0, borderRadius: "100%" }}
+                whileHover={{ scale: 1, borderRadius: "0%" }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+              
+              {/* Content */}
+              <motion.span
+                className="relative z-10"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              >
+                🎨
+              </motion.span>
+              <span className="relative z-10 text-lg text-gray-700 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                Browse Templates
+              </span>
             </motion.button>
           </motion.div>
             {/* Demo preview image with enhanced styling */}
@@ -464,71 +562,209 @@ const Hero = () => {
             ))}
           </motion.div>
         </div>
-      </div>
-      
-      {/* Testimonial section */}
+      </div>      {/* Enhanced testimonial section with improved design and vibrant colors */}
       <motion.div
-        className="max-w-5xl mx-auto mt-20 px-4"
-        initial={{ opacity: 0, y: 30 }}
+        className="max-w-6xl mx-auto mt-24 px-4 mb-20"
+        initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7 }}
+        transition={{ duration: 0.8 }}
       >
-        <div className="text-center mb-10">
-          <h3 className="text-2xl md:text-3xl font-bold mb-4">What Developers Are Saying</h3>
-          <p className="text-gray-600 dark:text-gray-400">Join thousands of developers who have improved their GitHub profiles</p>
+        {/* Section header with animated elements */}
+        <div className="text-center mb-16 relative">
+          <motion.div
+            className="absolute -top-4 left-1/2 -translate-x-1/2 w-20 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+            initial={{ width: 0 }}
+            whileInView={{ width: 80 }}
+            viewport={{ once: true }}
+            transition={{ duration: 1, delay: 0.3 }}
+          />
+          <motion.h3 
+            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 dark:from-white dark:via-blue-200 dark:to-purple-200 bg-clip-text text-transparent"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            What Developers Are Saying
+          </motion.h3>
+          <motion.p 
+            className="text-lg md:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Join thousands of developers who have transformed their GitHub profiles
+          </motion.p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Testimonials grid with enhanced cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
             {
               name: "Sarah Chen",
               role: "Senior Frontend Developer",
-              text: "This tool saved me hours of work. My GitHub profile now stands out and I've received compliments from recruiters!",
-              avatar: "https://i.pravatar.cc/100?img=1"
+              company: "Tech Innovations",
+              text: "This tool saved me hours of work. My GitHub profile now stands out and I've received compliments from recruiters! The templates are incredibly well-designed.",
+              avatar: "https://i.pravatar.cc/100?img=1",
+              rating: 5,
+              highlight: "Saved hours of work"
             },
             {
               name: "James Wilson",
               role: "Full Stack Engineer",
-              text: "The drag and drop builder makes creating professional READMEs so easy. The templates are beautiful and the widgets are extremely useful.",
-              avatar: "https://i.pravatar.cc/100?img=2"
+              company: "StartupXYZ",
+              text: "The drag and drop builder makes creating professional READMEs so easy. The widgets are extremely useful and the GitHub integration is seamless.",
+              avatar: "https://i.pravatar.cc/100?img=2",
+              rating: 5,
+              highlight: "Seamless integration"
             },
             {
               name: "Priya Sharma",
               role: "Open Source Contributor",
-              text: "I use this tool for all my repositories now. The GitHub stats integration is brilliant and gives my projects a professional look.",
-              avatar: "https://i.pravatar.cc/100?img=3"
+              company: "Community Leader",
+              text: "I use this tool for all my repositories now. The GitHub stats integration is brilliant and gives my projects a professional look that attracts contributors.",
+              avatar: "https://i.pravatar.cc/100?img=3",
+              rating: 5,
+              highlight: "Professional look"
             }
           ].map((testimonial, idx) => (
             <motion.div
               key={idx}
-              className="bg-white dark:bg-gray-800/40 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
-              whileHover={{ y: -5 }}
-              initial={{ opacity: 0, y: 20 }}
+              className="group relative"
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.2 * idx, duration: 0.5 }}
-            >              <div className="flex items-center mb-4">
-                <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
-                  <AvatarWithFallback 
-                    src={testimonial.avatar} 
-                    alt={testimonial.name} 
-                    name={testimonial.name}
-                    width={40} 
-                    height={40}
-                    className="w-full h-full object-cover"
-                    style="circle"
-                  />
+              transition={{ delay: 0.2 * idx, duration: 0.6, type: "spring" }}
+              whileHover={{ y: -8 }}
+            >
+              {/* Card background with gradient border */}
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"></div>
+              
+              <div className="relative bg-white dark:bg-gray-800/90 p-8 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg backdrop-blur-sm h-full flex flex-col">
+                {/* Rating stars */}
+                <div className="flex mb-4">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <motion.span
+                      key={i}
+                      className="text-yellow-400 text-lg"
+                      initial={{ opacity: 0, scale: 0 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.4 + idx * 0.2 + i * 0.1, duration: 0.3 }}
+                    >
+                      ★
+                    </motion.span>
+                  ))}
                 </div>
-                <div>
-                  <p className="font-medium">{testimonial.name}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</p>
+                
+                {/* Testimonial text */}                <blockquote className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed mb-6 flex-grow">
+                  <span className="text-3xl text-blue-500 leading-none">&ldquo;</span>
+                  {testimonial.text}
+                  <span className="text-3xl text-blue-500 leading-none">&rdquo;</span>
+                </blockquote>
+                
+                {/* Highlight badge */}
+                <div className="mb-6">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-800 dark:text-blue-300 border border-blue-200/50 dark:border-blue-700/50">
+                    ✨ {testimonial.highlight}
+                  </span>
+                </div>
+                
+                {/* Author info */}
+                <div className="flex items-center pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-blue-500/20">
+                      <AvatarWithFallback 
+                        src={testimonial.avatar} 
+                        alt={testimonial.name} 
+                        name={testimonial.name}
+                        width={48} 
+                        height={48}
+                        className="w-full h-full object-cover"
+                        style="circle"
+                      />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{testimonial.role}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">{testimonial.company}</p>
+                  </div>
                 </div>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 italic">&ldquo;{testimonial.text}&rdquo;</p>
             </motion.div>
           ))}
         </div>
+          {/* Enhanced call to action in testimonials section */}
+        <motion.div 
+          className="text-center mt-16 mb-24"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+        >
+          <motion.button
+            className="group relative inline-flex items-center px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-500 via-purple-600 to-pink-600 text-white font-semibold text-lg shadow-2xl overflow-hidden"
+            whileHover={{ 
+              scale: 1.08, 
+              y: -4,
+              boxShadow: "0 25px 50px rgba(139, 92, 246, 0.5)"
+            }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/create')}
+          >
+            {/* Animated background gradient */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+              initial={{ rotate: 0 }}
+              whileHover={{ rotate: 180 }}
+              transition={{ duration: 0.8, ease: "easeInOut" }}
+            />
+            
+            {/* Sparkle effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-yellow-300/20 via-pink-300/20 to-purple-300/20 opacity-0 group-hover:opacity-100"
+              animate={{
+                background: [
+                  "radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)",
+                  "radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)",
+                  "radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.3) 0%, transparent 50%)",
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+            
+            {/* Content */}
+            <motion.span
+              className="relative z-10 mr-3"
+              animate={{ rotate: [0, 360] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            >
+              ✨
+            </motion.span>
+            <span className="relative z-10">Join These Happy Developers</span>
+            <motion.span
+              className="relative z-10 ml-3"
+              animate={{ x: [0, 6, 0] }}
+              transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+            >
+              🚀
+            </motion.span>
+          </motion.button>
+          
+          {/* Additional motivational text */}
+          <motion.p
+            className="mt-6 text-gray-600 dark:text-gray-400 text-lg"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 1, duration: 0.8 }}
+          >
+            Start creating your professional GitHub profile in under 5 minutes
+          </motion.p>
+        </motion.div>
       </motion.div>
       
       {/* Enhanced floating shape animations */}
@@ -561,27 +797,9 @@ const Hero = () => {
           />
         ))}
       </div>
-      
-      {/* Connection to next section */}
-      <div className="absolute bottom-0 left-0 right-0">
-        <svg 
-          className="w-full text-white dark:text-black" 
-          viewBox="0 0 1440 100" 
-          fill="none" 
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path 
-            d="M0 50H1440V100H0V50Z" 
-            fill="currentColor" 
-          />
-          <path 
-            d="M0 0L1440 0C1440 0 1140 100 720 100C300 100 0 0 0 0Z" 
-            fill="currentColor" 
-          />
-        </svg>
-      </div>
-      
-      {/* Enhanced animated scroll indicator with dynamic visibility based on scroll */}
+        {/* Smooth gradient transition to next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-white/50 to-transparent dark:from-gray-900/50 pointer-events-none"></div>
+        {/* Enhanced animated scroll indicator with dynamic visibility based on scroll */}
       <motion.div 
         className={`absolute bottom-14 left-1/2 transform -translate-x-1/2 flex flex-col items-center transition-opacity duration-300 ${isScrolled ? 'opacity-0' : 'opacity-100'}`}
         initial={{ opacity: 0, y: -10 }}
