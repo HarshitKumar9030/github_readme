@@ -70,8 +70,8 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/harshitkumar9030/github_readme_gen.git
-   cd github_readme_gen
+   git clone https://github.com/harshitkumar9030/github_readme.git
+   cd github_readme
    ```
 
 2. **Install dependencies**
@@ -108,7 +108,7 @@
 ## 📁 Project Structure
 
 ```
-github_readme_gen/
+github_readme/
 ├── 📂 src/
 │   ├── 📂 app/                    # Next.js App Router
 │   │   ├── 📂 api/               # API endpoints
@@ -194,13 +194,13 @@ Have an idea? We'd love to hear it! Include:
 
 <div align="center">
 
-![GitHub stars](https://img.shields.io/github/stars/harshitkumar9030/github_readme_gen?style=social)
-![GitHub forks](https://img.shields.io/github/forks/harshitkumar9030/github_readme_gen?style=social)
-![GitHub watchers](https://img.shields.io/github/watchers/harshitkumar9030/github_readme_gen?style=social)
+![GitHub stars](https://img.shields.io/github/stars/harshitkumar9030/github_readme?style=social)
+![GitHub forks](https://img.shields.io/github/forks/harshitkumar9030/github_readme?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/harshitkumar9030/github_readme?style=social)
 
-![GitHub issues](https://img.shields.io/github/issues/harshitkumar9030/github_readme_gen)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/harshitkumar9030/github_readme_gen)
-![GitHub last commit](https://img.shields.io/github/last-commit/harshitkumar9030/github_readme_gen)
+![GitHub issues](https://img.shields.io/github/issues/harshitkumar9030/github_readme)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/harshitkumar9030/github_readme)
+![GitHub last commit](https://img.shields.io/github/last-commit/harshitkumar9030/github_readme)
 
 </div>
 
@@ -246,8 +246,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 Need help? We're here for you!
 
 - 📚 **[Documentation](https://github-readme-harshit.vercel.app/documentation)** - Comprehensive guides and tutorials
-- 💬 **[GitHub Discussions](https://github.com/harshitkumar9030/github_readme_gen/discussions)** - Community Q&A
-- 🐛 **[Issue Tracker](https://github.com/harshitkumar9030/github_readme_gen/issues)** - Bug reports and feature requests
+- 💬 **[GitHub Discussions](https://github.com/harshitkumar9030/github_readme/discussions)** - Community Q&A
+- 🐛 **[Issue Tracker](https://github.com/harshitkumar9030/github_readme/issues)** - Bug reports and feature requests
 - 📧 **[Contact](mailto:harshitkumar9030@gmail.com)** - Direct support
 
 ---
