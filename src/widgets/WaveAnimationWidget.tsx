@@ -141,87 +141,8 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
             height={effectiveConfig.height}
             className="w-full h-auto"
             style={{ maxWidth: '100%', height: 'auto' }}
-          />
-        )}
+          />        )}
       </div>
-
-      {/* Configuration Panel */}
-      {onConfigChange && (
-        <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-4">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white">Animation Settings</h4>
-          
-          {/* Wave Colors */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Primary Color
-              </label>
-              <input
-                type="color"
-                value={effectiveConfig.waveColor}
-                onChange={(e) => onConfigChange({ ...config, waveColor: e.target.value })}
-                className="w-full h-8 border border-gray-300 dark:border-gray-600 rounded"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Secondary Color
-              </label>
-              <input
-                type="color"
-                value={effectiveConfig.waveSecondaryColor}
-                onChange={(e) => onConfigChange({ ...config, waveSecondaryColor: e.target.value })}
-                className="w-full h-8 border border-gray-300 dark:border-gray-600 rounded"
-              />
-            </div>
-          </div>
-
-          {/* Wave Settings */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Speed
-              </label>
-              <select
-                value={effectiveConfig.waveSpeed}
-                onChange={(e) => onConfigChange({ ...config, waveSpeed: e.target.value as 'slow' | 'medium' | 'fast' })}
-                className="w-full px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-              >
-                <option value="slow">Slow</option>
-                <option value="medium">Medium</option>
-                <option value="fast">Fast</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Wave Count
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="5"
-                value={effectiveConfig.waveCount}
-                onChange={(e) => onConfigChange({ ...config, waveCount: parseInt(e.target.value) })}
-                className="w-full px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Height
-              </label>
-              <input
-                type="number"
-                min="100"
-                max="400"
-                step="50"
-                value={effectiveConfig.height}
-                onChange={(e) => onConfigChange({ ...config, height: parseInt(e.target.value) })}
-                className="w-full px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -307,7 +307,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         { value: 'github-stats', label: 'GitHub Stats', desc: 'Profile statistics and activity' },
                         { value: 'top-languages', label: 'Top Languages', desc: 'Most used programming languages' },
                         { value: 'contribution-graph', label: 'Contribution Graph', desc: 'GitHub contribution activity' },
-                        { value: 'social-stats', label: 'Social Stats', desc: 'Social media metrics' }
+                        { value: 'social-stats', label: 'Social Stats', desc: 'Social media metrics' },
+                        { value: 'typing-animation', label: 'Typing Animation', desc: 'Animated typing text effect' },
+                        { value: 'wave-animation', label: 'Wave Animation', desc: 'Animated wave graphics' },
+                        { value: 'language-chart', label: 'Language Chart', desc: 'Programming language distribution chart' },
+                        { value: 'repo-showcase', label: 'Repository Showcase', desc: 'Highlight specific repositories' },
+                        { value: 'animated-progress', label: 'Animated Progress', desc: 'Skill progress bars with animation' }
                       ].map((widget) => (
                         <button
                           key={widget.value}

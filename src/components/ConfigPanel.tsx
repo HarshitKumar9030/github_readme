@@ -408,9 +408,107 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         { value: '500', label: '500px' },
         { value: '600', label: '600px' },
         { value: '700', label: '700px' },
-        { value: '800', label: '800px' }
+        { value: '800', label: '800px' }      ]
+    }
+  ];
+
+  // Wave Animation specific options
+  const waveAnimationOptions: ConfigOption[] = [
+    {
+      id: 'waveColor',
+      label: 'Primary Wave Color',
+      type: 'color',
+      defaultValue: '#0099ff'
+    },
+    {
+      id: 'waveSecondaryColor',
+      label: 'Secondary Wave Color',
+      type: 'color',
+      defaultValue: '#00ccff'
+    },
+    {
+      id: 'waveSpeed',
+      label: 'Wave Speed',
+      type: 'select',
+      defaultValue: 'medium',
+      options: [
+        { value: 'slow', label: 'Slow' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'fast', label: 'Fast' }
       ]
-    }  ];
+    },
+    {
+      id: 'waveCount',
+      label: 'Number of Waves',
+      type: 'select',
+      defaultValue: 3,
+      options: [
+        { value: '1', label: '1 Wave' },
+        { value: '2', label: '2 Waves' },
+        { value: '3', label: '3 Waves' },
+        { value: '4', label: '4 Waves' },
+        { value: '5', label: '5 Waves' }
+      ]
+    },
+    {
+      id: 'height',
+      label: 'Wave Height',
+      type: 'select',
+      defaultValue: 200,
+      options: [
+        { value: '100', label: '100px' },
+        { value: '150', label: '150px' },
+        { value: '200', label: '200px' },
+        { value: '250', label: '250px' },
+        { value: '300', label: '300px' }
+      ]    }
+  ];
+
+  // Animated Progress specific options
+  const animatedProgressOptions: ConfigOption[] = [
+    {
+      id: 'skills',
+      label: 'Skills (JSON Array)',
+      type: 'text',
+      defaultValue: '[{"name":"JavaScript","level":90},{"name":"TypeScript","level":85},{"name":"React","level":80}]'
+    },
+    {
+      id: 'animationDuration',
+      label: 'Animation Duration (ms)',
+      type: 'select',
+      defaultValue: 2000,
+      options: [
+        { value: '500', label: '0.5 seconds' },
+        { value: '1000', label: '1 second' },
+        { value: '1500', label: '1.5 seconds' },
+        { value: '2000', label: '2 seconds' },
+        { value: '3000', label: '3 seconds' },
+        { value: '4000', label: '4 seconds' },
+        { value: '5000', label: '5 seconds' }
+      ]
+    },
+    {
+      id: 'showProgressText',
+      label: 'Show Progress Text',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'progressBarHeight',
+      label: 'Progress Bar Height',
+      type: 'select',
+      defaultValue: 20,
+      options: [
+        { value: '10', label: '10px' },
+        { value: '15', label: '15px' },
+        { value: '20', label: '20px' },
+        { value: '25', label: '25px' },
+        { value: '30', label: '30px' },
+        { value: '40', label: '40px' },
+        { value: '50', label: '50px' }
+      ]
+    }
+  ];
 
   // Get options based on widget type
   const getOptionsForWidgetType = () => {
@@ -422,9 +520,11 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       case 'contribution-graph':
         return [...commonOptions, ...contributionGraphOptions];
       case 'social-stats':
-        return [...commonOptions, ...socialStatsOptions];
-      case 'typing-animation':
-        return [...commonOptions, ...typingAnimationOptions];
+        return [...commonOptions, ...socialStatsOptions];      case 'typing-animation':
+        return [...commonOptions, ...typingAnimationOptions];      case 'wave-animation':
+        return [...commonOptions, ...waveAnimationOptions];
+      case 'animated-progress':
+        return [...commonOptions, ...animatedProgressOptions];
       default:
         return commonOptions;
     }
