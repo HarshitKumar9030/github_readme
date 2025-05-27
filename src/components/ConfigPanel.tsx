@@ -5,9 +5,13 @@ import { WidgetConfig } from '@/interfaces/WidgetConfig';
 interface ConfigOption {
   id: string;
   label: string;
-  type: 'toggle' | 'select' | 'color' | 'text';
+  type: 'toggle' | 'select' | 'color' | 'text' | 'range' | 'textarea';
   defaultValue: any;
   options?: { value: string; label: string }[];
+  placeholder?: string;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 interface ConfigPanelProps {
@@ -324,13 +328,125 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     }
   ];
 
+  // Language Chart specific options
+  const languageChartOptions: ConfigOption[] = [
+    {
+      id: 'username',
+      label: 'GitHub Username',
+      type: 'text',
+      defaultValue: '',
+      placeholder: 'Enter GitHub username (e.g., octocat, torvalds)'
+    },
+    {
+      id: 'chartType',
+      label: 'Chart Type',
+      type: 'select',
+      defaultValue: 'donut',
+      options: [
+        { value: 'donut', label: '🍩 Donut Chart' },
+        { value: 'pie', label: '🥧 Pie Chart' },
+        { value: 'bar', label: '📊 Bar Chart' }
+      ]
+    },
+    {
+      id: 'maxLanguages',
+      label: 'Max Languages',
+      type: 'select',
+      defaultValue: 8,
+      options: [
+        { value: '3', label: 'Top 3' },
+        { value: '5', label: 'Top 5' },
+        { value: '8', label: 'Top 8' }
+      ]
+    },
+    {
+      id: 'size',
+      label: 'Chart Size',
+      type: 'range',
+      defaultValue: 400,
+      min: 300,
+      max: 600,
+      step: 50
+    },
+    {
+      id: 'minPercentage',
+      label: 'Minimum Percentage',
+      type: 'range',
+      defaultValue: 1,
+      min: 0.5,
+      max: 5,
+      step: 0.5
+    }
+  ];
+
+  // Repository Showcase specific options
+  const repoShowcaseOptions: ConfigOption[] = [
+    {
+      id: 'username',
+      label: 'GitHub Username',
+      type: 'text',
+      defaultValue: '',
+      placeholder: 'Enter GitHub username'
+    },
+    {
+      id: 'showcaseRepos',
+      label: 'Showcase Repositories',
+      type: 'textarea',
+      defaultValue: '',
+      placeholder: 'Enter repository names, one per line (e.g., repo1, repo2, repo3)'
+    },
+    {
+      id: 'showStars',
+      label: 'Show Stars',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'showForks',
+      label: 'Show Forks',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'showLanguage',
+      label: 'Show Language',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'showDescription',
+      label: 'Show Description',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'width',
+      label: 'Width',
+      type: 'range',
+      defaultValue: 400,
+      min: 300,
+      max: 600,
+      step: 50
+    },
+    {
+      id: 'height',
+      label: 'Height',
+      type: 'range',
+      defaultValue: 200,
+      min: 150,
+      max: 300,
+      step: 25
+    }
+  ];
+
   // Typing Animation specific options
   const typingAnimationOptions: ConfigOption[] = [
     {
       id: 'text',
-      label: 'Text to Type',
+      label: 'Text to Display',
       type: 'text',
-      defaultValue: 'Hello, I am a developer!'
+      defaultValue: 'Hello, I am a developer!',
+      placeholder: 'Enter text to animate'
     },
     {
       id: 'font',
@@ -339,32 +455,20 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       defaultValue: 'monospace',
       options: [
         { value: 'monospace', label: 'Monospace' },
-        { value: 'Arial', label: 'Arial' },
-        { value: 'Helvetica', label: 'Helvetica' },
-        { value: 'Times New Roman', label: 'Times New Roman' },
-        { value: 'Georgia', label: 'Georgia' },
-        { value: 'Verdana', label: 'Verdana' },
-        { value: 'Courier New', label: 'Courier New' },
-        { value: 'Comic Sans MS', label: 'Comic Sans MS' }
+        { value: 'serif', label: 'Serif' },
+        { value: 'sans-serif', label: 'Sans-serif' },
+        { value: 'cursive', label: 'Cursive' },
+        { value: 'fantasy', label: 'Fantasy' }
       ]
     },
     {
       id: 'size',
       label: 'Font Size',
-      type: 'select',
+      type: 'range',
       defaultValue: 20,
-      options: [
-        { value: '12', label: '12px' },
-        { value: '14', label: '14px' },
-        { value: '16', label: '16px' },
-        { value: '18', label: '18px' },
-        { value: '20', label: '20px' },
-        { value: '24', label: '24px' },
-        { value: '28', label: '28px' },
-        { value: '32', label: '32px' },
-        { value: '36', label: '36px' },
-        { value: '48', label: '48px' }
-      ]
+      min: 12,
+      max: 48,
+      step: 2
     },
     {
       id: 'color',
@@ -375,16 +479,11 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     {
       id: 'duration',
       label: 'Animation Duration (ms)',
-      type: 'select',
+      type: 'range',
       defaultValue: 3000,
-      options: [
-        { value: '1000', label: '1 second' },
-        { value: '2000', label: '2 seconds' },
-        { value: '3000', label: '3 seconds' },
-        { value: '4000', label: '4 seconds' },
-        { value: '5000', label: '5 seconds' },
-        { value: '6000', label: '6 seconds' }
-      ]
+      min: 1000,
+      max: 10000,
+      step: 500
     },
     {
       id: 'loop',
@@ -401,14 +500,20 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     {
       id: 'width',
       label: 'Animation Width',
-      type: 'select',
+      type: 'range',
       defaultValue: 600,
-      options: [
-        { value: '400', label: '400px' },
-        { value: '500', label: '500px' },
-        { value: '600', label: '600px' },
-        { value: '700', label: '700px' },
-        { value: '800', label: '800px' }      ]
+      min: 300,
+      max: 800,
+      step: 50
+    },
+    {
+      id: 'height',
+      label: 'Animation Height',
+      type: 'range',
+      defaultValue: 100,
+      min: 50,
+      max: 200,
+      step: 25
     }
   ];
 
@@ -521,10 +626,15 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         return [...commonOptions, ...contributionGraphOptions];
       case 'social-stats':
         return [...commonOptions, ...socialStatsOptions];      case 'typing-animation':
-        return [...commonOptions, ...typingAnimationOptions];      case 'wave-animation':
+        return [...commonOptions, ...typingAnimationOptions];
+      case 'wave-animation':
         return [...commonOptions, ...waveAnimationOptions];
       case 'animated-progress':
         return [...commonOptions, ...animatedProgressOptions];
+      case 'language-chart':
+        return [...commonOptions, ...languageChartOptions];
+      case 'repo-showcase':
+        return [...commonOptions, ...repoShowcaseOptions];
       default:
         return commonOptions;
     }
@@ -707,6 +817,30 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   value={config[option.id as keyof WidgetConfig] !== undefined ? 
                     config[option.id as keyof WidgetConfig] as string : option.defaultValue}
                   onChange={(e) => handleChange(option.id, e.target.value)}
+                />
+              )}
+              
+              {option.type === 'range' && (
+                <input
+                  type="range"
+                  min={option.min}
+                  max={option.max}
+                  step={option.step}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                  value={config[option.id as keyof WidgetConfig] !== undefined ? 
+                    config[option.id as keyof WidgetConfig] as number : option.defaultValue}
+                  onChange={(e) => handleChange(option.id, Number(e.target.value))}
+                />
+              )}
+              
+              {option.type === 'textarea' && (
+                <textarea
+                  className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  value={config[option.id as keyof WidgetConfig] !== undefined ? 
+                    config[option.id as keyof WidgetConfig] as string : option.defaultValue}
+                  onChange={(e) => handleChange(option.id, e.target.value)}
+                  rows={3}
+                  placeholder={option.placeholder}
                 />
               )}
             </div>

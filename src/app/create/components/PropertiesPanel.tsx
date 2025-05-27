@@ -1,10 +1,28 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { Block, ContentBlock, TemplateBlock, WidgetBlock } from '@/interfaces/BlockTypes';
 import BlockLayoutSelector from '../BlockLayoutSelector';
 import ConfigPanel from '@/components/ConfigPanel';
 import ContentBlockEditor from '../ContentBlockEditor';
+
+// Dynamically import WidgetTypeDropdown to avoid hydration issues
+const WidgetTypeDropdown = dynamic(() => import('./WidgetTypeDropdown'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full flex items-center justify-between p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl animate-pulse">
+      <div className="flex items-center space-x-3">
+        <div className="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+        <div className="space-y-2">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-48"></div>
+        </div>
+      </div>
+      <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded"></div>
+    </div>
+  )
+});
 
 interface PropertiesPanelProps {
   selectedBlock: Block | undefined;
@@ -296,46 +314,11 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                     Widget Configuration
                   </h5>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Customize your widget settings and appearance</p>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                      Widget Type
-                    </label>                    <div className="grid grid-cols-1 gap-2">
-                      {[
-                        { value: 'github-stats', label: 'GitHub Stats', desc: 'Profile statistics and activity' },
-                        { value: 'top-languages', label: 'Top Languages', desc: 'Most used programming languages' },
-                        { value: 'contribution-graph', label: 'Contribution Graph', desc: 'GitHub contribution activity' },
-                        { value: 'social-stats', label: 'Social Stats', desc: 'Social media metrics' },
-                        { value: 'typing-animation', label: 'Typing Animation', desc: 'Animated typing text effect' },
-                        { value: 'wave-animation', label: 'Wave Animation', desc: 'Animated wave graphics' },
-                        { value: 'language-chart', label: 'Language Chart', desc: 'Programming language distribution chart' },
-                        { value: 'repo-showcase', label: 'Repository Showcase', desc: 'Highlight specific repositories' },
-                        { value: 'animated-progress', label: 'Animated Progress', desc: 'Skill progress bars with animation' }
-                      ].map((widget) => (
-                        <button
-                          key={widget.value}
-                          onClick={() => updateWidgetProperty(selectedBlock.id, 'widgetId', widget.value)}
-                          className={`flex items-center justify-between p-3 rounded-xl text-sm transition-all duration-200 ${
-                            (selectedBlock as WidgetBlock).widgetId === widget.value
-                              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/25'
-                              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-200 dark:hover:border-blue-700'
-                          }`}
-                        >
-                          <div className="text-left">
-                            <div className="font-medium">{widget.label}</div>
-                            <div className="text-xs opacity-80">{widget.desc}</div>
-                          </div>
-                          {(selectedBlock as WidgetBlock).widgetId === widget.value && (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                </div>                <div className="space-y-4">
+                  <WidgetTypeDropdown 
+                    selectedWidgetId={(selectedBlock as WidgetBlock).widgetId}
+                    onWidgetChange={(widgetId) => updateWidgetProperty(selectedBlock.id, 'widgetId', widgetId)}
+                  />
                   
                   {/* Enhanced Widget Configuration Panel */}
                   <div className="pt-4 border-t border-gray-200/50 dark:border-gray-700/50">                    <div className="bg-gray-50/70 dark:bg-gray-700/70 rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/50">

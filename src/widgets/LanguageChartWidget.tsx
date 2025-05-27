@@ -108,94 +108,9 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
       const newConfig = { ...config, ...updates };
       onConfigChange(newConfig);
     }
-  }, [config, onConfigChange]);
-  return (
+  }, [config, onConfigChange]);  return (
     <div className="space-y-4">
-      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg space-y-4">
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          🌐 Language Chart Configuration
-        </h3>
-        
-        <div>
-          <label className="block text-sm font-medium mb-2">GitHub Username</label>
-          <input
-            type="text"
-            value={config.username || ''}
-            onChange={(e) => handleConfigChange({ username: e.target.value })}
-            placeholder="Enter GitHub username (e.g., octocat, torvalds)"
-            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            ⚡ Ultra-fast parallel processing with advanced caching
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Chart Type</label>
-            <select
-              value={config.chartType || 'donut'}
-              onChange={(e) => handleConfigChange({ chartType: e.target.value as 'donut' | 'pie' | 'bar' })}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            >
-              <option value="donut">🍩 Donut Chart</option>
-              <option value="pie">🥧 Pie Chart</option>
-              <option value="bar">📊 Bar Chart</option>
-            </select>
-          </div>          <div>
-            <label className="block text-sm font-medium mb-2">Max Languages</label>
-            <select
-              value={Math.min(config.maxLanguages || 8, 8)}
-              onChange={(e) => handleConfigChange({ maxLanguages: Math.min(parseInt(e.target.value), 8) })}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-            >
-              <option value={3}>Top 3</option>
-              <option value={5}>Top 5</option>
-              <option value={8}>Top 8</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Chart Size: {config.size || 400}px
-          </label>
-          <input
-            type="range"
-            min="300"
-            max="600"
-            step="50"
-            value={config.size || 400}
-            onChange={(e) => handleConfigChange({ size: parseInt(e.target.value) })}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-            <span>300px</span>
-            <span>450px</span>
-            <span>600px</span>
-          </div>
-        </div>
-
-        {config.chartType !== 'bar' && (
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Minimum Percentage: {config.minPercentage || 1}%
-            </label>
-            <input
-              type="range"
-              min="0.5"
-              max="5"
-              step="0.5"
-              value={config.minPercentage || 1}
-              onChange={(e) => handleConfigChange({ minPercentage: parseFloat(e.target.value) })}
-              className="w-full"
-            />
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Hide languages with less than {config.minPercentage || 1}% usage
-            </div>
-          </div>
-        )}
-      </div>      <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">Preview</h3>
           {isLoading && (
