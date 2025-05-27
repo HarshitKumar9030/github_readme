@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { createAbsoluteUrl } from '@/utils/urlHelpers';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
@@ -64,68 +64,10 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     layoutStyle: config.layoutStyle || 'side-by-side',
     showTrophies: config.showTrophies ?? (config.layoutType === 'trophies' || config.layoutType === 'full'),
     showStreaks: config.showStreaks ?? (config.layoutType === 'streaks' || config.layoutType === 'full'),
-    showStats: config.showStats ?? (['stats', 'combined', 'full'].includes(config.layoutType || ''))
-  };
+    showStats: config.showStats ?? (['stats', 'combined', 'full'].includes(config.layoutType || ''))  };
 
-  // Fetch GitHub stats when username changes
-  useEffect(() => {
-    async function fetchData() {
-      if (!config.username) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`https://api.github.com/users/${config.username}`);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch GitHub data: ${response.statusText}`);
-        }
-        const data = await response.json();
-        setStatsData({
-          followers: data.followers,
-          following: data.following,
-          repositories: data.public_repos,
-          avatar_url: data.avatar_url,
-          name: data.name,
-          bio: data.bio
-        });
-        // Generate SVG URL for stats card
-        const statsParams = new URLSearchParams({
-          username: config.username,
-          theme: config.theme || 'light'
-        });
-        if (config.hideBorder) statsParams.append('hide_border', 'true');
-        if (config.hideTitle) statsParams.append('hide_title', 'true');
-        if (config.compactMode) statsParams.append('layout', 'compact');
-        if (config.showIcons) statsParams.append('show_icons', 'true');
-        if (config.includePrivate) statsParams.append('count_private', 'true');
-        if (config.includeAllCommits) statsParams.append('include_all_commits', 'true');
-        setSvgUrl(`https://github-readme-stats.vercel.app/api?${statsParams.toString()}`);
-        // Trophy URL
-        if (effectiveConfig.showTrophies) {
-          setTrophyUrl(`https://github-profile-trophy.vercel.app/?username=${config.username}&theme=${config.trophyTheme || 'flat'}&margin-w=10&margin-h=10`);
-        } else {
-          setTrophyUrl('');
-        }
-        // Streak URL
-        if (effectiveConfig.showStreaks) {
-          setStreakUrl(`https://github-readme-streak-stats.herokuapp.com/?user=${config.username}&theme=${config.streakTheme || config.theme || 'default'}&hide_border=${config.hideBorder ? 'true' : 'false'}`);
-        } else {
-          setStreakUrl('');
-        }
-        // Notify parent with markdown when data is fetched
-        if (onMarkdownGenerated) {
-          setTimeout(() => {
-            onMarkdownGenerated(generateMarkdown());
-          }, 100);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [config.username, config.theme, config.layoutType, config.layoutStyle, config.showTrophies, config.showStreaks, config.showStats, config.hideBorder, config.hideTitle, config.compactMode, config.showIcons, config.includePrivate, config.includeAllCommits, config.trophyTheme, config.streakTheme]);  // Markdown generation for different layouts
-  const generateMarkdown = (): string => {
+  // Markdown generation for different layouts
+  const generateMarkdown = useCallback((): string => {
     if (!config.username) return '';
     let md = '';
     
@@ -207,7 +149,64 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     }
     
     return md;
-  };
+  }, [config.username, config.hideTitle, config.customTitle, effectiveConfig.layoutStyle, effectiveConfig.showStats, effectiveConfig.showTrophies, effectiveConfig.showStreaks, svgUrl, trophyUrl, streakUrl]);
+
+  // Fetch GitHub stats when username changes
+  useEffect(() => {
+    async function fetchData() {
+      if (!config.username) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`https://api.github.com/users/${config.username}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch GitHub data: ${response.statusText}`);
+        }
+        const data = await response.json();
+        setStatsData({
+          followers: data.followers,
+          following: data.following,
+          repositories: data.public_repos,
+          avatar_url: data.avatar_url,
+          name: data.name,
+          bio: data.bio
+        });
+        // Generate SVG URL for stats card
+        const statsParams = new URLSearchParams({
+          username: config.username,
+          theme: config.theme || 'light'
+        });
+        if (config.hideBorder) statsParams.append('hide_border', 'true');
+        if (config.hideTitle) statsParams.append('hide_title', 'true');
+        if (config.compactMode) statsParams.append('layout', 'compact');
+        if (config.showIcons) statsParams.append('show_icons', 'true');
+        if (config.includePrivate) statsParams.append('count_private', 'true');
+        if (config.includeAllCommits) statsParams.append('include_all_commits', 'true');
+        setSvgUrl(`https://github-readme-stats.vercel.app/api?${statsParams.toString()}`);
+        // Trophy URL
+        if (effectiveConfig.showTrophies) {
+          setTrophyUrl(`https://github-profile-trophy.vercel.app/?username=${config.username}&theme=${config.trophyTheme || 'flat'}&margin-w=10&margin-h=10`);
+        } else {
+          setTrophyUrl('');
+        }
+        // Streak URL
+        if (effectiveConfig.showStreaks) {
+          setStreakUrl(`https://github-readme-streak-stats.herokuapp.com/?user=${config.username}&theme=${config.streakTheme || config.theme || 'default'}&hide_border=${config.hideBorder ? 'true' : 'false'}`);
+        } else {
+          setStreakUrl('');
+        }
+        // Notify parent with markdown when data is fetched
+        if (onMarkdownGenerated) {
+          setTimeout(() => {
+            onMarkdownGenerated(generateMarkdown());
+          }, 100);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      } finally {
+        setLoading(false);
+      }    }
+    fetchData();  }, [config.username, config.theme, config.layoutType, config.layoutStyle, config.showTrophies, config.showStreaks, config.showStats, config.hideBorder, config.hideTitle, config.compactMode, config.showIcons, config.includePrivate, config.includeAllCommits, config.trophyTheme, config.streakTheme, effectiveConfig.showStreaks, effectiveConfig.showTrophies, generateMarkdown, onMarkdownGenerated]);
 
   const getThemeStyles = () => {
     switch (config.theme) {

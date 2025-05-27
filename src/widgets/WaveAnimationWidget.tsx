@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
@@ -41,9 +41,26 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
     height: config.height || 200,
     theme: config.theme || 'light',
     hideTitle: config.hideTitle || false,
-    customTitle: config.customTitle || '',
-    ...config
+    customTitle: config.customTitle || '',    ...config
   };
+
+  // Generate markdown for the widget
+  const generateMarkdown = useCallback((): string => {
+    if (!svgUrl) return '';
+
+    let md = '';
+    
+    if (!effectiveConfig.hideTitle) {
+      const title = effectiveConfig.customTitle || 'Wave Animation';
+      md += `## ${title}\n\n`;
+    }
+
+    md += `<div align="center">\n\n`;
+    md += `<img src="${window.location.origin}${svgUrl}" alt="Wave Animation" width="${effectiveConfig.width}" height="${effectiveConfig.height}" />\n\n`;
+    md += `</div>\n\n`;
+
+    return md;
+  }, [svgUrl, effectiveConfig.hideTitle, effectiveConfig.customTitle, effectiveConfig.width, effectiveConfig.height]);
 
   // Generate SVG URL when config changes
   useEffect(() => {
@@ -85,8 +102,7 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
       } finally {
         setLoading(false);
       }
-    };    generateSvgUrl();
-  }, [
+    };    generateSvgUrl();  }, [
     effectiveConfig.waveColor,
     effectiveConfig.waveSecondaryColor,
     effectiveConfig.waveSpeed,
@@ -94,26 +110,8 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
     effectiveConfig.width,
     effectiveConfig.height,
     effectiveConfig.theme,
-    onMarkdownGenerated
-  ]);
-
-  // Generate markdown for the widget
-  const generateMarkdown = (): string => {
-    if (!svgUrl) return '';
-
-    let md = '';
-    
-    if (!effectiveConfig.hideTitle) {
-      const title = effectiveConfig.customTitle || 'Wave Animation';
-      md += `## ${title}\n\n`;
-    }
-
-    md += `<div align="center">\n\n`;
-    md += `<img src="${window.location.origin}${svgUrl}" alt="Wave Animation" width="${effectiveConfig.width}" height="${effectiveConfig.height}" />\n\n`;
-    md += `</div>\n\n`;
-
-    return md;
-  };
+    generateMarkdown,
+    onMarkdownGenerated  ]);
 
   if (loading) {
     return (

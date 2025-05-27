@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -62,14 +63,20 @@ const InlineMarkdownRenderer = ({ content }: { content: string }) => {
                 {children}
               </code>
             );
-          },
-          img({ src, alt, ...props }) {
+          },          img({ src, alt, width, height, ...props }) {
+            const imageWidth = typeof width === 'number' ? width : parseInt(width as string) || 800;
+            const imageHeight = typeof height === 'number' ? height : parseInt(height as string) || 400;
+            const imageSrc = typeof src === 'string' ? src : '';
+            
             return (
-              <img
-                src={src}
-                alt={alt}
+              <Image
+                src={imageSrc}
+                alt={alt || ''}
+                width={imageWidth}
+                height={imageHeight}
                 className="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-                loading="lazy"
+                style={{ maxWidth: '100%', height: 'auto' }}
+                unoptimized={true}
                 {...props}
               />
             );

@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export default function SVGDemoPage() {
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   
@@ -25,20 +27,23 @@ export default function SVGDemoPage() {
               Create animated typing effects perfect for displaying skills, titles, or welcome messages.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">              <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Default Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/typing-animation?text=Welcome to my GitHub Profile&theme=default`}
                   alt="Typing Animation Default"
+                  width={600}
+                  height={100}
                   className="border rounded"
                 />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Neon Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/typing-animation?text=Full Stack Developer&theme=neon&speed=1.2`}
                   alt="Typing Animation Neon"
+                  width={600}
+                  height={100}
                   className="border rounded"
                 />
               </div>
@@ -59,21 +64,24 @@ export default function SVGDemoPage() {
             <p className="text-gray-600 mb-6">
               Beautiful animated wave patterns for section dividers and decorative elements.
             </p>
-            
-            <div className="space-y-4 mb-6">
+              <div className="space-y-4 mb-6">
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Ocean Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/wave-animation?theme=ocean&waves=3&height=100&width=600`}
                   alt="Wave Animation Ocean"
+                  width={600}
+                  height={100}
                   className="border rounded w-full"
                 />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Sunset Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/wave-animation?theme=sunset&waves=4&height=80&width=600`}
                   alt="Wave Animation Sunset"
+                  width={600}
+                  height={80}
                   className="border rounded w-full"
                 />
               </div>
@@ -94,21 +102,24 @@ export default function SVGDemoPage() {
             <p className="text-gray-600 mb-6">
               Visual representation of programming language usage across your repositories.
             </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">GitHub Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/language-chart?username=octocat&theme=github&size=250`}
                   alt="Language Chart GitHub Theme"
+                  width={250}
+                  height={250}
                   className="border rounded mx-auto"
                 />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Dark Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/language-chart?username=octocat&theme=dark&size=250`}
                   alt="Language Chart Dark Theme"
+                  width={250}
+                  height={250}
                   className="border rounded mx-auto"
                 />
               </div>
@@ -129,21 +140,24 @@ export default function SVGDemoPage() {
             <p className="text-gray-600 mb-6">
               Professional repository cards displaying stats, description, and metadata.
             </p>
-            
-            <div className="space-y-4 mb-6">
+              <div className="space-y-4 mb-6">
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">GitHub Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/repo-showcase?username=octocat&repo=Hello-World&theme=github&width=500&height=180`}
                   alt="Repository Showcase GitHub"
+                  width={500}
+                  height={180}
                   className="border rounded"
                 />
               </div>
               <div>
                 <h3 className="font-semibold text-gray-800 mb-2">Dark Theme</h3>
-                <img 
+                <Image 
                   src={`${baseUrl}/api/repo-showcase?username=octocat&repo=Hello-World&theme=dark&width=500&height=180`}
                   alt="Repository Showcase Dark"
+                  width={500}
+                  height={180}
                   className="border rounded"
                 />
               </div>

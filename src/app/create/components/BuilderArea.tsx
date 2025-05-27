@@ -10,7 +10,6 @@ import RepositoryShowcaseWidget from '@/widgets/RepositoryShowcaseWidget';
 import AnimatedProgressWidget from '@/widgets/AnimatedProgressWidget';
 import TypingAnimationWidget from '@/widgets/TypingAnimationWidget';
 
-// Accept widgetConfig, username, socials as props
 interface BuilderAreaProps {
   builderBlocks: Block[];
   dragOver: boolean;
@@ -54,12 +53,11 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   canUndo,
   canRedo
 }) => {
-  // Track if component is mounted to prevent hydration issues
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);  // Memoize the markdown generation callback to prevent infinite re-renders
+  }, []);  
   const handleMarkdownGenerated = useCallback((blockId: string) => {
     return (md: string) => {
       if (isMounted && typeof window !== 'undefined' && blockId && handleWidgetMarkdownGenerated) {
@@ -67,7 +65,6 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
       }
     };  }, [handleWidgetMarkdownGenerated, isMounted]);
 
-  // Memoize individual widget configs to prevent unnecessary re-renders
   const githubStatsConfig = useMemo(() => ({
     username: username,
     theme: widgetConfig.theme || 'light',
@@ -278,7 +275,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig.hideTitle,
     widgetConfig.customTitle
   ]);
-  // Create combined configs object for easy access
+
   const memoizedConfigs = useMemo(() => ({
     githubStats: githubStatsConfig,
     topLanguages: topLanguagesConfig,
@@ -312,7 +309,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
       );
     }
   };
-  // Render widget with SSR protection
+
   const renderWidget = (block: Block) => {
     if (!isMounted) {
       return (
@@ -322,7 +319,6 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
       );
     }
 
-    // Type guard to ensure this is a widget block
     if (block.type !== 'widget') {
       return null;
     }

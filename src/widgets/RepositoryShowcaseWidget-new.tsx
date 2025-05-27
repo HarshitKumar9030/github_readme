@@ -28,6 +28,55 @@ interface RepositoryShowcaseWidgetProps extends BaseWidgetProps {
   onConfigChange?: (config: RepositoryShowcaseWidgetConfig) => void;
 }
 
+// Helper function to generate markdown for a specific config
+const generateMarkdownForConfig = (config: RepositoryShowcaseWidgetConfig): string => {
+  if (!config || !config.showcaseRepos?.length) {
+    return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
+  }
+
+  // Convert repository names to owner/repo format if needed
+  const formattedRepos = config.showcaseRepos.map(repo => {
+    if (repo.includes('/')) {
+      return repo; // Already in owner/repo format
+    } else if (config.username?.trim()) {
+      return `${config.username}/${repo}`; // Add username as owner
+    }
+    return repo;
+  }).filter(repo => repo.includes('/')); // Only keep valid owner/repo pairs
+
+  if (formattedRepos.length === 0) {
+    return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
+  }
+
+  const params = new URLSearchParams({
+    repos: formattedRepos.join(','),
+    theme: config.theme || 'default',
+    layout: config.repoLayout || 'single',
+    sortBy: config.sortBy || 'stars',
+    repoLimit: (config.repoLimit || 6).toString(),
+    cardWidth: (config.repoCardWidth || 400).toString(),
+    cardHeight: (config.repoCardHeight || 200).toString()
+  });
+
+  if (config.showStats !== undefined) {
+    params.set('showStats', config.showStats.toString());
+  }
+  if (config.showLanguage !== undefined) {
+    params.set('showLanguage', config.showLanguage.toString());
+  }
+  if (config.showDescription !== undefined) {
+    params.set('showDescription', config.showDescription.toString());
+  }
+  if (config.showTopics !== undefined) {
+    params.set('showTopics', config.showTopics.toString());
+  }
+  if (config.showLastUpdated !== undefined) {
+    params.set('showLastUpdated', config.showLastUpdated.toString());
+  }
+
+  return `![Repository Showcase](https://your-domain.com/api/repo-showcase?${params.toString()})`;
+};
+
 const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & MarkdownExportable = ({
   config,
   onConfigChange,
@@ -113,9 +162,8 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
       if (!response.ok) {
         throw new Error('Failed to generate repository showcase');
       }
-      
-      if (onMarkdownGenerated) {
-        const markdown = RepositoryShowcaseWidget.generateMarkdown(config);
+        if (onMarkdownGenerated) {
+        const markdown = generateMarkdownForConfig(config);
         onMarkdownGenerated(markdown);
       }
     } catch (err) {
@@ -204,52 +252,8 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
   );
 };
 
-RepositoryShowcaseWidget.generateMarkdown = (config?: RepositoryShowcaseWidgetConfig): string => {
-  if (!config || !config.showcaseRepos?.length) {
-    return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
-  }
-
-  // Convert repository names to owner/repo format if needed
-  const formattedRepos = config.showcaseRepos.map(repo => {
-    if (repo.includes('/')) {
-      return repo; // Already in owner/repo format
-    } else if (config.username?.trim()) {
-      return `${config.username}/${repo}`; // Add username as owner
-    }
-    return repo;
-  }).filter(repo => repo.includes('/')); // Only keep valid owner/repo pairs
-
-  if (formattedRepos.length === 0) {
-    return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
-  }
-
-  const params = new URLSearchParams({
-    repos: formattedRepos.join(','),
-    theme: config.theme || 'default',
-    layout: config.repoLayout || 'single',
-    sortBy: config.sortBy || 'stars',
-    repoLimit: (config.repoLimit || 6).toString(),
-    cardWidth: (config.repoCardWidth || 400).toString(),
-    cardHeight: (config.repoCardHeight || 200).toString()
-  });
-
-  if (config.showStats !== undefined) {
-    params.set('showStats', config.showStats.toString());
-  }
-  if (config.showLanguage !== undefined) {
-    params.set('showLanguage', config.showLanguage.toString());
-  }
-  if (config.showDescription !== undefined) {
-    params.set('showDescription', config.showDescription.toString());
-  }
-  if (config.showTopics !== undefined) {
-    params.set('showTopics', config.showTopics.toString());
-  }
-  if (config.showLastUpdated !== undefined) {
-    params.set('showLastUpdated', config.showLastUpdated.toString());
-  }
-
-  return `![Repository Showcase](https://your-domain.com/api/repo-showcase?${params.toString()})`;
+RepositoryShowcaseWidget.generateMarkdown = (): string => {
+  return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
 };
 
 export default RepositoryShowcaseWidget;

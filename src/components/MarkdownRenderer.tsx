@@ -348,11 +348,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     : "my-4 text-center";
 
                   return (
-                    <div className={containerClassName}>
-                      <div className={`${isBadge ? 'inline-block' : 'inline-block relative'}`}>
+                    <div className={containerClassName}>                      <div className={`${isBadge ? 'inline-block' : 'inline-block relative'}`}>
                         <Image
                           {...imageProps}
                           {...dimensions}
+                          alt={alt || ''}
                           style={{ 
                             maxWidth: '100%',
                             height: 'auto'

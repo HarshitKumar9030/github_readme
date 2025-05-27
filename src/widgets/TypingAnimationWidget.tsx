@@ -25,6 +25,49 @@ interface TypingAnimationWidgetProps extends BaseWidgetProps {
   onConfigChange?: (config: TypingAnimationWidgetConfig) => void;
 }
 
+// Helper function to generate markdown with config
+function generateMarkdownForConfig(config: TypingAnimationWidgetConfig): string {
+  const effectiveConfig = {
+    text: config.text || 'Hello, I am a developer!',
+    theme: config.theme || 'light',
+    fontFamily: config.font || 'monospace',
+    fontSize: config.size || 20,
+    color: config.color || '#0066cc',
+    speed: config.duration ? Math.floor(config.duration / (config.text || 'Hello, I am a developer!').length) : 150,
+    loop: config.loop !== false,
+    cursor: config.cursor !== false,
+    width: config.width || 600,
+    height: config.height || 100
+  };
+
+  const params = new URLSearchParams({
+    text: effectiveConfig.text,
+    theme: effectiveConfig.theme,
+    fontFamily: effectiveConfig.fontFamily,
+    fontSize: effectiveConfig.fontSize.toString(),
+    color: effectiveConfig.color,
+    speed: effectiveConfig.speed.toString(),
+    loop: effectiveConfig.loop.toString(),
+    cursor: effectiveConfig.cursor.toString(),
+    width: effectiveConfig.width.toString(),
+    height: effectiveConfig.height.toString()
+  });
+
+  const url = `/api/typing-animation?${params.toString()}`;
+
+  let md = '';
+  if (!config.hideTitle) {
+    const title = config.customTitle || 'Typing Animation';
+    md += `## ${title}\n\n`;
+  }
+
+  md += `<div align="center">\n\n`;
+  md += `<img src="${url}" alt="Typing Animation" width="${effectiveConfig.width}" height="${effectiveConfig.height}" />\n\n`;
+  md += `</div>\n\n`;
+
+  return md;
+}
+
 const TypingAnimationWidget: React.FC<TypingAnimationWidgetProps> & MarkdownExportable = ({
   config,
   onConfigChange,
@@ -33,11 +76,10 @@ const TypingAnimationWidget: React.FC<TypingAnimationWidgetProps> & MarkdownExpo
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   // Memoize the effective config to prevent unnecessary re-calculations
   const effectiveConfig = useMemo(() => ({
     text: config.text || 'Hello, I am a developer!',
-    theme: config.theme || 'default',
+    theme: config.theme || 'light',
     fontFamily: config.font || 'monospace',
     fontSize: config.size || 20,
     color: config.color || '#0066cc',
@@ -83,7 +125,7 @@ const TypingAnimationWidget: React.FC<TypingAnimationWidgetProps> & MarkdownExpo
           throw new Error('Failed to generate typing animation');
         }        // Generate markdown with current config
         if (onMarkdownGenerated) {
-          const markdown = TypingAnimationWidget.generateMarkdown({
+          const markdown = generateMarkdownForConfig({
             text: effectiveConfig.text,
             theme: effectiveConfig.theme,
             font: effectiveConfig.fontFamily,
@@ -164,35 +206,20 @@ const TypingAnimationWidget: React.FC<TypingAnimationWidgetProps> & MarkdownExpo
   );
 };
 
-TypingAnimationWidget.generateMarkdown = function(config?: TypingAnimationWidgetConfig): string {
-  const effectiveConfig = {
-    text: config?.text || 'Hello, I am a developer!',
-    theme: config?.theme || 'default',
-    fontFamily: config?.font || 'monospace',
-    fontSize: config?.size || 20,
-    color: config?.color || '#0066cc',
-    speed: config?.duration ? Math.floor(config.duration / (config.text || 'Hello, I am a developer!').length) : 150,
-    loop: config?.loop !== false,
-    cursor: config?.cursor !== false,
-    width: config?.width || 600,
-    height: config?.height || 100
-  };
-
-  const params = new URLSearchParams({
-    text: effectiveConfig.text,
-    theme: effectiveConfig.theme,
-    fontFamily: effectiveConfig.fontFamily,
-    fontSize: effectiveConfig.fontSize.toString(),
-    color: effectiveConfig.color,
-    speed: effectiveConfig.speed.toString(),
-    loop: effectiveConfig.loop.toString(),
-    cursor: effectiveConfig.cursor.toString(),
-    width: effectiveConfig.width.toString(),
-    height: effectiveConfig.height.toString()
+// Export the markdown generation function
+TypingAnimationWidget.generateMarkdown = function(): string {
+  return generateMarkdownForConfig({
+    text: 'Hello, I am a developer!',
+    theme: 'light',
+    font: 'monospace',
+    size: 20,
+    color: '#0066cc',
+    duration: 3000,
+    loop: true,
+    cursor: true,
+    width: 600,
+    height: 100
   });
-
-  const url = createAbsoluteUrl(`/api/typing-animation?${params.toString()}`);
-  return `![Typing Animation](${url})`;
 };
 
 export default TypingAnimationWidget;

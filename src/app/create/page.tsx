@@ -416,9 +416,8 @@ export default function CreatePage() {
     showPreview,
     generatePreview,
   ]);
-
   // Save current state as a project
-  const saveProject = () => {
+  const saveProject = useCallback(() => {
     try {
       const newProject: ReadmeProject = {
         id: `project-${Date.now()}`,
@@ -443,7 +442,7 @@ export default function CreatePage() {
       console.error("Failed to save project:", error);
       alert("Failed to save project. Please try again.");
     }
-  };
+  }, [projectName, builderBlocks, username, theme, projects]);
 
   // Load a previously saved project
   const loadProject = (project: ReadmeProject) => {
