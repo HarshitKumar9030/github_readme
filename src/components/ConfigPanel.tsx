@@ -393,9 +393,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       type: 'textarea',
       defaultValue: '',
       placeholder: 'Enter repository names, comma-separated (e.g., repo1, repo2, repo3)'
-    },
-    {
-      id: 'layout',
+    },    {
+      id: 'repoLayout',
       label: 'Layout Style',
       type: 'select',
       defaultValue: 'single',
@@ -432,16 +431,9 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         { value: '4', label: '4 repositories' },
         { value: '6', label: '6 repositories' }
       ]
-    },
-    {
-      id: 'showStars',
-      label: 'Show Stars',
-      type: 'toggle',
-      defaultValue: true
-    },
-    {
-      id: 'showForks',
-      label: 'Show Forks',
+    },    {
+      id: 'showStats',
+      label: 'Show Stats (Stars & Forks)',
       type: 'toggle',
       defaultValue: true
     },
@@ -468,9 +460,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       label: 'Show Last Updated',
       type: 'toggle',
       defaultValue: false
-    },
-    {
-      id: 'cardWidth',
+    },    {
+      id: 'repoCardWidth',
       label: 'Card Width',
       type: 'range',
       defaultValue: 400,
@@ -479,7 +470,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       step: 50
     },
     {
-      id: 'cardHeight',
+      id: 'repoCardHeight',
       label: 'Card Height',
       type: 'range',
       defaultValue: 200,
@@ -704,12 +695,22 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
   };
 
   const options = getOptionsForWidgetType();
-
   const handleChange = (id: string, value: any) => {
-    onChange({
-      ...config,
-      [id]: value
-    });
+    // Special handling for showcaseRepos - convert string to array when needed
+    if (id === 'showcaseRepos' && typeof value === 'string') {
+      const repoArray = value.trim() 
+        ? value.split(',').map(repo => repo.trim()).filter(repo => repo.length > 0)
+        : [];
+      onChange({
+        ...config,
+        [id]: repoArray
+      });
+    } else {
+      onChange({
+        ...config,
+        [id]: value
+      });
+    }
   };
   // Group options by category
   const themeOptions = options.filter(opt => opt.id === 'theme');
@@ -895,12 +896,16 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                   onChange={(e) => handleChange(option.id, Number(e.target.value))}
                 />
               )}
-              
-              {option.type === 'textarea' && (
+                {option.type === 'textarea' && (
                 <textarea
                   className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  value={config[option.id as keyof WidgetConfig] !== undefined ? 
-                    config[option.id as keyof WidgetConfig] as string : option.defaultValue}
+                  value={(() => {
+                    const configValue = config[option.id as keyof WidgetConfig];
+                    if (option.id === 'showcaseRepos' && Array.isArray(configValue)) {
+                      return configValue.join(', ');
+                    }
+                    return configValue !== undefined ? configValue as string : option.defaultValue;
+                  })()}
                   onChange={(e) => handleChange(option.id, e.target.value)}
                   rows={3}
                   placeholder={option.placeholder}

@@ -156,7 +156,11 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
       },      repoShowcase: {
         username: username,
         theme: widgetConfig.theme || 'default',
-        showcaseRepos: widgetConfig.showcaseRepos || [],
+        showcaseRepos: Array.isArray(widgetConfig.showcaseRepos) 
+          ? widgetConfig.showcaseRepos 
+          : typeof widgetConfig.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()
+            ? widgetConfig.showcaseRepos.split(',').map(repo => repo.trim()).filter(repo => repo.length > 0)
+            : [],
         repoLayout: widgetConfig.repoLayout || 'single',
         sortBy: widgetConfig.sortBy || 'stars',
         repoLimit: widgetConfig.repoLimit || 6,

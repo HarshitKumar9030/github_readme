@@ -30,18 +30,22 @@ interface RepositoryShowcaseWidgetProps extends BaseWidgetProps {
 
 // Helper function to generate markdown for a specific config
 const generateMarkdownForConfig = (config: RepositoryShowcaseWidgetConfig): string => {
-  if (!config || !config.showcaseRepos?.length) {
+  // Ensure showcaseRepos is an array and has content
+  const showcaseRepos = Array.isArray(config?.showcaseRepos) ? config.showcaseRepos : [];
+  if (!config || showcaseRepos.length === 0) {
     return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
   }
+  
   // Convert repository names to owner/repo format if needed
-  const formattedRepos = (config.showcaseRepos || []).map(repo => {
+  const formattedRepos = showcaseRepos.map(repo => {
+    if (typeof repo !== 'string') return ''; // Skip invalid entries
     if (repo.includes('/')) {
       return repo; // Already in owner/repo format
     } else if (config.username?.trim()) {
       return `${config.username}/${repo}`; // Add username as owner
     }
     return repo;
-  }).filter(repo => repo.includes('/')); // Only keep valid owner/repo pairs
+  }).filter(repo => repo && repo.includes('/')); // Only keep valid owner/repo pairs
 
   if (formattedRepos.length === 0) {
     return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
@@ -84,21 +88,35 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
   const [svgUrl, setSvgUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
-  const generateSvgUrl = useCallback(() => {
-    if (!config.showcaseRepos?.length) {
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  // Ensure component is only interactive after mounting (client-side)
+  useEffect(() => {
+    setMounted(true);
+  }, []);  const generateSvgUrl = useCallback(() => {
+    // Don't generate URL until component is mounted to avoid hydration mismatch
+    if (!mounted) {
+      setSvgUrl('');
+      return;
+    }
+
+    // Ensure showcaseRepos is an array and has content
+    const showcaseRepos = Array.isArray(config.showcaseRepos) ? config.showcaseRepos : [];
+    if (showcaseRepos.length === 0) {
       setSvgUrl('');
       return;
     }
 
     // Convert repository names to owner/repo format if needed
-    const formattedRepos = (config.showcaseRepos || []).map(repo => {
+    const formattedRepos = showcaseRepos.map(repo => {
+      if (typeof repo !== 'string') return ''; // Skip invalid entries
       if (repo.includes('/')) {
         return repo; // Already in owner/repo format
       } else if (config.username?.trim()) {
         return `${config.username}/${repo}`; // Add username as owner
       }
       return repo;
-    }).filter(repo => repo.includes('/')); // Only keep valid owner/repo pairs
+    }).filter(repo => repo && repo.includes('/')); // Only keep valid owner/repo pairs
 
     if (formattedRepos.length === 0) {
       setSvgUrl('');
@@ -134,6 +152,7 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
     const url = createAbsoluteUrl(`/api/repo-showcase?${params.toString()}`);
     setSvgUrl(url);
   }, [
+    mounted, // Add mounted as dependency
     config.username,
     config.showcaseRepos,
     config.theme,
@@ -148,9 +167,8 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
     config.showTopics,
     config.showLastUpdated
   ]);
-
   const loadPreview = useCallback(async () => {
-    if (!svgUrl) return;
+    if (!mounted || !svgUrl) return;
     
     setIsLoading(true);
     setError('');
@@ -169,15 +187,16 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
     } finally {
       setIsLoading(false);
     }
-  }, [svgUrl, onMarkdownGenerated, config]);
-
+  }, [mounted, svgUrl, onMarkdownGenerated, config]);
   useEffect(() => {
+    if (!mounted) return;
     generateSvgUrl();
-  }, [generateSvgUrl]);
+  }, [generateSvgUrl, mounted]);
 
   useEffect(() => {
+    if (!mounted) return;
     loadPreview();
-  }, [loadPreview]);
+  }, [loadPreview, mounted]);
 
   const handleConfigChange = (updates: Partial<RepositoryShowcaseWidgetConfig>) => {
     if (onConfigChange) {
@@ -205,23 +224,35 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
         break;
       case 'grid-3x1':
         displayWidth = cardWidth * 3 + 20;
-        break;
-      case 'list':
-        displayHeight = cardHeight * Math.min(config.showcaseRepos?.length || 1, config.repoLimit || 6) + (Math.min(config.showcaseRepos?.length || 1, config.repoLimit || 6) - 1) * 10;
+        break;      case 'list':
+        const showcaseReposLength = Array.isArray(config.showcaseRepos) ? config.showcaseRepos.length : 0;
+        displayHeight = cardHeight * Math.min(showcaseReposLength || 1, config.repoLimit || 6) + (Math.min(showcaseReposLength || 1, config.repoLimit || 6) - 1) * 10;
         break;
     }
     
     return { width: displayWidth, height: displayHeight };
   };
-
   const displayDimensions = getDisplayDimensions();
+
+  // Show static version during SSR/hydration
+  if (!mounted) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">Preview</h3>
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            Loading repository showcase...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold mb-3">Preview</h3>
-        
-        {!config.showcaseRepos?.length ? (
+          {!Array.isArray(config.showcaseRepos) || config.showcaseRepos.length === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Add repositories to showcase
           </div>
