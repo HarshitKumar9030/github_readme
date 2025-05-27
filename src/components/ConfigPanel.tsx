@@ -14,7 +14,7 @@ interface ConfigPanelProps {
   config: Partial<WidgetConfig>;
   onChange: (config: Partial<WidgetConfig>) => void;
   title?: string;
-  widgetType?: 'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph';
+  widgetType?: 'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph' | 'typing-animation' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress';
 }
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ 
@@ -316,14 +316,102 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       label: 'Hide Border',
       type: 'toggle',
       defaultValue: false
-    },
-    {
+    },    {
       id: 'customTitle',
       label: 'Custom Title',
       type: 'text',
       defaultValue: ''
     }
   ];
+
+  // Typing Animation specific options
+  const typingAnimationOptions: ConfigOption[] = [
+    {
+      id: 'text',
+      label: 'Text to Type',
+      type: 'text',
+      defaultValue: 'Hello, I am a developer!'
+    },
+    {
+      id: 'font',
+      label: 'Font Family',
+      type: 'select',
+      defaultValue: 'monospace',
+      options: [
+        { value: 'monospace', label: 'Monospace' },
+        { value: 'Arial', label: 'Arial' },
+        { value: 'Helvetica', label: 'Helvetica' },
+        { value: 'Times New Roman', label: 'Times New Roman' },
+        { value: 'Georgia', label: 'Georgia' },
+        { value: 'Verdana', label: 'Verdana' },
+        { value: 'Courier New', label: 'Courier New' },
+        { value: 'Comic Sans MS', label: 'Comic Sans MS' }
+      ]
+    },
+    {
+      id: 'size',
+      label: 'Font Size',
+      type: 'select',
+      defaultValue: 20,
+      options: [
+        { value: '12', label: '12px' },
+        { value: '14', label: '14px' },
+        { value: '16', label: '16px' },
+        { value: '18', label: '18px' },
+        { value: '20', label: '20px' },
+        { value: '24', label: '24px' },
+        { value: '28', label: '28px' },
+        { value: '32', label: '32px' },
+        { value: '36', label: '36px' },
+        { value: '48', label: '48px' }
+      ]
+    },
+    {
+      id: 'color',
+      label: 'Text Color',
+      type: 'color',
+      defaultValue: '#0066cc'
+    },
+    {
+      id: 'duration',
+      label: 'Animation Duration (ms)',
+      type: 'select',
+      defaultValue: 3000,
+      options: [
+        { value: '1000', label: '1 second' },
+        { value: '2000', label: '2 seconds' },
+        { value: '3000', label: '3 seconds' },
+        { value: '4000', label: '4 seconds' },
+        { value: '5000', label: '5 seconds' },
+        { value: '6000', label: '6 seconds' }
+      ]
+    },
+    {
+      id: 'loop',
+      label: 'Loop Animation',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'cursor',
+      label: 'Show Cursor',
+      type: 'toggle',
+      defaultValue: true
+    },
+    {
+      id: 'width',
+      label: 'Animation Width',
+      type: 'select',
+      defaultValue: 600,
+      options: [
+        { value: '400', label: '400px' },
+        { value: '500', label: '500px' },
+        { value: '600', label: '600px' },
+        { value: '700', label: '700px' },
+        { value: '800', label: '800px' }
+      ]
+    }  ];
+
   // Get options based on widget type
   const getOptionsForWidgetType = () => {
     switch (widgetType) {
@@ -335,6 +423,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         return [...commonOptions, ...contributionGraphOptions];
       case 'social-stats':
         return [...commonOptions, ...socialStatsOptions];
+      case 'typing-animation':
+        return [...commonOptions, ...typingAnimationOptions];
       default:
         return commonOptions;
     }

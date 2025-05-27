@@ -333,13 +333,12 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                   </div>
                   
                   {/* Enhanced Widget Configuration Panel */}
-                  <div className="pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
-                    <div className="bg-gray-50/70 dark:bg-gray-700/70 rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/50">
+                  <div className="pt-4 border-t border-gray-200/50 dark:border-gray-700/50">                    <div className="bg-gray-50/70 dark:bg-gray-700/70 rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/50">
                       <ConfigPanel 
                         config={widgetConfig}
                         onChange={setWidgetConfig}
                         title="Widget Settings"
-                        widgetType={(selectedBlock as WidgetBlock).widgetId as 'github-stats' | 'top-languages' | 'contribution-graph' | 'social-stats'}
+                        widgetType={(selectedBlock as WidgetBlock).widgetId as 'github-stats' | 'top-languages' | 'contribution-graph' | 'social-stats' | 'typing-animation' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress'}
                       />
                     </div>
                   </div>
