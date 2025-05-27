@@ -16,12 +16,12 @@ const Navbar = () => {
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
-  };
-  const navLinks = [
+  };  const navLinks = [
     { href: '/about', label: 'About' },
     { href: '/features', label: 'Features' },
     { href: '/templates', label: 'Templates' },
     { href: '/documentation', label: 'Docs' },
+    { href: '/changelog', label: 'Changelog' },
     { href: '/feedback', label: 'Feedback' },
   ];
 

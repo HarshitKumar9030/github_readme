@@ -36,51 +36,62 @@ export async function GET(request: NextRequest) {
   const finalCursorColor = cursorColor !== color ? cursorColor : currentTheme.accent;
   
   // Calculate dimensions based on text length
-  const estimatedTextWidth = text.length * (fontSize * 0.6);
-  const finalWidth = width === 800 ? Math.max(estimatedTextWidth + 60, 300) : width;
+  const charWidth = fontSize * 0.6;
+  const estimatedTextWidth = text.length * charWidth;
+  const finalWidth = width === 800 ? Math.max(estimatedTextWidth + 80, 300) : width;
   const finalHeight = height === 100 ? fontSize + 40 : height;
   
-  // Create the typing animation
+  // Create the typing animation timing
   const totalDuration = text.length * speed + pauseAfter;
   const typingDuration = text.length * speed;
   
-  // Generate keyframes for typing effect
-  let keyframes = '';
-  for (let i = 0; i <= text.length; i++) {
-    const percentage = (i * speed / totalDuration) * 100;
-    keyframes += `${percentage}% { width: ${i * (fontSize * 0.6)}px; }\n`;
-  }
-  
-  // Add pause keyframes
-  const pauseStart = (typingDuration / totalDuration) * 100;
-  keyframes += `${pauseStart}%, 100% { width: ${text.length * (fontSize * 0.6)}px; }\n`;
-  
+  // Generate individual character animations
+  const characterAnimations = text.split('').map((char, index) => {
+    const delay = index * speed;
+    const animationDelay = `${delay}ms`;
+    return `
+      .char-${index} {
+        opacity: 0;
+        animation: appear 0ms ${animationDelay} forwards;
+      }
+    `;
+  }).join('');
+
   const svg = `
-<svg width="${finalWidth}" height="${finalHeight}" xmlns="http://www.w3.org/2000/svg">
+<svg width="${finalWidth}" height="${finalHeight}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${finalWidth} ${finalHeight}">
   <defs>
+    ${finalBg.startsWith('linear-gradient') ? `
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    ` : ''}
+    
     <style>
       .typing-container {
         font-family: ${fontFamily};
         font-size: ${fontSize}px;
         fill: ${finalColor};
-        dominant-baseline: middle;
+        dominant-baseline: central;
+        text-anchor: start;
       }
       
-      .typing-text {
-        overflow: hidden;
-        white-space: nowrap;
-        animation: typing ${totalDuration}ms ${loop ? 'infinite' : 'forwards'} steps(${text.length}, end);
+      ${characterAnimations}
+      
+      @keyframes appear {
+        to { opacity: 1; }
       }
       
       .cursor {
-        animation: blink 1s infinite;
+        animation: blink 1s infinite ${loop ? `, cursor-move ${totalDuration}ms infinite` : `, cursor-move ${totalDuration}ms forwards`};
         fill: ${finalCursorColor};
+        transform-origin: center;
       }
       
-      @keyframes typing {
-        0% { width: 0; }
-        ${(typingDuration / totalDuration) * 100}% { width: ${text.length * (fontSize * 0.6)}px; }
-        100% { width: ${text.length * (fontSize * 0.6)}px; }
+      @keyframes cursor-move {
+        0% { transform: translateX(0); }
+        ${(typingDuration / totalDuration) * 100}% { transform: translateX(${estimatedTextWidth}px); }
+        100% { transform: translateX(${estimatedTextWidth}px); }
       }
       
       @keyframes blink {
@@ -88,47 +99,37 @@ export async function GET(request: NextRequest) {
         51%, 100% { opacity: 0; }
       }
       
-      .background {
-        fill: ${finalBg === 'transparent' ? 'none' : finalBg};
+      .typing-text {
+        ${loop ? `animation: reset-text ${totalDuration}ms infinite;` : ''}
       }
       
-      ${finalBg.startsWith('linear-gradient') ? `
-      .gradient-bg {
-        fill: url(#gradient);
+      ${loop ? `
+      @keyframes reset-text {
+        0%, 100% { }
+        ${((totalDuration - pauseAfter) / totalDuration) * 100}% { }
       }
       ` : ''}
     </style>
-    
-    ${finalBg.startsWith('linear-gradient') ? `
-    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-    </linearGradient>
-    ` : ''}
   </defs>
   
   <!-- Background -->
   ${finalBg !== 'transparent' ? `
-  <rect width="100%" height="100%" class="${finalBg.startsWith('linear-gradient') ? 'gradient-bg' : 'background'}" rx="8"/>
+  <rect width="100%" height="100%" fill="${finalBg.startsWith('linear-gradient') ? 'url(#gradient)' : finalBg}" rx="8"/>
   ` : ''}
   
-  <!-- Typing text container -->
-  <g transform="translate(20, ${finalHeight / 2})">
-    <!-- Hidden full text for proper spacing -->
-    <text class="typing-container" opacity="0">${text}</text>
-    
-    <!-- Visible typing text with mask -->
-    <defs>
-      <mask id="typing-mask">
-        <rect fill="white" height="${fontSize + 10}" class="typing-text"/>
-      </mask>
-    </defs>
-    
-    <text class="typing-container" mask="url(#typing-mask)">${text}</text>
+  <!-- Text container -->
+  <g transform="translate(20, ${finalHeight / 2})" class="typing-text">
+    <!-- Individual characters with staggered animation -->
+    ${text.split('').map((char, index) => {
+      const xPosition = index * charWidth;
+      // Escape special characters for SVG
+      const escapedChar = char === '<' ? '&lt;' : char === '>' ? '&gt;' : char === '&' ? '&amp;' : char;
+      return `<text class="typing-container char-${index}" x="${xPosition}" y="0">${escapedChar}</text>`;
+    }).join('')}
     
     <!-- Cursor -->
     ${cursor ? `
-    <text class="typing-container cursor" x="${text.length * (fontSize * 0.6) + 2}" y="0">|</text>
+    <text class="typing-container cursor" x="0" y="0">|</text>
     ` : ''}
   </g>
 </svg>`;
