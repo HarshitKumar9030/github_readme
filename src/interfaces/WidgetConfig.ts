@@ -38,14 +38,19 @@ export interface WidgetConfig {
   // Language Chart SVG specific properties
   showPercentages?: boolean;
   chartType?: 'pie' | 'donut';
-  chartColors?: string[];
-
-  // Repository Showcase SVG specific properties
-  showcaseRepos?: string[]; // Array of repo names to showcase
+  chartColors?: string[];  // Repository Showcase SVG specific properties
+  showcaseRepos?: string[]; // Array of repo names to showcase (can be "reponame" or "owner/reponame")
+  repoLayout?: 'single' | 'grid-2x1' | 'grid-2x2' | 'grid-3x1' | 'list';
+  sortBy?: 'stars' | 'forks' | 'updated' | 'name' | 'created';
+  repoLimit?: number;
   showStars?: boolean;
   showForks?: boolean;
   showLanguage?: boolean;
   showDescription?: boolean;
+  showTopics?: boolean;
+  showLastUpdated?: boolean;
+  repoCardWidth?: number;
+  repoCardHeight?: number;
 
      // Animated Progress SVG specific properties
   skills?: { name: string; level: number; color?: string }[];

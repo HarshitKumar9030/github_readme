@@ -378,7 +378,6 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       step: 0.5
     }
   ];
-
   // Repository Showcase specific options
   const repoShowcaseOptions: ConfigOption[] = [
     {
@@ -393,7 +392,46 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       label: 'Showcase Repositories',
       type: 'textarea',
       defaultValue: '',
-      placeholder: 'Enter repository names, one per line (e.g., repo1, repo2, repo3)'
+      placeholder: 'Enter repository names, comma-separated (e.g., repo1, repo2, repo3)'
+    },
+    {
+      id: 'layout',
+      label: 'Layout Style',
+      type: 'select',
+      defaultValue: 'single',
+      options: [
+        { value: 'single', label: 'Single Repository' },
+        { value: 'grid-2x1', label: 'Grid 2×1 (2 repositories)' },
+        { value: 'grid-2x2', label: 'Grid 2×2 (4 repositories)' },
+        { value: 'grid-3x1', label: 'Grid 3×1 (3 repositories)' },
+        { value: 'list', label: 'Vertical List' }
+      ]
+    },
+    {
+      id: 'sortBy',
+      label: 'Sort Repositories By',
+      type: 'select',
+      defaultValue: 'stars',
+      options: [
+        { value: 'stars', label: 'Stars (Descending)' },
+        { value: 'forks', label: 'Forks (Descending)' },
+        { value: 'updated', label: 'Last Updated' },
+        { value: 'name', label: 'Name (Alphabetical)' },
+        { value: 'created', label: 'Date Created' }
+      ]
+    },
+    {
+      id: 'repoLimit',
+      label: 'Repository Limit',
+      type: 'select',
+      defaultValue: 4,
+      options: [
+        { value: '1', label: '1 repository' },
+        { value: '2', label: '2 repositories' },
+        { value: '3', label: '3 repositories' },
+        { value: '4', label: '4 repositories' },
+        { value: '6', label: '6 repositories' }
+      ]
     },
     {
       id: 'showStars',
@@ -420,8 +458,20 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       defaultValue: true
     },
     {
-      id: 'width',
-      label: 'Width',
+      id: 'showTopics',
+      label: 'Show Topics',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'showLastUpdated',
+      label: 'Show Last Updated',
+      type: 'toggle',
+      defaultValue: false
+    },
+    {
+      id: 'cardWidth',
+      label: 'Card Width',
       type: 'range',
       defaultValue: 400,
       min: 300,
@@ -429,8 +479,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       step: 50
     },
     {
-      id: 'height',
-      label: 'Height',
+      id: 'cardHeight',
+      label: 'Card Height',
       type: 'range',
       defaultValue: 200,
       min: 150,

@@ -153,17 +153,21 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
         height: widgetConfig.height || 200,
         hideTitle: widgetConfig.hideTitle || false,
         customTitle: widgetConfig.customTitle || ''
-      },
-      repoShowcase: {
+      },      repoShowcase: {
         username: username,
         theme: widgetConfig.theme || 'default',
         showcaseRepos: widgetConfig.showcaseRepos || [],
-        showStars: widgetConfig.showStars !== false,
-        showForks: widgetConfig.showForks !== false,
+        repoLayout: widgetConfig.repoLayout || 'single',
+        sortBy: widgetConfig.sortBy || 'stars',
+        repoLimit: widgetConfig.repoLimit || 6,
+        showStats: widgetConfig.showStats !== false,
         showLanguage: widgetConfig.showLanguage !== false,
         showDescription: widgetConfig.showDescription !== false,
-        width: widgetConfig.cardWidth || 400,
-        height: widgetConfig.height || 200,
+        showTopics: widgetConfig.showTopics !== false,
+        showLastUpdated: widgetConfig.showLastUpdated !== false,
+        repoCardWidth: widgetConfig.repoCardWidth || 400,
+        repoCardHeight: widgetConfig.repoCardHeight || 200,
+        hideBorder: widgetConfig.hideBorder || false,
         hideTitle: widgetConfig.hideTitle || false,
         customTitle: widgetConfig.customTitle || ''
       }
@@ -198,10 +202,16 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig.waveCount,
     widgetConfig.width,
     widgetConfig.showcaseRepos,
-    widgetConfig.showStars,
-    widgetConfig.showForks,
+    widgetConfig.repoLayout,
+    widgetConfig.sortBy,
+    widgetConfig.repoLimit,
+    widgetConfig.showStats,
     widgetConfig.showLanguage,
-    widgetConfig.showDescription
+    widgetConfig.showDescription,
+    widgetConfig.showTopics,
+    widgetConfig.showLastUpdated,
+    widgetConfig.repoCardWidth,
+    widgetConfig.repoCardHeight
   ]);
 
   return (
