@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import { createAbsoluteUrl } from '@/utils/urlHelpers';
@@ -92,8 +92,37 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
 
   // Ensure component is only interactive after mounting (client-side)
   useEffect(() => {
-    setMounted(true);
-  }, []);  const generateSvgUrl = useCallback(() => {
+    setMounted(true);  }, []);
+
+  // Generate config hash for comparison to prevent unnecessary updates
+  const configHash = useMemo(() => {
+    const showcaseRepos = Array.isArray(config.showcaseRepos) ? config.showcaseRepos : [];
+    return JSON.stringify({
+      username: config.username,
+      showcaseRepos,
+      theme: config.theme,
+      repoLayout: config.repoLayout,
+      sortBy: config.sortBy,
+      repoLimit: config.repoLimit,
+      repoCardWidth: config.repoCardWidth,
+      repoCardHeight: config.repoCardHeight,
+      showStats: config.showStats,
+      showLanguage: config.showLanguage,
+      showDescription: config.showDescription,
+      showTopics: config.showTopics,
+      showLastUpdated: config.showLastUpdated
+    });
+  }, [config]);
+
+  // Parse config from hash to avoid direct config dependencies
+  const parsedConfig = useMemo(() => {
+    try {
+      return JSON.parse(configHash);
+    } catch {
+      return {};
+    }
+  }, [configHash]);
+  const generateSvgUrl = useCallback(() => {
     // Don't generate URL until component is mounted to avoid hydration mismatch
     if (!mounted) {
       setSvgUrl('');
@@ -101,22 +130,20 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
     }
 
     // Ensure showcaseRepos is an array and has content
-    const showcaseRepos = Array.isArray(config.showcaseRepos) ? config.showcaseRepos : [];
+    const showcaseRepos = Array.isArray(parsedConfig.showcaseRepos) ? parsedConfig.showcaseRepos : [];
     if (showcaseRepos.length === 0) {
       setSvgUrl('');
       return;
-    }
-
-    // Convert repository names to owner/repo format if needed
-    const formattedRepos = showcaseRepos.map(repo => {
+    }    // Convert repository names to owner/repo format if needed
+    const formattedRepos = showcaseRepos.map((repo: any) => {
       if (typeof repo !== 'string') return ''; // Skip invalid entries
       if (repo.includes('/')) {
         return repo; // Already in owner/repo format
-      } else if (config.username?.trim()) {
-        return `${config.username}/${repo}`; // Add username as owner
+      } else if (parsedConfig.username?.trim()) {
+        return `${parsedConfig.username}/${repo}`; // Add username as owner
       }
       return repo;
-    }).filter(repo => repo && repo.includes('/')); // Only keep valid owner/repo pairs
+    }).filter((repo: string) => repo && repo.includes('/')); // Only keep valid owner/repo pairs
 
     if (formattedRepos.length === 0) {
       setSvgUrl('');
@@ -125,48 +152,33 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
 
     const params = new URLSearchParams({
       repos: formattedRepos.join(','),
-      theme: config.theme || 'default',
-      layout: config.repoLayout || 'single',
-      sortBy: config.sortBy || 'stars',
-      repoLimit: (config.repoLimit || 6).toString(),
-      cardWidth: (config.repoCardWidth || 400).toString(),
-      cardHeight: (config.repoCardHeight || 200).toString()
+      theme: parsedConfig.theme || 'default',
+      layout: parsedConfig.repoLayout || 'single',
+      sortBy: parsedConfig.sortBy || 'stars',
+      repoLimit: (parsedConfig.repoLimit || 6).toString(),
+      cardWidth: (parsedConfig.repoCardWidth || 400).toString(),
+      cardHeight: (parsedConfig.repoCardHeight || 200).toString()
     });
 
-    if (config.showStats !== undefined) {
-      params.set('showStats', config.showStats.toString());
+    if (parsedConfig.showStats !== undefined) {
+      params.set('showStats', parsedConfig.showStats.toString());
     }
-    if (config.showLanguage !== undefined) {
-      params.set('showLanguage', config.showLanguage.toString());
+    if (parsedConfig.showLanguage !== undefined) {
+      params.set('showLanguage', parsedConfig.showLanguage.toString());
     }
-    if (config.showDescription !== undefined) {
-      params.set('showDescription', config.showDescription.toString());
+    if (parsedConfig.showDescription !== undefined) {
+      params.set('showDescription', parsedConfig.showDescription.toString());
     }
-    if (config.showTopics !== undefined) {
-      params.set('showTopics', config.showTopics.toString());
+    if (parsedConfig.showTopics !== undefined) {
+      params.set('showTopics', parsedConfig.showTopics.toString());
     }
-    if (config.showLastUpdated !== undefined) {
-      params.set('showLastUpdated', config.showLastUpdated.toString());
+    if (parsedConfig.showLastUpdated !== undefined) {
+      params.set('showLastUpdated', parsedConfig.showLastUpdated.toString());
     }
 
     const url = createAbsoluteUrl(`/api/repo-showcase?${params.toString()}`);
     setSvgUrl(url);
-  }, [
-    mounted, // Add mounted as dependency
-    config.username,
-    config.showcaseRepos,
-    config.theme,
-    config.repoLayout,
-    config.sortBy,
-    config.repoLimit,
-    config.repoCardWidth,
-    config.repoCardHeight,
-    config.showStats,
-    config.showLanguage,
-    config.showDescription,
-    config.showTopics,
-    config.showLastUpdated
-  ]);
+  }, [mounted, parsedConfig]);
   const loadPreview = useCallback(async () => {
     if (!mounted || !svgUrl) return;
     

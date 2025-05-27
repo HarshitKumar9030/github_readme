@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo } from 'react';
-import { Block } from '@/interfaces/BlockTypes';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { Block, WidgetBlock } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
 import EnhancedSocialStatsWidget from '@/app/create/SocialStatsWidget-Redesigned';
 import TopLanguagesWidget from '@/widgets/TopLanguagesWidget';
@@ -54,129 +54,38 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   canUndo,
   canRedo
 }) => {
-  // Memoize the markdown generation callback to prevent infinite re-renders
+  // Track if component is mounted to prevent hydration issues
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);  // Memoize the markdown generation callback to prevent infinite re-renders
   const handleMarkdownGenerated = useCallback((blockId: string) => {
     return (md: string) => {
-      if (typeof window !== 'undefined' && blockId && handleWidgetMarkdownGenerated) {
+      if (isMounted && typeof window !== 'undefined' && blockId && handleWidgetMarkdownGenerated) {
         handleWidgetMarkdownGenerated(blockId, md);
       }
-    };
-  }, [handleWidgetMarkdownGenerated]);
-  // Memoize widget configs to prevent unnecessary re-renders
-  const memoizedConfigs = useMemo(() => {
-    return {      githubStats: {
-        username: username,
-        theme: widgetConfig.theme || 'light',
-        layoutType: 'full' as const,
-        layoutStyle: widgetConfig.layoutStyle || 'side-by-side',
-        showTrophies: true,
-        showStreaks: true,
-        showLanguages: true,
-        showStats: true,
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        includeAllCommits: widgetConfig.includeAllCommits || false,
-        includePrivate: widgetConfig.includePrivate || false,
-        compactMode: widgetConfig.layoutCompact || false,
-        hideRank: widgetConfig.hideRank || false,
-        trophyTheme: widgetConfig.trophyTheme || widgetConfig.theme || 'flat',
-        customTitle: widgetConfig.customTitle
-      },
-      topLanguages: {
-        username: username,
-        theme: widgetConfig.theme || 'light',
-        layout: widgetConfig.layout || 'compact',
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || '',
-        excludeRepos: widgetConfig.excludeRepos || '',
-        excludeLangs: widgetConfig.excludeLangs || '',
-        cardWidth: widgetConfig.cardWidth || 495,
-      },
-      contributionGraph: {
-        username: username,
-        theme: widgetConfig.theme || 'github',
-        showArea: widgetConfig.showArea || false,
-        showDots: widgetConfig.showDots || true,
-        height: widgetConfig.height || 180,
-        graphType: widgetConfig.graphType || 'line',
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || ''
-      },
-      animatedProgress: {
-        theme: widgetConfig.theme || 'default',
-        skills: widgetConfig.skills || [
-          { name: 'JavaScript', level: 90, color: '#f1e05a' },
-          { name: 'TypeScript', level: 85, color: '#3178c6' },
-          { name: 'React', level: 80, color: '#61dafb' }
-        ],
-        animationDuration: widgetConfig.animationDuration || 2000,
-        showProgressText: widgetConfig.showProgressText !== false,
-        progressBarHeight: widgetConfig.progressBarHeight || 20,
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || ''
-      },      typingAnimation: {
-        theme: widgetConfig.theme || 'default',
-        text: widgetConfig.text || 'Hello, I am a developer!',
-        font: widgetConfig.font || 'monospace',
-        size: widgetConfig.size || 20,
-        color: widgetConfig.color || '#0066cc',
-        duration: widgetConfig.duration || 3000,
-        loop: widgetConfig.loop !== false,
-        cursor: widgetConfig.cursor !== false,
-        width: widgetConfig.width || 600,
-        height: 100,
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || ''
-      },
-      languageChart: {
-        username: username,
-        theme: widgetConfig.theme || 'light',
-        showPercentages: widgetConfig.showPercentages !== false,
-        size: widgetConfig.cardWidth || 300,
-        minPercentage: 5,
-        maxLanguages: 8,
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || ''
-      },      waveAnimation: {
-        username: username,
-        theme: widgetConfig.theme || 'light',
-        waveColor: widgetConfig.waveColor || '#0099ff',
-        waveSecondaryColor: widgetConfig.waveSecondaryColor || '#00ccff',
-        waveSpeed: widgetConfig.waveSpeed || 'medium',
-        waveCount: widgetConfig.waveCount || 3,
-        width: widgetConfig.width || 800,
-        height: widgetConfig.height || 200,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || ''
-      },      repoShowcase: {
-        username: username,
-        theme: widgetConfig.theme || 'default',
-        showcaseRepos: Array.isArray(widgetConfig.showcaseRepos) 
-          ? widgetConfig.showcaseRepos 
-          : typeof widgetConfig.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()
-            ? widgetConfig.showcaseRepos.split(',').map(repo => repo.trim()).filter(repo => repo.length > 0)
-            : [],
-        repoLayout: widgetConfig.repoLayout || 'single',
-        sortBy: widgetConfig.sortBy || 'stars',
-        repoLimit: widgetConfig.repoLimit || 6,
-        showStats: widgetConfig.showStats !== false,
-        showLanguage: widgetConfig.showLanguage !== false,
-        showDescription: widgetConfig.showDescription !== false,
-        showTopics: widgetConfig.showTopics !== false,
-        showLastUpdated: widgetConfig.showLastUpdated !== false,
-        repoCardWidth: widgetConfig.repoCardWidth || 400,
-        repoCardHeight: widgetConfig.repoCardHeight || 200,
-        hideBorder: widgetConfig.hideBorder || false,
-        hideTitle: widgetConfig.hideTitle || false,
-        customTitle: widgetConfig.customTitle || ''
-      }
-    };
-  }, [
+    };  }, [handleWidgetMarkdownGenerated, isMounted]);
+
+  // Memoize individual widget configs to prevent unnecessary re-renders
+  const githubStatsConfig = useMemo(() => ({
+    username: username,
+    theme: widgetConfig.theme || 'light',
+    layoutType: 'full' as const,
+    layoutStyle: widgetConfig.layoutStyle || 'side-by-side',
+    showTrophies: true,
+    showStreaks: true,
+    showLanguages: true,
+    showStats: true,
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    includeAllCommits: widgetConfig.includeAllCommits || false,
+    includePrivate: widgetConfig.includePrivate || false,
+    compactMode: widgetConfig.layoutCompact || false,
+    hideRank: widgetConfig.hideRank || false,
+    trophyTheme: widgetConfig.trophyTheme || widgetConfig.theme || 'flat',
+    customTitle: widgetConfig.customTitle
+  }), [
     username,
     widgetConfig.theme,
     widgetConfig.layoutStyle,
@@ -187,24 +96,173 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig.layoutCompact,
     widgetConfig.hideRank,
     widgetConfig.trophyTheme,
-    widgetConfig.customTitle,
+    widgetConfig.customTitle
+  ]);
+
+  const topLanguagesConfig = useMemo(() => ({
+    username: username,
+    theme: widgetConfig.theme || 'light',
+    layout: widgetConfig.layout || 'compact',
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || '',
+    excludeRepos: widgetConfig.excludeRepos || '',
+    excludeLangs: widgetConfig.excludeLangs || '',
+    cardWidth: widgetConfig.cardWidth || 495,
+  }), [
+    username,
+    widgetConfig.theme,
     widgetConfig.layout,
+    widgetConfig.hideBorder,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle,
     widgetConfig.excludeRepos,
     widgetConfig.excludeLangs,
-    widgetConfig.cardWidth,
+    widgetConfig.cardWidth
+  ]);
+
+  const contributionGraphConfig = useMemo(() => ({
+    username: username,
+    theme: widgetConfig.theme || 'github',
+    showArea: widgetConfig.showArea || false,
+    showDots: widgetConfig.showDots || true,
+    height: widgetConfig.height || 180,
+    graphType: widgetConfig.graphType || 'line',
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || ''
+  }), [
+    username,
+    widgetConfig.theme,
     widgetConfig.showArea,
     widgetConfig.showDots,
     widgetConfig.height,
     widgetConfig.graphType,
+    widgetConfig.hideBorder,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle
+  ]);
+
+  const animatedProgressConfig = useMemo(() => ({
+    theme: widgetConfig.theme || 'default',
+    skills: widgetConfig.skills || [
+      { name: 'JavaScript', level: 90, color: '#f1e05a' },
+      { name: 'TypeScript', level: 85, color: '#3178c6' },
+      { name: 'React', level: 80, color: '#61dafb' }
+    ],
+    animationDuration: widgetConfig.animationDuration || 2000,
+    showProgressText: widgetConfig.showProgressText !== false,
+    progressBarHeight: widgetConfig.progressBarHeight || 20,
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || ''
+  }), [
+    widgetConfig.theme,
     widgetConfig.skills,
     widgetConfig.animationDuration,
     widgetConfig.showProgressText,
     widgetConfig.progressBarHeight,
-    widgetConfig.showPercentages,    widgetConfig.waveColor,
+    widgetConfig.hideBorder,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle
+  ]);
+
+  const typingAnimationConfig = useMemo(() => ({
+    theme: widgetConfig.theme || 'default',
+    text: widgetConfig.text || 'Hello, I am a developer!',
+    font: widgetConfig.font || 'monospace',
+    size: widgetConfig.size || 20,
+    color: widgetConfig.color || '#0066cc',
+    duration: widgetConfig.duration || 3000,
+    loop: widgetConfig.loop !== false,
+    cursor: widgetConfig.cursor !== false,
+    width: widgetConfig.width || 600,
+    height: 100,
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || ''
+  }), [
+    widgetConfig.theme,
+    widgetConfig.text,
+    widgetConfig.font,
+    widgetConfig.size,
+    widgetConfig.color,
+    widgetConfig.duration,
+    widgetConfig.loop,
+    widgetConfig.cursor,
+    widgetConfig.width,
+    widgetConfig.hideBorder,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle
+  ]);
+
+  const languageChartConfig = useMemo(() => ({
+    username: username,
+    theme: widgetConfig.theme || 'light',
+    showPercentages: widgetConfig.showPercentages !== false,
+    size: widgetConfig.cardWidth || 300,
+    minPercentage: 5,
+    maxLanguages: 8,
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || ''
+  }), [
+    username,
+    widgetConfig.theme,
+    widgetConfig.showPercentages,
+    widgetConfig.cardWidth,
+    widgetConfig.hideBorder,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle
+  ]);
+
+  const waveAnimationConfig = useMemo(() => ({
+    username: username,
+    theme: widgetConfig.theme || 'light',
+    waveColor: widgetConfig.waveColor || '#0099ff',
+    waveSecondaryColor: widgetConfig.waveSecondaryColor || '#00ccff',
+    waveSpeed: widgetConfig.waveSpeed || 'medium',
+    waveCount: widgetConfig.waveCount || 3,
+    width: widgetConfig.width || 800,
+    height: widgetConfig.height || 200,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || ''
+  }), [
+    username,
+    widgetConfig.theme,
+    widgetConfig.waveColor,
     widgetConfig.waveSecondaryColor,
     widgetConfig.waveSpeed,
     widgetConfig.waveCount,
     widgetConfig.width,
+    widgetConfig.height,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle
+  ]);
+
+  const repoShowcaseConfig = useMemo(() => ({
+    username: username,
+    theme: widgetConfig.theme || 'default',    showcaseRepos: Array.isArray(widgetConfig.showcaseRepos) 
+      ? widgetConfig.showcaseRepos 
+      : typeof widgetConfig.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()
+        ? widgetConfig.showcaseRepos.split(',').map((repo: string) => repo.trim()).filter((repo: string) => repo.length > 0)
+        : [],
+    repoLayout: widgetConfig.repoLayout || 'single',
+    sortBy: widgetConfig.sortBy || 'stars',
+    repoLimit: widgetConfig.repoLimit || 6,
+    showStats: widgetConfig.showStats !== false,
+    showLanguage: widgetConfig.showLanguage !== false,
+    showDescription: widgetConfig.showDescription !== false,
+    showTopics: widgetConfig.showTopics !== false,
+    showLastUpdated: widgetConfig.showLastUpdated !== false,
+    repoCardWidth: widgetConfig.repoCardWidth || 400,
+    repoCardHeight: widgetConfig.repoCardHeight || 200,
+    hideBorder: widgetConfig.hideBorder || false,
+    hideTitle: widgetConfig.hideTitle || false,
+    customTitle: widgetConfig.customTitle || ''
+  }), [
+    username,
+    widgetConfig.theme,
     widgetConfig.showcaseRepos,
     widgetConfig.repoLayout,
     widgetConfig.sortBy,
@@ -215,8 +273,129 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig.showTopics,
     widgetConfig.showLastUpdated,
     widgetConfig.repoCardWidth,
-    widgetConfig.repoCardHeight
+    widgetConfig.repoCardHeight,
+    widgetConfig.hideBorder,
+    widgetConfig.hideTitle,
+    widgetConfig.customTitle
   ]);
+  // Create combined configs object for easy access
+  const memoizedConfigs = useMemo(() => ({
+    githubStats: githubStatsConfig,
+    topLanguages: topLanguagesConfig,
+    contributionGraph: contributionGraphConfig,
+    animatedProgress: animatedProgressConfig,
+    typingAnimation: typingAnimationConfig,
+    languageChart: languageChartConfig,
+    waveAnimation: waveAnimationConfig,
+    repoShowcase: repoShowcaseConfig
+  }), [
+    githubStatsConfig,
+    topLanguagesConfig,
+    contributionGraphConfig,
+    animatedProgressConfig,
+    typingAnimationConfig,
+    languageChartConfig,
+    waveAnimationConfig,
+    repoShowcaseConfig
+  ]);
+
+  // Widget error boundary component
+  const WidgetErrorBoundary: React.FC<{ children: React.ReactNode; widgetId: string }> = ({ children, widgetId }) => {
+    try {
+      return <>{children}</>;
+    } catch (error) {
+      console.error(`Error rendering widget ${widgetId}:`, error);
+      return (
+        <div className="p-4 text-center text-red-500 bg-red-50 dark:bg-red-900/20 rounded-md">
+          <p>Error loading {widgetId} widget</p>
+        </div>
+      );
+    }
+  };
+  // Render widget with SSR protection
+  const renderWidget = (block: Block) => {
+    if (!isMounted) {
+      return (
+        <div className="p-4 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-md">
+          <p>Loading widget...</p>
+        </div>
+      );
+    }
+
+    // Type guard to ensure this is a widget block
+    if (block.type !== 'widget') {
+      return null;
+    }
+
+    const widgetBlock = block as WidgetBlock;
+
+    return (
+      <WidgetErrorBoundary widgetId={widgetBlock.widgetId}>
+        {widgetBlock.widgetId === 'github-stats' && (
+          <GitHubStatsWidget 
+            config={memoizedConfigs.githubStats}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'social-stats' && (
+          <EnhancedSocialStatsWidget 
+            socials={socials}
+            theme={widgetConfig.theme || 'default'}
+            layout={widgetConfig.layout === 'compact' ? 'compact' : 'default'}
+            showAvatar={true}
+            showBio={false}
+            hideStats={[]}
+            customTitle={widgetConfig.customTitle}
+            enableAnimations={true}
+            showBorder={!widgetConfig.hideBorder}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'top-languages' && (
+          <TopLanguagesWidget
+            config={memoizedConfigs.topLanguages}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'contribution-graph' && (
+          <ContributionGraphWidget
+            config={memoizedConfigs.contributionGraph}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'wave-animation' && (
+          <WaveAnimationWidget
+            config={memoizedConfigs.waveAnimation}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'language-chart' && (
+          <LanguageChartWidget
+            config={memoizedConfigs.languageChart}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'repo-showcase' && (
+          <RepositoryShowcaseWidget
+            config={memoizedConfigs.repoShowcase}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'animated-progress' && (
+          <AnimatedProgressWidget
+            config={memoizedConfigs.animatedProgress}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+        {widgetBlock.widgetId === 'typing-animation' && (
+          <TypingAnimationWidget
+            config={memoizedConfigs.typingAnimation}
+            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+          />
+        )}
+      </WidgetErrorBoundary>
+    );
+  };
 
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
@@ -364,72 +543,28 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                           </button>
                         </div>
                       </div>
-                      
-                      {/* Block preview - you may need to create separate components for each block type for better maintainability */}
+                        {/* Block preview - you may need to create separate components for each block type for better maintainability */}
                       {block.type === 'widget' && (
-                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">                            {block.widgetId === 'github-stats' ? 'GitHub Stats Widget' : 
-                             block.widgetId === 'top-languages' ? 'Top Languages Widget' : 
-                             block.widgetId === 'contribution-graph' ? 'Contribution Graph Widget' :
-                             block.widgetId === 'wave-animation' ? 'Wave Animation Widget' :
-                             block.widgetId === 'language-chart' ? 'Language Chart Widget' :
-                             block.widgetId === 'repo-showcase' ? 'Repository Showcase Widget' :
-                             block.widgetId === 'animated-progress' ? 'Animated Progress Widget' :
-                             block.widgetId === 'typing-animation' ? 'Typing Animation Widget' :
-                             'Social Stats Widget'}
+                        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            {(() => {
+                              const widgetBlock = block as WidgetBlock;
+                              switch (widgetBlock.widgetId) {
+                                case 'github-stats': return 'GitHub Stats Widget';
+                                case 'top-languages': return 'Top Languages Widget';
+                                case 'contribution-graph': return 'Contribution Graph Widget';
+                                case 'wave-animation': return 'Wave Animation Widget';
+                                case 'language-chart': return 'Language Chart Widget';
+                                case 'repo-showcase': return 'Repository Showcase Widget';
+                                case 'animated-progress': return 'Animated Progress Widget';
+                                case 'typing-animation': return 'Typing Animation Widget';
+                                case 'social-stats': return 'Social Stats Widget';
+                                default: return 'Unknown Widget';
+                              }
+                            })()}
                           </div>
-                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">                            {block.widgetId === 'github-stats' && (                              <GitHubStatsWidget 
-                                config={memoizedConfigs.githubStats}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}{block.widgetId === 'social-stats' && (
-                              <EnhancedSocialStatsWidget 
-                                socials={socials}
-                                theme={widgetConfig.theme || 'default'}
-                                layout={widgetConfig.layout === 'compact' ? 'compact' : 'default'}
-                                showAvatar={true}
-                                showBio={false}
-                                hideStats={[]}
-                                customTitle={widgetConfig.customTitle}
-                                enableAnimations={true}
-                                showBorder={!widgetConfig.hideBorder}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}                            {block.widgetId === 'top-languages' && (
-                              <TopLanguagesWidget
-                                config={memoizedConfigs.topLanguages}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}                            {block.widgetId === 'contribution-graph' && (
-                              <ContributionGraphWidget
-                                config={memoizedConfigs.contributionGraph}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}{block.widgetId === 'wave-animation' && (
-                              <WaveAnimationWidget
-                                config={memoizedConfigs.waveAnimation}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}{block.widgetId === 'language-chart' && (
-                              <LanguageChartWidget
-                                config={memoizedConfigs.languageChart}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}                            {block.widgetId === 'repo-showcase' && (
-                              <RepositoryShowcaseWidget
-                                config={memoizedConfigs.repoShowcase}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}                            {block.widgetId === 'animated-progress' && (
-                              <AnimatedProgressWidget
-                                config={memoizedConfigs.animatedProgress}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}                            {block.widgetId === 'typing-animation' && (
-                              <TypingAnimationWidget
-                                config={memoizedConfigs.typingAnimation}
-                                onMarkdownGenerated={handleMarkdownGenerated(block.id)}
-                              />
-                            )}
+                          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">
+                            {renderWidget(block)}
                           </div>
                         </div>
                       )}
