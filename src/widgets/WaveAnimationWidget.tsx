@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
 export interface WaveAnimationWidgetConfig extends BaseWidgetConfig {
@@ -30,16 +31,17 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
   const [svgUrl, setSvgUrl] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
   // Set default configuration values
   const effectiveConfig = {
-    waveColor: config.waveColor || '#4F46E5',
-    waveSecondaryColor: config.waveSecondaryColor || '#7C3AED',
+    waveColor: config.waveColor || '#0099ff',
+    waveSecondaryColor: config.waveSecondaryColor || '#00ccff',
     waveSpeed: config.waveSpeed || 'medium',
     waveCount: config.waveCount || 3,
     width: config.width || 800,
     height: config.height || 200,
     theme: config.theme || 'light',
+    hideTitle: config.hideTitle || false,
+    customTitle: config.customTitle || '',
     ...config
   };
 
@@ -47,18 +49,27 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
   useEffect(() => {
     const generateSvgUrl = () => {
       setLoading(true);
-      setError(null);
-
-      try {
+      setError(null);      try {
+        // Convert speed string to numeric value
+        const speedMap = {
+          'slow': 0.5,
+          'medium': 1.0,
+          'fast': 2.0
+        };
+        
         const params = new URLSearchParams({
           color: effectiveConfig.waveColor,
-          secondaryColor: effectiveConfig.waveSecondaryColor,
-          speed: effectiveConfig.waveSpeed,
-          count: effectiveConfig.waveCount.toString(),
+          waves: effectiveConfig.waveCount.toString(),
+          speed: speedMap[effectiveConfig.waveSpeed].toString(),
           width: effectiveConfig.width.toString(),
           height: effectiveConfig.height.toString(),
           theme: effectiveConfig.theme
         });
+
+        // Add secondary color if provided and different from primary
+        if (effectiveConfig.waveSecondaryColor && effectiveConfig.waveSecondaryColor !== effectiveConfig.waveColor) {
+          params.set('secondaryColor', effectiveConfig.waveSecondaryColor);
+        }
 
         const url = `/api/wave-animation?${params.toString()}`;
         setSvgUrl(url);
@@ -74,9 +85,7 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
       } finally {
         setLoading(false);
       }
-    };
-
-    generateSvgUrl();
+    };    generateSvgUrl();
   }, [
     effectiveConfig.waveColor,
     effectiveConfig.waveSecondaryColor,
@@ -84,7 +93,8 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
     effectiveConfig.waveCount,
     effectiveConfig.width,
     effectiveConfig.height,
-    effectiveConfig.theme
+    effectiveConfig.theme,
+    onMarkdownGenerated
   ]);
 
   // Generate markdown for the widget
@@ -129,19 +139,18 @@ const WaveAnimationWidget: React.FC<WaveAnimationWidgetProps> & MarkdownExportab
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
           {effectiveConfig.customTitle || 'Wave Animation'}
         </h3>
-      )}
-
-      {/* Wave Animation Preview */}
+      )}      {/* Wave Animation Preview */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
         {svgUrl && (
-          <img
+          <Image
             src={svgUrl}
             alt="Wave Animation"
             width={effectiveConfig.width}
             height={effectiveConfig.height}
             className="w-full h-auto"
             style={{ maxWidth: '100%', height: 'auto' }}
-          />        )}
+          />
+        )}
       </div>
     </div>
   );

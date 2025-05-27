@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  
-  // Extract parameters with defaults
+    // Extract parameters with defaults
   const height = parseInt(searchParams.get('height') || '120');
   const width = parseInt(searchParams.get('width') || '800');
   const color = searchParams.get('color') || '#0066cc';
+  const secondaryColor = searchParams.get('secondaryColor');
   const backgroundColor = searchParams.get('backgroundColor') || 'transparent';
   const waves = parseInt(searchParams.get('waves') || '3');
   const speed = parseFloat(searchParams.get('speed') || '1');
@@ -41,9 +41,18 @@ export async function GET(request: NextRequest) {
       background: 'radial-gradient(circle, #0f172a 0%, #1e293b 100%)'
     }
   };
+    const selectedTheme = themes[theme as keyof typeof themes] || themes.default;
   
-  const selectedTheme = themes[theme as keyof typeof themes] || themes.default;
-  const waveColors = selectedTheme.colors;
+  // Use custom colors if provided, otherwise fall back to theme colors
+  let waveColors = selectedTheme.colors;
+  if (color && color !== '#0066cc') {
+    if (secondaryColor) {
+      waveColors = [color, secondaryColor];
+    } else {
+      waveColors = [color];
+    }
+  }
+  
   const bgColor = backgroundColor !== 'transparent' ? backgroundColor : selectedTheme.background;
   
   // Generate wave paths

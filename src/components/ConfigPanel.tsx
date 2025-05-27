@@ -553,6 +553,18 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         { value: '3', label: '3 Waves' },
         { value: '4', label: '4 Waves' },
         { value: '5', label: '5 Waves' }
+      ]    },
+    {
+      id: 'width',
+      label: 'Wave Width',
+      type: 'select',
+      defaultValue: 800,
+      options: [
+        { value: '400', label: '400px' },
+        { value: '600', label: '600px' },
+        { value: '800', label: '800px' },
+        { value: '1000', label: '1000px' },
+        { value: '1200', label: '1200px' }
       ]
     },
     {
@@ -566,7 +578,8 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         { value: '200', label: '200px' },
         { value: '250', label: '250px' },
         { value: '300', label: '300px' }
-      ]    }
+      ]
+    }
   ];
 
   // Animated Progress specific options
