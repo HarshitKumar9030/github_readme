@@ -63,233 +63,216 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
         handleWidgetMarkdownGenerated(blockId, md);
       }
     };
-  }, [handleWidgetMarkdownGenerated, isMounted]);
-
-  const githubStatsConfig = useMemo(() => ({
+  }, [handleWidgetMarkdownGenerated, isMounted]);  const githubStatsConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'light',
+    theme: widgetConfig?.theme || 'light',
     layoutType: 'full' as const,
-    layoutStyle: widgetConfig.layoutStyle || 'side-by-side',
+    layoutStyle: widgetConfig?.layoutStyle || 'side-by-side',
     showTrophies: true,
     showStreaks: true,
     showLanguages: true,
     showStats: true,
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    includeAllCommits: widgetConfig.includeAllCommits || false,
-    includePrivate: widgetConfig.includePrivate || false,
-    compactMode: widgetConfig.layoutCompact || false,
-    hideRank: widgetConfig.hideRank || false,
-    trophyTheme: widgetConfig.trophyTheme || widgetConfig.theme || 'flat',
-    customTitle: widgetConfig.customTitle
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    includeAllCommits: widgetConfig?.includeAllCommits || false,
+    includePrivate: widgetConfig?.includePrivate || false,
+    compactMode: widgetConfig?.layoutCompact || false,
+    hideRank: widgetConfig?.hideRank || false,
+    trophyTheme: widgetConfig?.trophyTheme || widgetConfig?.theme || 'flat',
+    customTitle: widgetConfig?.customTitle
   }), [
     username,
-    widgetConfig.theme,
-    widgetConfig.layoutStyle,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.includeAllCommits,
-    widgetConfig.includePrivate,
-    widgetConfig.layoutCompact,
-    widgetConfig.hideRank,
-    widgetConfig.trophyTheme,
-    widgetConfig.customTitle
+    widgetConfig?.theme,
+    widgetConfig?.layoutStyle,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.includeAllCommits,
+    widgetConfig?.includePrivate,
+    widgetConfig?.layoutCompact,
+    widgetConfig?.hideRank,
+    widgetConfig?.trophyTheme,
+    widgetConfig?.customTitle
   ]);
-
-  // Debug to check if username is being passed correctly
-  console.log('BuilderArea: GitHub Stats Config', {
-    username,
-    showStats: githubStatsConfig.showStats,
-    showTrophies: githubStatsConfig.showTrophies,
-    showStreaks: githubStatsConfig.showStreaks,
-    layoutStyle: githubStatsConfig.layoutStyle
-  });
 
   const topLanguagesConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'light',
-    layout: widgetConfig.layout || 'compact',
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || '',
-    excludeRepos: widgetConfig.excludeRepos || '',
-    excludeLangs: widgetConfig.excludeLangs || '',
-    cardWidth: widgetConfig.cardWidth || 495,
+    theme: widgetConfig?.theme || 'light',
+    layout: widgetConfig?.layout || 'compact',
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || '',
+    excludeRepos: widgetConfig?.excludeRepos || '',
+    excludeLangs: widgetConfig?.excludeLangs || '',
+    cardWidth: widgetConfig?.cardWidth || 495,
   }), [
     username,
-    widgetConfig.theme,
-    widgetConfig.layout,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle,
-    widgetConfig.excludeRepos,
-    widgetConfig.excludeLangs,
-    widgetConfig.cardWidth
+    widgetConfig?.theme,
+    widgetConfig?.layout,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle,
+    widgetConfig?.excludeRepos,
+    widgetConfig?.excludeLangs,
+    widgetConfig?.cardWidth
   ]);
-
   const contributionGraphConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'github',
-    showArea: widgetConfig.showArea || false,
-    showDots: widgetConfig.showDots || true,
-    height: widgetConfig.height || 180,
-    graphType: widgetConfig.graphType || 'line',
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || ''
+    theme: widgetConfig?.theme || 'github',
+    showArea: widgetConfig?.showArea || false,
+    showDots: widgetConfig?.showDots || true,
+    height: widgetConfig?.height || 180,
+    graphType: widgetConfig?.graphType || 'line',
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || ''
   }), [
     username,
-    widgetConfig.theme,
-    widgetConfig.showArea,
-    widgetConfig.showDots,
-    widgetConfig.height,
-    widgetConfig.graphType,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle
+    widgetConfig?.theme,
+    widgetConfig?.showArea,
+    widgetConfig?.showDots,
+    widgetConfig?.height,
+    widgetConfig?.graphType,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle
   ]);
-
   const animatedProgressConfig = useMemo(() => ({
-    theme: widgetConfig.theme || 'default',
-    skills: widgetConfig.skills || [
+    theme: widgetConfig?.theme || 'default',
+    skills: widgetConfig?.skills || [
       { name: 'JavaScript', level: 90, color: '#f1e05a' },
       { name: 'TypeScript', level: 85, color: '#3178c6' },
       { name: 'React', level: 80, color: '#61dafb' }
     ],
-    animationDuration: widgetConfig.animationDuration || 2000,
-    showProgressText: widgetConfig.showProgressText !== false,
-    progressBarHeight: widgetConfig.progressBarHeight || 20,
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || ''
+    animationDuration: widgetConfig?.animationDuration || 2000,
+    showProgressText: widgetConfig?.showProgressText !== false,
+    progressBarHeight: widgetConfig?.progressBarHeight || 20,
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || ''
   }), [
-    widgetConfig.theme,
-    widgetConfig.skills,
-    widgetConfig.animationDuration,
-    widgetConfig.showProgressText,
-    widgetConfig.progressBarHeight,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle
+    widgetConfig?.theme,
+    widgetConfig?.skills,
+    widgetConfig?.animationDuration,
+    widgetConfig?.showProgressText,
+    widgetConfig?.progressBarHeight,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle
   ]);
-
   const typingAnimationConfig = useMemo(() => ({
-    theme: widgetConfig.theme || 'default',
-    text: widgetConfig.text || 'Hello, I am a developer!',
-    font: widgetConfig.font || 'monospace',
-    size: widgetConfig.size || 20,
-    color: widgetConfig.color || '#0066cc',
-    duration: widgetConfig.duration || 3000,
-    loop: widgetConfig.loop !== false,
-    cursor: widgetConfig.cursor !== false,
-    width: widgetConfig.width || 600,
+    theme: widgetConfig?.theme || 'default',
+    text: widgetConfig?.text || 'Hello, I am a developer!',
+    font: widgetConfig?.font || 'monospace',
+    size: widgetConfig?.size || 20,
+    color: widgetConfig?.color || '#0066cc',
+    duration: widgetConfig?.duration || 3000,
+    loop: widgetConfig?.loop !== false,
+    cursor: widgetConfig?.cursor !== false,
+    width: widgetConfig?.width || 600,
     height: 100,
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || ''
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || ''
   }), [
-    widgetConfig.theme,
-    widgetConfig.text,
-    widgetConfig.font,
-    widgetConfig.size,
-    widgetConfig.color,
-    widgetConfig.duration,
-    widgetConfig.loop,
-    widgetConfig.cursor,
-    widgetConfig.width,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle
+    widgetConfig?.theme,
+    widgetConfig?.text,
+    widgetConfig?.font,
+    widgetConfig?.size,
+    widgetConfig?.color,
+    widgetConfig?.duration,
+    widgetConfig?.loop,
+    widgetConfig?.cursor,
+    widgetConfig?.width,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle
   ]);
-
   const languageChartConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'light',
-    showPercentages: widgetConfig.showPercentages !== false,
-    size: widgetConfig.cardWidth || 300,
+    theme: widgetConfig?.theme || 'light',
+    showPercentages: widgetConfig?.showPercentages !== false,
+    size: widgetConfig?.cardWidth || 300,
     minPercentage: 5,
     maxLanguages: 8,
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || ''
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || ''
   }), [
     username,
-    widgetConfig.theme,
-    widgetConfig.showPercentages,
-    widgetConfig.cardWidth,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle
+    widgetConfig?.theme,
+    widgetConfig?.showPercentages,
+    widgetConfig?.cardWidth,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle
   ]);
-
   const waveAnimationConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'light',
-    waveColor: widgetConfig.waveColor || '#0099ff',
-    waveSecondaryColor: widgetConfig.waveSecondaryColor || '#00ccff',
-    waveSpeed: widgetConfig.waveSpeed || 'medium',
-    waveCount: widgetConfig.waveCount || 3,
-    width: widgetConfig.width || 800,
-    height: widgetConfig.height || 200,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || ''
+    theme: widgetConfig?.theme || 'light',
+    waveColor: widgetConfig?.waveColor || '#0099ff',
+    waveSecondaryColor: widgetConfig?.waveSecondaryColor || '#00ccff',
+    waveSpeed: widgetConfig?.waveSpeed || 'medium',
+    waveCount: widgetConfig?.waveCount || 3,
+    width: widgetConfig?.width || 800,
+    height: widgetConfig?.height || 200,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || ''
   }), [
     username,
-    widgetConfig.theme,
-    widgetConfig.waveColor,
-    widgetConfig.waveSecondaryColor,
-    widgetConfig.waveSpeed,
-    widgetConfig.waveCount,
-    widgetConfig.width,
-    widgetConfig.height,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle
-  ]);
-  // Memoize repository array parsing to prevent recreation on every render
+    widgetConfig?.theme,
+    widgetConfig?.waveColor,
+    widgetConfig?.waveSecondaryColor,
+    widgetConfig?.waveSpeed,
+    widgetConfig?.waveCount,
+    widgetConfig?.width,
+    widgetConfig?.height,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle
+  ]);  // Memoize repository array parsing to prevent recreation on every render
   const showcaseReposList = useMemo(() => {
-    if (Array.isArray(widgetConfig.showcaseRepos)) {
+    if (Array.isArray(widgetConfig?.showcaseRepos)) {
       return widgetConfig.showcaseRepos;
     }
-    if (typeof widgetConfig.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()) {
+    if (typeof widgetConfig?.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()) {
       return widgetConfig.showcaseRepos.split(',').map((repo: string) => repo.trim()).filter((repo: string) => repo.length > 0);
     }
     return [];
-  }, [widgetConfig.showcaseRepos]);
+  }, [widgetConfig?.showcaseRepos]);
 
   const repoShowcaseConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'default',
+    theme: widgetConfig?.theme || 'default',
     showcaseRepos: showcaseReposList,
-    repoLayout: widgetConfig.repoLayout || 'single',
-    sortBy: widgetConfig.sortBy || 'stars',
-    repoLimit: widgetConfig.repoLimit || 6,
-    showStats: widgetConfig.showStats !== false,
-    showLanguage: widgetConfig.showLanguage !== false,
-    showDescription: widgetConfig.showDescription !== false,
-    showTopics: widgetConfig.showTopics !== false,
-    showLastUpdated: widgetConfig.showLastUpdated !== false,
-    repoCardWidth: widgetConfig.repoCardWidth || 400,
-    repoCardHeight: widgetConfig.repoCardHeight || 200,
-    hideBorder: widgetConfig.hideBorder || false,
-    hideTitle: widgetConfig.hideTitle || false,
-    customTitle: widgetConfig.customTitle || ''
+    repoLayout: widgetConfig?.repoLayout || 'single',
+    sortBy: widgetConfig?.sortBy || 'stars',
+    repoLimit: widgetConfig?.repoLimit || 6,
+    showStats: widgetConfig?.showStats !== false,
+    showLanguage: widgetConfig?.showLanguage !== false,
+    showDescription: widgetConfig?.showDescription !== false,
+    showTopics: widgetConfig?.showTopics !== false,
+    showLastUpdated: widgetConfig?.showLastUpdated !== false,
+    repoCardWidth: widgetConfig?.repoCardWidth || 400,
+    repoCardHeight: widgetConfig?.repoCardHeight || 200,
+    hideBorder: widgetConfig?.hideBorder || false,
+    hideTitle: widgetConfig?.hideTitle || false,
+    customTitle: widgetConfig?.customTitle || ''
   }), [
     username,
-    widgetConfig.theme,
+    widgetConfig?.theme,
     showcaseReposList,
-    widgetConfig.repoLayout,
-    widgetConfig.sortBy,
-    widgetConfig.repoLimit,
-    widgetConfig.showStats,
-    widgetConfig.showLanguage,
-    widgetConfig.showDescription,
-    widgetConfig.showTopics,
-    widgetConfig.showLastUpdated,
-    widgetConfig.repoCardWidth,
-    widgetConfig.repoCardHeight,
-    widgetConfig.hideBorder,
-    widgetConfig.hideTitle,
-    widgetConfig.customTitle
+    widgetConfig?.repoLayout,
+    widgetConfig?.sortBy,
+    widgetConfig?.repoLimit,
+    widgetConfig?.showStats,
+    widgetConfig?.showLanguage,
+    widgetConfig?.showDescription,
+    widgetConfig?.showTopics,
+    widgetConfig?.showLastUpdated,
+    widgetConfig?.repoCardWidth,
+    widgetConfig?.repoCardHeight,
+    widgetConfig?.hideBorder,
+    widgetConfig?.hideTitle,
+    widgetConfig?.customTitle
   ]);
 
   const memoizedConfigs = useMemo(() => ({
@@ -347,18 +330,17 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
             config={memoizedConfigs.githubStats}
             onMarkdownGenerated={handleMarkdownGenerated(block.id)}
           />
-        )}
-        {widgetBlock.widgetId === 'social-stats' && (
+        )}        {widgetBlock.widgetId === 'social-stats' && (
           <EnhancedSocialStatsWidget 
             socials={socials}
-            theme={widgetConfig.theme || 'default'}
-            layout={widgetConfig.layout === 'compact' ? 'compact' : 'default'}
+            theme={widgetConfig?.theme || 'default'}
+            layout={widgetConfig?.layout === 'compact' ? 'compact' : 'default'}
             showAvatar={true}
             showBio={false}
             hideStats={[]}
-            customTitle={widgetConfig.customTitle}
+            customTitle={widgetConfig?.customTitle}
             enableAnimations={true}
-            showBorder={!widgetConfig.hideBorder}
+            showBorder={!widgetConfig?.hideBorder}
             onMarkdownGenerated={handleMarkdownGenerated(block.id)}
           />
         )}
@@ -406,7 +388,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
         )}
       </WidgetErrorBoundary>
     );
-  }, [isMounted, memoizedConfigs, handleMarkdownGenerated, socials, widgetConfig.theme, widgetConfig.layout, widgetConfig.customTitle, widgetConfig.hideBorder]);
+  }, [isMounted, memoizedConfigs, handleMarkdownGenerated, socials, widgetConfig?.theme, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);
 
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
