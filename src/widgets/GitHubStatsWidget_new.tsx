@@ -429,6 +429,6 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
 GitHubStatsWidget.generateMarkdown = function() {
   // This is a placeholder - the actual component instance will generate markdown
   return '';
-o};
+};
 
 export default GitHubStatsWidget;

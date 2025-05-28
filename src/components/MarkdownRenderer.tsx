@@ -299,11 +299,15 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   // Handle Blob objects by converting to string or skipping
                   const srcString = typeof src === 'string' ? src : '';
                   if (!srcString) return null;
-                  
-                  const isAbsoluteUrl = srcString.startsWith('http://') || srcString.startsWith('https://');
+                    const isAbsoluteUrl = srcString.startsWith('http://') || srcString.startsWith('https://');
                   const isDataUrl = srcString.startsWith('data:');
                   const isGitHubStats = srcString.includes('/api/github-stats-svg') || 
                                      srcString.includes('github-readme-stats');
+                  const isRepoShowcase = srcString.includes('/api/repo-showcase');
+                  const isTypingAnimation = srcString.includes('/api/typing-animation');
+                  const isWaveAnimation = srcString.includes('/api/wave-animation');
+                  const isLanguageChart = srcString.includes('/api/language-chart');
+                  const isAnimatedProgress = srcString.includes('/api/animated-progress');
                   
                   const isBadge = 
                     srcString.includes('img.shields.io') ||
@@ -312,23 +316,88 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     (srcString.includes('github.com') && srcString.includes('badge')) ||
                     (alt && ['badge', 'shield', 'stars', 'license', 'version', 'build'].some(term => 
                       alt.toLowerCase().includes(term)
-                    ));
-                    // GitHub-style image handling
+                    ));                    // GitHub-style image handling
                   const imageProps = {
                     src: srcString,
                     alt: alt || '',
                     title,
-                    unoptimized: !!(isAbsoluteUrl || isDataUrl || isGitHubStats || isBadge), // Ensure boolean with double negation
-                    className: `${isBadge ? '' : 'rounded-md'} max-w-full h-auto ${isGitHubStats && !isBadge ? 'border border-gray-200 dark:border-gray-700' : ''}`,
-                  };
-
-                  // Determine dimensions based on image type
+                    unoptimized: !!(isAbsoluteUrl || isDataUrl || isGitHubStats || isBadge || isRepoShowcase || isTypingAnimation || isWaveAnimation || isLanguageChart || isAnimatedProgress), // Ensure boolean with double negation
+                    className: `${isBadge ? '' : 'rounded-md'} max-w-full h-auto ${(isGitHubStats || isRepoShowcase) && !isBadge ? 'border border-gray-200 dark:border-gray-700' : ''}`,
+                  };                  // Determine dimensions based on image type
                   let dimensions = { width: 800, height: 400 };
                   if (isGitHubStats) {
                     if (isBadge) {
                       dimensions = { width: 150, height: 28 };
                     } else if (srcString.includes('github-readme-stats') || srcString.includes('/api/github-stats-svg')) {
                       dimensions = { width: 495, height: 195 };
+                    }
+                  } else if (isRepoShowcase) {
+                    // Repository showcase dimensions - extract from URL params if possible
+                    try {
+                      const url = new URL(srcString, window.location.origin);
+                      const cardWidth = parseInt(url.searchParams.get('cardWidth') || '400');
+                      const cardHeight = parseInt(url.searchParams.get('cardHeight') || '200');
+                      const layout = url.searchParams.get('layout') || 'single';
+                      
+                      let displayWidth = cardWidth;
+                      let displayHeight = cardHeight;
+                      
+                      switch (layout) {
+                        case 'grid-2x1':
+                          displayWidth = cardWidth * 2 + 10;
+                          break;
+                        case 'grid-2x2':
+                          displayWidth = cardWidth * 2 + 10;
+                          displayHeight = cardHeight * 2 + 10;
+                          break;
+                        case 'grid-3x1':
+                          displayWidth = cardWidth * 3 + 20;
+                          break;
+                        case 'list':
+                          const repos = url.searchParams.get('repos')?.split(',') || [];
+                          const repoLimit = parseInt(url.searchParams.get('repoLimit') || '6');
+                          displayHeight = cardHeight * Math.min(repos.length, repoLimit) + (Math.min(repos.length, repoLimit) - 1) * 10;
+                          break;
+                      }
+                      
+                      dimensions = { width: displayWidth, height: displayHeight };
+                    } catch {
+                      dimensions = { width: 400, height: 200 }; // Fallback
+                    }
+                  } else if (isTypingAnimation) {
+                    try {
+                      const url = new URL(srcString, window.location.origin);
+                      const width = parseInt(url.searchParams.get('width') || '600');
+                      const height = parseInt(url.searchParams.get('height') || '100');
+                      dimensions = { width, height };
+                    } catch {
+                      dimensions = { width: 600, height: 100 };
+                    }
+                  } else if (isWaveAnimation) {
+                    try {
+                      const url = new URL(srcString, window.location.origin);
+                      const width = parseInt(url.searchParams.get('width') || '800');
+                      const height = parseInt(url.searchParams.get('height') || '200');
+                      dimensions = { width, height };
+                    } catch {
+                      dimensions = { width: 800, height: 200 };
+                    }
+                  } else if (isLanguageChart) {
+                    try {
+                      const url = new URL(srcString, window.location.origin);
+                      const size = parseInt(url.searchParams.get('size') || '300');
+                      dimensions = { width: size, height: size };
+                    } catch {
+                      dimensions = { width: 300, height: 300 };
+                    }
+                  } else if (isAnimatedProgress) {
+                    try {
+                      const url = new URL(srcString, window.location.origin);
+                      const width = parseInt(url.searchParams.get('width') || '500');
+                      const height = parseInt(url.searchParams.get('height') || '300');
+                      dimensions = { width, height };
+                    } catch {
+                      dimensions = { width: 500, height: 300 };
                     }
                   } else if (isBadge) {
                     // Standard badges have these dimensions

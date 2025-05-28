@@ -55,7 +55,11 @@ export const safeStringify = (obj: any): string => {
 export const generateCacheKey = (widgetId: string, config: any): string => {
   try {
     const configString = safeStringify(config);
-    return `${widgetId}-${btoa(configString).slice(0, 32)}`;
+    // Use a fallback for SSR when btoa is not available
+    const hash = typeof window !== 'undefined' && typeof btoa !== 'undefined'
+      ? btoa(configString).slice(0, 32)
+      : configString.slice(0, 32);
+    return `${widgetId}-${hash}`;
   } catch {
     return `${widgetId}-${Date.now()}`;
   }
@@ -63,15 +67,25 @@ export const generateCacheKey = (widgetId: string, config: any): string => {
 
 // Validate URL parameters
 export const buildUrl = (baseUrl: string, params: Record<string, any>): string => {
-  const url = new URL(baseUrl, window.location.origin);
-  
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== null && value !== undefined && value !== '') {
-      url.searchParams.set(key, String(value));
-    }
-  });
-  
-  return url.toString();
+  try {
+    // For external URLs, use them directly instead of relative to current origin
+    const url = baseUrl.startsWith('http') 
+      ? new URL(baseUrl) 
+      : typeof window !== 'undefined' 
+        ? new URL(baseUrl, window.location.origin)
+        : new URL(baseUrl, 'https://localhost:3000'); // fallback for SSR
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
+        url.searchParams.set(key, String(value));
+      }
+    });
+    
+    return url.toString();
+  } catch (error) {
+    console.error('Error building URL:', error);
+    return baseUrl;
+  }
 };
 
 // Error message formatter
@@ -157,18 +171,40 @@ export const memoize = <T extends (...args: any[]) => any>(
 
 // Common widget URL generators
 export const createGitHubStatsUrl = (username: string, config: any): string => {
-  const params = {
+  const params: Record<string, any> = {
     username,
-    theme: config.theme || 'default',
-    show_icons: config.showIcons !== false,
-    include_all_commits: config.includeAllCommits || false,
-    hide_border: config.hideBorder || false,
-    hide_title: config.hideTitle || false,
-    hide_rank: config.hideRank || false,
-    disable_animations: false
   };
   
-  return buildUrl('/api/github-stats', params);
+  // Only add parameters if they have valid values
+  if (config.theme && config.theme !== 'default') {
+    params.theme = config.theme;
+  }
+  
+  if (config.showIcons !== false) {
+    params.show_icons = 'true';
+  }
+  
+  if (config.includeAllCommits) {
+    params.include_all_commits = 'true';
+  }
+  
+  if (config.includePrivate) {
+    params.count_private = 'true';
+  }
+  
+  if (config.hideBorder) {
+    params.hide_border = 'true';
+  }
+  
+  if (config.hideTitle) {
+    params.hide_title = 'true';
+  }
+  
+  if (config.hideRank) {
+    params.hide_rank = 'true';
+  }
+  
+  return buildUrl('https://github-readme-stats.vercel.app/api', params);
 };
 
 export const createLanguagesUrl = (username: string, config: any): string => {
@@ -182,29 +218,47 @@ export const createLanguagesUrl = (username: string, config: any): string => {
     langs_count: config.languagesCount || 8
   };
   
-  return buildUrl('/api/top-languages', params);
+  return buildUrl('https://github-readme-stats.vercel.app/api/top-langs', params);
 };
 
 export const createStreakUrl = (username: string, config: any): string => {
-  const params = {
+  const params: Record<string, any> = {
     user: username,
-    theme: config.streakTheme || config.theme || 'default',
-    hide_border: config.hideBorder || false,
-    disable_animations: false
   };
+  
+  if (config.streakTheme && config.streakTheme !== 'default') {
+    params.theme = config.streakTheme;
+  } else if (config.theme && config.theme !== 'default') {
+    params.theme = config.theme;
+  }
+  
+  if (config.hideBorder) {
+    params.hide_border = 'true';
+  }
   
   return buildUrl('https://github-readme-streak-stats.herokuapp.com', params);
 };
 
 export const createTrophyUrl = (username: string, config: any): string => {
-  const params = {
+  const params: Record<string, any> = {
     username,
-    theme: config.trophyTheme || config.theme || 'flat',
-    column: config.trophyColumns || 6,
-    margin_w: 15,
-    margin_h: 15,
-    no_frame: config.hideBorder || false
   };
+  
+  if (config.trophyTheme && config.trophyTheme !== 'flat') {
+    params.theme = config.trophyTheme;
+  } else if (config.theme && config.theme !== 'default') {
+    params.theme = config.theme;
+  } else {
+    params.theme = 'flat';
+  }
+  
+  if (config.trophyColumns) {
+    params.column = config.trophyColumns;
+  }
+  
+  if (config.hideBorder) {
+    params.no_frame = 'true';
+  }
   
   return buildUrl('https://github-profile-trophy.vercel.app', params);
 };

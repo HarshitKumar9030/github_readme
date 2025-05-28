@@ -144,9 +144,8 @@ export default function CreatePage() {
   const [showMobileWarning, setShowMobileWarning] = useState(true);
   const [activeTab, setActiveTab] = useState<
     "blocks" | "templates" | "social" | "settings"
-  >("blocks");
-  const [projectName, setProjectName] = useState<string>("My README");
-  const [username, setUsername] = useState<string>("");
+  >("blocks");  const [projectName, setProjectName] = useState<string>("My README");
+  const [username, setUsername] = useState<string>("octocat"); // Default GitHub username for demo
   const { theme, setTheme } = useTheme();
   const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);

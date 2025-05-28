@@ -57,13 +57,13 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);  
-  const handleMarkdownGenerated = useCallback((blockId: string) => {
+  }, []);    const handleMarkdownGenerated = useCallback((blockId: string) => {
     return (md: string) => {
       if (isMounted && typeof window !== 'undefined' && blockId && handleWidgetMarkdownGenerated) {
         handleWidgetMarkdownGenerated(blockId, md);
       }
-    };  }, [handleWidgetMarkdownGenerated, isMounted]);
+    };
+  }, [handleWidgetMarkdownGenerated, isMounted]);
 
   const githubStatsConfig = useMemo(() => ({
     username: username,
@@ -95,6 +95,15 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig.trophyTheme,
     widgetConfig.customTitle
   ]);
+
+  // Debug to check if username is being passed correctly
+  console.log('BuilderArea: GitHub Stats Config', {
+    username,
+    showStats: githubStatsConfig.showStats,
+    showTrophies: githubStatsConfig.showTrophies,
+    showStreaks: githubStatsConfig.showStreaks,
+    layoutStyle: githubStatsConfig.layoutStyle
+  });
 
   const topLanguagesConfig = useMemo(() => ({
     username: username,
@@ -236,14 +245,21 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig.hideTitle,
     widgetConfig.customTitle
   ]);
+  // Memoize repository array parsing to prevent recreation on every render
+  const showcaseReposList = useMemo(() => {
+    if (Array.isArray(widgetConfig.showcaseRepos)) {
+      return widgetConfig.showcaseRepos;
+    }
+    if (typeof widgetConfig.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()) {
+      return widgetConfig.showcaseRepos.split(',').map((repo: string) => repo.trim()).filter((repo: string) => repo.length > 0);
+    }
+    return [];
+  }, [widgetConfig.showcaseRepos]);
 
   const repoShowcaseConfig = useMemo(() => ({
     username: username,
-    theme: widgetConfig.theme || 'default',    showcaseRepos: Array.isArray(widgetConfig.showcaseRepos) 
-      ? widgetConfig.showcaseRepos 
-      : typeof widgetConfig.showcaseRepos === 'string' && widgetConfig.showcaseRepos.trim()
-        ? widgetConfig.showcaseRepos.split(',').map((repo: string) => repo.trim()).filter((repo: string) => repo.length > 0)
-        : [],
+    theme: widgetConfig.theme || 'default',
+    showcaseRepos: showcaseReposList,
     repoLayout: widgetConfig.repoLayout || 'single',
     sortBy: widgetConfig.sortBy || 'stars',
     repoLimit: widgetConfig.repoLimit || 6,
@@ -260,7 +276,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   }), [
     username,
     widgetConfig.theme,
-    widgetConfig.showcaseRepos,
+    showcaseReposList,
     widgetConfig.repoLayout,
     widgetConfig.sortBy,
     widgetConfig.repoLimit,
@@ -309,8 +325,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
       );
     }
   };
-
-  const renderWidget = (block: Block) => {
+  const renderWidget = useCallback((block: Block) => {
     if (!isMounted) {
       return (
         <div className="p-4 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-md">
@@ -391,7 +406,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
         )}
       </WidgetErrorBoundary>
     );
-  };
+  }, [isMounted, memoizedConfigs, handleMarkdownGenerated, socials, widgetConfig.theme, widgetConfig.layout, widgetConfig.customTitle, widgetConfig.hideBorder]);
 
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
@@ -587,4 +602,4 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   );
 };
 
-export default BuilderArea;
+export default React.memo(BuilderArea);

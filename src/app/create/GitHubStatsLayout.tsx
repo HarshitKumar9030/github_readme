@@ -44,8 +44,7 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
     }
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&${params.toString()}`;
   };
-  // No trophy or streak functions needed
-  // Generate markdown based on selected arrangement
+  // No trophy or streak functions needed  // Generate markdown based on selected arrangement
   const generateMarkdown = () => {
     let markdown = '';
     
@@ -82,7 +81,9 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 
 </div>`;
         break;
-        case 'statsLanguages':        // Stat card on top, languages below in a table layout
+        
+      case 'statsLanguages':
+        // Stat card on top, languages below in a table layout
         markdown = `<div align="center">
 
 ![GitHub Stats](${generateStatsUrl()})
@@ -104,7 +105,8 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 
 </div>`;
         break;
-        case 'allWidgets':       
+        
+      case 'allWidgets':       
         markdown = `<div align="center">
 
 <table>
@@ -128,6 +130,16 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
 </td>
 </tr>
 </table>
+
+</div>`;
+        break;
+        
+      default:
+        markdown = `<div align="center">
+
+![GitHub Stats](${generateStatsUrl()})
+
+![Top Languages](${generateLanguagesUrl()})
 
 </div>`;
         break;
