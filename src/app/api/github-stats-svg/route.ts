@@ -130,20 +130,29 @@ async function fetchEnhancedGitHubStats(username: string) {
   let commits = 0;
   let issues = 0;
   let prs = 0;
-  
-  try {
+    try {
+    // Create headers with GitHub token if available
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'GitHub-README-Generator'
+    };
+    
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    if (GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${GITHUB_TOKEN}`;
+    }
+
     // Get repositories to calculate total stars
-    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`);
+    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`, { headers });
     if (reposResponse.ok) {
       const repos = await reposResponse.json();
       totalStars = repos.reduce((sum: number, repo: any) => sum + (repo.stargazers_count || 0), 0);
     }
-    
-    // Get search results for user activity (approximate values)
+      // Get search results for user activity (approximate values)
     const [commitsRes, issuesRes, prsRes] = await Promise.allSettled([
-      fetch(`https://api.github.com/search/commits?q=author:${username}&per_page=1`),
-      fetch(`https://api.github.com/search/issues?q=author:${username}+type:issue&per_page=1`),
-      fetch(`https://api.github.com/search/issues?q=author:${username}+type:pr&per_page=1`)
+      fetch(`https://api.github.com/search/commits?q=author:${username}&per_page=1`, { headers }),
+      fetch(`https://api.github.com/search/issues?q=author:${username}+type:issue&per_page=1`, { headers }),
+      fetch(`https://api.github.com/search/issues?q=author:${username}+type:pr&per_page=1`, { headers })
     ]);
     
     if (commitsRes.status === 'fulfilled' && commitsRes.value.ok) {

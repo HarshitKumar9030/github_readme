@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
+import StableImage from '@/components/StableImage';
 
 export interface TopLanguagesWidgetConfig extends BaseWidgetConfig {
   username: string;
@@ -26,8 +26,8 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
   onMarkdownGenerated
 }) => {
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
-  // Generate the image URL
-  const generateUrl = () => {
+    // Memoized URL generation for stability
+  const imageUrl = useMemo(() => {
     if (!config.username) return '';
     const params = new URLSearchParams();
     if (config.theme) params.append('theme', config.theme);
@@ -38,8 +38,9 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     if (config.cardWidth) params.append('card_width', config.cardWidth.toString());
     
     return `https://github-readme-stats.vercel.app/api/top-langs/?username=${config.username}&${params.toString()}`;
-  };
-  // Generate markdown
+  }, [config]);
+
+  const cacheKey = useMemo(() => `top-langs-${config.username}-${config.theme}-${config.layout}-${JSON.stringify(config)}`, [config]);// Generate markdown
   const generateMarkdown = () => {
     if (!config.username) return '<!-- Add a GitHub username to display Top Languages stats -->';
     let md = '';
@@ -48,25 +49,25 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     } else if (!config.hideTitle) {
       md += `## Top Languages\n\n`;
     }
-    
+
     // Apply layout style if specified
     const layoutStyle = config.layoutStyle || 'center';
     
     if (layoutStyle === 'center') {
       md += `<div align="center">\n\n`;
-      md += `<img src="${generateUrl()}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
+      md += `<img src="${imageUrl}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
       md += `</div>\n\n`;
     } else if (layoutStyle === 'left') {
       md += `<div align="left">\n\n`;
-      md += `<img src="${generateUrl()}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
+      md += `<img src="${imageUrl}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
       md += `</div>\n\n`;
     } else if (layoutStyle === 'right') {
       md += `<div align="right">\n\n`;
-      md += `<img src="${generateUrl()}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
+      md += `<img src="${imageUrl}" alt="Top Languages" width="${config.cardWidth || 495}" />\n\n`;
       md += `</div>\n\n`;
     } else {
       // Fallback to simple markdown image
-      md += `![Top Languages](${generateUrl()})\n\n`;
+      md += `![Top Languages](${imageUrl})\n\n`;
     }
     
     return md;
@@ -76,21 +77,24 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
   useEffect(() => {
     if (onMarkdownGenerated) onMarkdownGenerated(generateMarkdown());
     // eslint-disable-next-line
-  }, [config]);
-  return (
+  }, [config]);  return (
     <div className="rounded-lg border p-4">
       {viewMode === 'preview' ? (
         <>
           {!config.hideTitle && <h3 className="text-lg font-medium">{config.customTitle || 'Top Languages'}</h3>}
           {config.username ? (
-            <div className="relative w-full h-auto mt-2" style={{ minHeight: 150 }}>              <Image 
-                src={generateUrl()} 
+            <div className="relative w-full h-auto mt-2" style={{ minHeight: 150 }}>
+              <StableImage 
+                src={imageUrl} 
                 alt="Top Languages" 
                 width={config.cardWidth || 495} 
                 height={195} 
-                priority 
-                unoptimized // GitHub API SVGs need to remain unoptimized to render correctly
+                cacheKey={cacheKey}
+                priority={false}
+                unoptimized={true} // GitHub API SVGs need to remain unoptimized to render correctly
                 style={{ width: '100%', height: 'auto' }}
+                fallbackText="Top Languages unavailable"
+                loadingText="Loading languages..."
               />
             </div>
           ) : (

@@ -67,13 +67,23 @@ export async function GET(request: NextRequest) {
   
   // Limit the number of repositories
   repositoriesToFetch = repositoriesToFetch.slice(0, Math.min(repoLimit, 6));
-
   try {
+    // Create headers with GitHub token if available
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'GitHub-README-Generator'
+    };
+    
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+    if (GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${GITHUB_TOKEN}`;
+    }
+
     // Fetch repository data for all repositories
     const repoDataPromises = repositoriesToFetch.map(async (repoPath) => {
       const [repoUsername, repoName] = repoPath.split('/');
       try {
-        const repoResponse = await fetch(`https://api.github.com/repos/${repoUsername}/${repoName}`);
+        const repoResponse = await fetch(`https://api.github.com/repos/${repoUsername}/${repoName}`, { headers });
         if (!repoResponse.ok) {
           throw new Error(`Repository ${repoPath} not found`);
         }
@@ -84,7 +94,7 @@ export async function GET(request: NextRequest) {
         let primaryLanguage = repoData.language || 'Unknown';
         if (showLanguage) {
           try {
-            const langResponse = await fetch(repoData.languages_url);
+            const langResponse = await fetch(repoData.languages_url, { headers });
             if (langResponse.ok) {
               const languages = await langResponse.json();
               const sortedLanguages = Object.entries(languages)

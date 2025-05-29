@@ -1,5 +1,4 @@
 
-// Debounce utility
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
@@ -11,7 +10,6 @@ export const debounce = <T extends (...args: any[]) => any>(
   };
 };
 
-// Deep equal comparison for dependencies
 export const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
   
@@ -37,7 +35,6 @@ export const deepEqual = (a: any, b: any): boolean => {
   return keys.every(k => deepEqual(a[k], b[k]));
 };
 
-// Safe JSON stringify with circular reference handling
 export const safeStringify = (obj: any): string => {
   const seen = new WeakSet();
   return JSON.stringify(obj, (key, val) => {
@@ -142,7 +139,6 @@ export class RateLimiter {
   }
 }
 
-// Memoization utility for expensive computations
 export const memoize = <T extends (...args: any[]) => any>(
   fn: T,
   getKey?: (...args: Parameters<T>) => string
@@ -159,7 +155,6 @@ export const memoize = <T extends (...args: any[]) => any>(
     const result = fn(...args);
     cache.set(key, result);
     
-    // Limit cache size to prevent memory leaks
     if (cache.size > 100) {
       const firstKey = cache.keys().next().value;
       cache.delete(firstKey);
@@ -169,13 +164,11 @@ export const memoize = <T extends (...args: any[]) => any>(
   }) as T;
 };
 
-// Common widget URL generators
 export const createGitHubStatsUrl = (username: string, config: any): string => {
   const params: Record<string, any> = {
     username,
   };
   
-  // Only add parameters if they have valid values
   if (config.theme && config.theme !== 'default') {
     params.theme = config.theme;
   }

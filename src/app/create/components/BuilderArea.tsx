@@ -52,18 +52,25 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   handleRedo,
   canUndo,
   canRedo
-}) => {
-  const [isMounted, setIsMounted] = useState(false);
+}) => {  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);    const handleMarkdownGenerated = useCallback((blockId: string) => {
-    return (md: string) => {
-      if (isMounted && typeof window !== 'undefined' && blockId && handleWidgetMarkdownGenerated) {
-        handleWidgetMarkdownGenerated(blockId, md);
-      }
-    };
-  }, [handleWidgetMarkdownGenerated, isMounted]);  const githubStatsConfig = useMemo(() => ({
+  }, []);
+
+  // Create stable callback functions for each block to prevent re-renders
+  const blockIds = useMemo(() => builderBlocks.map(b => b.id), [builderBlocks]);
+  const stableCallbacks = useMemo(() => {
+    const callbacks: Record<string, (md: string) => void> = {};
+    builderBlocks.forEach(block => {
+      callbacks[block.id] = (md: string) => {
+        if (isMounted && typeof window !== 'undefined' && handleWidgetMarkdownGenerated) {
+          handleWidgetMarkdownGenerated(block.id, md);
+        }
+      };
+    });
+    return callbacks;
+  }, [builderBlocks, handleWidgetMarkdownGenerated, isMounted]);const githubStatsConfig = useMemo(() => ({
     username: username,
     theme: widgetConfig?.theme || 'light',
     layoutType: 'full' as const,
@@ -324,11 +331,10 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     const widgetBlock = block as WidgetBlock;
 
     return (
-      <WidgetErrorBoundary widgetId={widgetBlock.widgetId}>
-        {widgetBlock.widgetId === 'github-stats' && (
+      <WidgetErrorBoundary widgetId={widgetBlock.widgetId}>        {widgetBlock.widgetId === 'github-stats' && (
           <GitHubStatsWidget 
             config={memoizedConfigs.githubStats}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}        {widgetBlock.widgetId === 'social-stats' && (
           <EnhancedSocialStatsWidget 
@@ -341,54 +347,54 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
             customTitle={widgetConfig?.customTitle}
             enableAnimations={true}
             showBorder={!widgetConfig?.hideBorder}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'top-languages' && (
           <TopLanguagesWidget
             config={memoizedConfigs.topLanguages}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'contribution-graph' && (
           <ContributionGraphWidget
             config={memoizedConfigs.contributionGraph}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'wave-animation' && (
           <WaveAnimationWidget
             config={memoizedConfigs.waveAnimation}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'language-chart' && (
           <LanguageChartWidget
             config={memoizedConfigs.languageChart}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'repo-showcase' && (
           <RepositoryShowcaseWidget
             config={memoizedConfigs.repoShowcase}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'animated-progress' && (
           <AnimatedProgressWidget
             config={memoizedConfigs.animatedProgress}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
         {widgetBlock.widgetId === 'typing-animation' && (
           <TypingAnimationWidget
             config={memoizedConfigs.typingAnimation}
-            onMarkdownGenerated={handleMarkdownGenerated(block.id)}
+            onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
       </WidgetErrorBoundary>
     );
-  }, [isMounted, memoizedConfigs, handleMarkdownGenerated, socials, widgetConfig?.theme, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);
+  }, [isMounted, memoizedConfigs, stableCallbacks, socials, widgetConfig?.theme, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);
 
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">

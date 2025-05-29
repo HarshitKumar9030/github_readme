@@ -72,10 +72,22 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> & MarkdownExportable =
     async function fetchData() {
       if (!config.username) return;
       setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`https://api.github.com/users/${config.username}`);
+      setError(null);      try {
+        // Create headers with GitHub token if available
+        const headers: Record<string, string> = {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'GitHub-README-Generator'
+        };
+        
+        if (typeof process !== 'undefined' && process.env?.GITHUB_TOKEN) {
+          headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+        }
+
+        const response = await fetch(`https://api.github.com/users/${config.username}`, { headers });
         if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error(`GitHub API rate limit exceeded. Please try again later or add a GitHub token.`);
+          }
           throw new Error(`Failed to fetch GitHub data: ${response.statusText}`);
         }
         const data = await response.json();

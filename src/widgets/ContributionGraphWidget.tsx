@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import StableImage from '@/components/StableImage';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 
 export interface ContributionGraphWidgetConfig extends Omit<BaseWidgetConfig, 'theme'> {
@@ -32,8 +32,7 @@ const ContributionGraphWidget: React.FC<ContributionGraphWidgetProps> & Markdown
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
-  const generateUrl = useCallback((): string => {
+  const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');  const generateUrl = useCallback((): string => {
     if (!config.username) return '';
     
     const params = new URLSearchParams();
@@ -49,6 +48,12 @@ const ContributionGraphWidget: React.FC<ContributionGraphWidgetProps> & Markdown
     
     return `https://github-readme-activity-graph.vercel.app/graph?username=${config.username}&${params.toString()}`;
   }, [config]);
+
+  // Memoized cache key for stable image caching
+  const cacheKey = useMemo(() => 
+    `contribution-${config.username}-${config.theme}-${config.showArea}-${config.hideBorder}-${config.height}`, 
+    [config.username, config.theme, config.showArea, config.hideBorder, config.height]
+  );
   const generateMarkdown = useCallback((): string => {
     if (!config.username) return '<!-- Add a GitHub username to display Contribution Graph -->';
     
@@ -128,23 +133,19 @@ const ContributionGraphWidget: React.FC<ContributionGraphWidgetProps> & Markdown
               </button>
             )}
           </div>
-        </div>
-
-        {viewMode === 'preview' ? (
+        </div>        {viewMode === 'preview' ? (
           <div className="flex flex-col items-center w-full">
             {config.username ? (
               <div className="w-full">
-                <Image 
+                <StableImage 
                   src={generateUrl()} 
                   alt="Contribution Graph" 
                   width={800} 
                   height={400} 
-                  unoptimized
+                  cacheKey={cacheKey}
                   className="w-full h-auto rounded-md"
-                  onError={(e) => {
-                    console.error('Failed to load contribution graph:', e);
-                    setError('Failed to load contribution graph');
-                  }}
+                  fallbackText="Contribution graph unavailable"
+                  loadingText="Loading contribution graph..."
                 />
               </div>
             ) : (

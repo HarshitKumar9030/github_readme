@@ -307,13 +307,28 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
 
       setIsLoading(true);
       setError("");
-      lastFetchedUsernameRef.current = stableDeps.username;
+      lastFetchedUsernameRef.current = stableDeps.username;      try {
+        // Create headers with GitHub token if available
+        const headers: Record<string, string> = {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'GitHub-README-Generator'
+        };
+        
+        // Add authorization header if token is available (client-side won't have access to process.env)
+        // This will primarily work in server-side contexts
+        if (typeof process !== 'undefined' && process.env?.GITHUB_TOKEN) {
+          headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+        }
 
-      try {
         const response = await fetch(
-          `https://api.github.com/users/${stableDeps.username}`
+          `https://api.github.com/users/${stableDeps.username}`,
+          { headers }
         );
         if (!response.ok) {
+          // Enhanced error handling for rate limiting
+          if (response.status === 429) {
+            throw new Error(`GitHub API rate limit exceeded. Please try again later or add a GitHub token.`);
+          }
           throw new Error(`GitHub user not found: ${response.statusText}`);
         }
 

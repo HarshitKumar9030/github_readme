@@ -1,17 +1,16 @@
 import axios from "axios";
 
 export const getGithubStats = async (username: string) => {
-// no need for headers, works just fine without it 
-
-//   const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const BASE_URL = "https://api.github.com/users";
   const url = `${BASE_URL}/${username}`;
-//   const headers = {
-//     Authorization: `Bearer ${GITHUB_TOKEN}`,
-//     Accept: "application/vnd.github.v3+json",
-//   };
+  const headers = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'GitHub-README-Generator',
+    ...(GITHUB_TOKEN && { 'Authorization': `token ${GITHUB_TOKEN}` })
+  };
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, { headers });
     const {
       followers,
       public_repos,
@@ -38,11 +37,17 @@ export const getGithubStats = async (username: string) => {
 };
 
 export const getRepositoryStats = async (owner: string, repo: string) => {
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const BASE_URL = "https://api.github.com/repos";
   const url = `${BASE_URL}/${owner}/${repo}`;
+  const headers = {
+    'Accept': 'application/vnd.github.v3+json',
+    'User-Agent': 'GitHub-README-Generator',
+    ...(GITHUB_TOKEN && { 'Authorization': `token ${GITHUB_TOKEN}` })
+  };
   
   try {
-    const response = await axios.get(url);
+    const response = await axios.get(url, { headers });
     const {
       stargazers_count,
       forks_count,
@@ -66,15 +71,20 @@ export const getRepositoryStats = async (owner: string, repo: string) => {
 
 // Get weekly star count for a repository
 export const getWeeklyStarCount = async (owner: string, repo: string) => {
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
   const BASE_URL = "https://api.github.com/repos";
   const url = `${BASE_URL}/${owner}/${repo}/stargazers`;
+  const baseHeaders = {
+    'Accept': 'application/vnd.github.v3.star+json',
+    'User-Agent': 'GitHub-README-Generator'
+  };
+  const headers = {
+    ...baseHeaders,
+    ...(GITHUB_TOKEN && { 'Authorization': `token ${GITHUB_TOKEN}` })
+  };
   
   try {
-    const response = await axios.get(url, {
-      headers: {
-        Accept: "application/vnd.github.v3.star+json"
-      }
-    });
+    const response = await axios.get(url, { headers });
     
     // Calculate stars in the last week
     const oneWeekAgo = new Date();

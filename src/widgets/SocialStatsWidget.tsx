@@ -249,64 +249,86 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
   const [svgLoading, setSvgLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
-  const [svgPreviewUrl, setSvgPreviewUrl] = useState<string>('');  const [copied, setCopied] = useState<boolean>(false);
-  const [retryCount, setRetryCount] = useState<number>(0);
+  const [svgPreviewUrl, setSvgPreviewUrl] = useState<string>('');  const [copied, setCopied] = useState<boolean>(false);  const [retryCount, setRetryCount] = useState<number>(0);
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Fetch GitHub stats when username changes
+  const apiCallTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchedUsernameRef = useRef<string>('');
+  const githubDataCacheRef = useRef<{ [key: string]: { data: any; timestamp: number } }>({});  // Fetch GitHub stats when username changes
   useEffect(() => {
     async function fetchData() {
-      if (config.socials?.github) {
-        setLoading(true);
+      if (!config.socials?.github) {
+        setStats(prev => ({ ...prev, github: undefined }));
+        setSvgPreviewUrl('');
         setError(null);
-        
-        if (debounceTimerRef.current) {
-          clearTimeout(debounceTimerRef.current);
-        }
-        
-        debounceTimerRef.current = setTimeout(async () => {
-          try {
-            const githubStats = await getGithubStats(config.socials.github);
-            setStats(prev => ({
-              ...prev,
-              github: {
-                followers: githubStats.followers,
-                following: githubStats.following,
-                repositories: githubStats.public_repos,
-                avatar: githubStats.avatar_url,
-                name: githubStats.name,
-                bio: githubStats.bio
-              }
-            }));
-
-            // Generate SVG preview URL for the integrated API
-            if (config.useSvgCard) {
-              setSvgLoading(true);
-              const svgParams = new URLSearchParams({
-                username: config.socials.github,
-                theme: config.theme || 'light',
-                layout: config.compactMode ? 'compact' : 'default'
-              });
-              
-              if (config.hideBorder) svgParams.append('hideBorder', 'true');
-              if (config.hideTitle) svgParams.append('hideTitle', 'true');
-              
-              setSvgPreviewUrl(createAbsoluteUrl(`/api/github-stats-svg?${svgParams.toString()}`));
-              setSvgLoading(false);
-            }
-            
-            // Reset retry count on success
-            setRetryCount(0);
-          } catch (err) {
-            setError('Failed to fetch GitHub stats');
-            console.error(err);
-          } finally {
-            setLoading(false);
-            setSvgLoading(false);
-          }
-        }, 500); 
+        return;
       }
+
+      // Prevent duplicate calls for the same username
+      if (lastFetchedUsernameRef.current === config.socials.github) {
+        return;
+      }
+
+      // Check cache first (5-minute cache)
+      const cached = githubDataCacheRef.current[config.socials.github];
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        setStats(prev => ({
+          ...prev,
+          github: cached.data
+        }));
+        setError(null);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      lastFetchedUsernameRef.current = config.socials.github;
+      
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          const githubStats = await getGithubStats(config.socials.github);
+          const githubData = {
+            followers: githubStats.followers,
+            following: githubStats.following,
+            repositories: githubStats.public_repos,
+            avatar: githubStats.avatar_url,
+            name: githubStats.name,
+            bio: githubStats.bio
+          };
+
+          // Cache the data
+          githubDataCacheRef.current[config.socials.github] = {
+            data: githubData,
+            timestamp: Date.now()
+          };
+
+          setStats(prev => ({
+            ...prev,
+            github: githubData
+          }));
+          
+          // Reset retry count on success
+          setRetryCount(0);
+          setError(null);
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Failed to fetch GitHub stats';
+          
+          // Handle 429 rate limit errors specifically
+          if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
+            setError('GitHub API rate limit exceeded. Please try again later.');
+          } else {
+            setError('Failed to fetch GitHub stats');
+          }
+          
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      }, 500); 
     }
 
     fetchData();
@@ -316,6 +338,27 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
         clearTimeout(debounceTimerRef.current);
       }
     };
+  }, [config.socials?.github]); // Only depend on username
+
+  // Update SVG URL when config changes (separate from API data fetching)
+  useEffect(() => {
+    if (config.useSvgCard && config.socials?.github) {
+      setSvgLoading(true);
+      const svgParams = new URLSearchParams({
+        username: config.socials.github,
+        theme: config.theme || 'light',
+        layout: config.compactMode ? 'compact' : 'default'
+      });
+      
+      if (config.hideBorder) svgParams.append('hideBorder', 'true');
+      if (config.hideTitle) svgParams.append('hideTitle', 'true');
+      
+      setSvgPreviewUrl(createAbsoluteUrl(`/api/github-stats-svg?${svgParams.toString()}`));
+      setSvgLoading(false);
+    } else {
+      setSvgPreviewUrl('');
+      setSvgLoading(false);
+    }
   }, [config.socials?.github, config.theme, config.useSvgCard, config.compactMode, config.hideBorder, config.hideTitle]);// Generate markdown for the widget and notify parent
   useEffect(() => {
     if (onMarkdownGenerated) {
@@ -323,6 +366,14 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> & MarkdownExportable =
       onMarkdownGenerated(markdown);
     }
   }, [config, stats, onMarkdownGenerated]);
+  // Cleanup effect for timeouts
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // Copy to clipboard function
   const copyToClipboard = async (text: string) => {

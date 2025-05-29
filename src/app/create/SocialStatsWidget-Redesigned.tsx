@@ -63,16 +63,37 @@ interface EnhancedSocialStatsWidgetProps {
   onMarkdownGenerated?: (markdown: string) => void;
 }
 
-// GitHub stats fetching service
-const fetchGitHubStats = async (username: string): Promise<EnhancedSocialStats['github']> => {
+// GitHub stats fetching service with caching and rate limiting
+const fetchGitHubStats = async (username: string, cache: React.MutableRefObject<{ [key: string]: { data: any; timestamp: number } }>): Promise<EnhancedSocialStats['github']> => {
+  // Check cache (5 minutes expiry)
+  const cached = cache.current[username];
+  if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+    return cached.data;
+  }
   try {
-    // Fetch user profile
-    const userResponse = await fetch(`https://api.github.com/users/${username}`);
-    if (!userResponse.ok) throw new Error('Failed to fetch GitHub user');
+    // Create headers with GitHub token if available
+    const headers: Record<string, string> = {
+      'Accept': 'application/vnd.github.v3+json',
+      'User-Agent': 'GitHub-README-Generator'
+    };
+    
+    if (typeof process !== 'undefined' && process.env?.GITHUB_TOKEN) {
+      headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+    }
+
+    // Fetch user profile with retry logic
+    const userResponse = await fetch(`https://api.github.com/users/${username}`, { headers });
+    if (!userResponse.ok) {
+      if (userResponse.status === 429) {
+        throw new Error('GitHub API rate limit exceeded. Please try again later.');
+      }
+      throw new Error('Failed to fetch GitHub user');
+    }
     const userData = await userResponse.json();
 
-    // Fetch user events for additional stats
-    const eventsResponse = await fetch(`https://api.github.com/users/${username}/events`);
+    // Add delay between API calls to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 100));    // Fetch user events for additional stats
+    const eventsResponse = await fetch(`https://api.github.com/users/${username}/events`, { headers });
     const eventsData = eventsResponse.ok ? await eventsResponse.json() : [];
 
     // Calculate stats from events
@@ -80,12 +101,13 @@ const fetchGitHubStats = async (username: string): Promise<EnhancedSocialStats['
     const issues = eventsData.filter((event: any) => event.type === 'IssuesEvent').length;
     const pullRequests = eventsData.filter((event: any) => event.type === 'PullRequestEvent').length;
 
-    // Fetch repositories to calculate total stars
-    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100`);
+    // Add delay before final API call
+    await new Promise(resolve => setTimeout(resolve, 100));    // Fetch repositories to calculate total stars
+    const reposResponse = await fetch(`https://api.github.com/users/${username}/repos?per_page=100`, { headers });
     const reposData = reposResponse.ok ? await reposResponse.json() : [];
     const totalStars = reposData.reduce((sum: number, repo: any) => sum + repo.stargazers_count, 0);
 
-    return {
+    const result = {
       followers: userData.followers,
       following: userData.following,
       repositories: userData.public_repos,
@@ -101,6 +123,14 @@ const fetchGitHubStats = async (username: string): Promise<EnhancedSocialStats['
       blog: userData.blog,
       joinedDate: userData.created_at,
     };
+
+    // Cache the result
+    cache.current[username] = {
+      data: result,
+      timestamp: Date.now()
+    };
+
+    return result;
   } catch (error) {
     console.error('Error fetching GitHub stats:', error);
     throw error;
@@ -256,8 +286,7 @@ function EnhancedSocialStatsWidget({
   borderRadius = "medium",
   showBorder = true,
   onMarkdownGenerated,
-}: EnhancedSocialStatsWidgetProps) {
-  // Use reducer for batched state updates to prevent flickering
+}: EnhancedSocialStatsWidgetProps) {  // Use reducer for batched state updates to prevent flickering
   const [state, dispatch] = useReducer(widgetReducer, {
     stats: {},
     loading: false,
@@ -265,6 +294,11 @@ function EnhancedSocialStatsWidget({
     svgUrl: "",
     viewMode: "card"
   });
+
+  // Add caching and debouncing refs
+  const apiCallTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const lastFetchedUsernameRef = React.useRef<string>("");
+  const githubDataCacheRef = React.useRef<{ [key: string]: { data: any; timestamp: number } }>({});
 
   // Memoize theme configuration to prevent recreation
   const themeConfig = useMemo(() => getThemeConfig(theme), [theme]);
@@ -310,16 +344,28 @@ function EnhancedSocialStatsWidget({
     large: "rounded-2xl",
   }[borderRadius]), [borderRadius]);  // Use useEffect to handle fetching with proper dependencies instead of useCallback
   useEffect(() => {
+    // Clear any pending API calls
+    if (apiCallTimeoutRef.current) {
+      clearTimeout(apiCallTimeoutRef.current);
+    }
+
     const fetchData = async () => {
       if (!socials.github) {
         dispatch({ type: 'RESET' });
+        lastFetchedUsernameRef.current = "";
+        return;
+      }
+
+      // Prevent duplicate calls for the same username
+      if (lastFetchedUsernameRef.current === socials.github) {
         return;
       }
 
       dispatch({ type: 'FETCH_START' });
+      lastFetchedUsernameRef.current = socials.github;
 
       try {
-        const githubStats = await fetchGitHubStats(socials.github);
+        const githubStats = await fetchGitHubStats(socials.github, githubDataCacheRef);
         
         // Generate SVG URL
         const apiPath = `/api/github-stats-svg?username=${encodeURIComponent(socials.github)}&theme=${theme}&layout=${layout}&showAvatar=${showAvatar}&showBio=${showBio}&hideStats=${memoizedHideStats.join(',')}&borderRadius=${borderRadius}&showBorder=${showBorder}`;
@@ -341,8 +387,24 @@ function EnhancedSocialStatsWidget({
       }
     };
 
-    fetchData();
+    // Debounce API calls by 500ms
+    apiCallTimeoutRef.current = setTimeout(fetchData, 500);
+
+    return () => {
+      if (apiCallTimeoutRef.current) {
+        clearTimeout(apiCallTimeoutRef.current);
+      }
+    };
   }, [socials.github, theme, layout, showAvatar, showBio, memoizedHideStats, borderRadius, showBorder]);
+
+  // Cleanup all timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (apiCallTimeoutRef.current) {
+        clearTimeout(apiCallTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Stable toggle function
   const toggleViewMode = useCallback(() => {
