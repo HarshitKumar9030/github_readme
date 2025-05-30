@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { Block, WidgetBlock } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
-import EnhancedSocialStatsWidget from '@/app/create/SocialStatsWidget-Redesigned';
+import SocialStatsWidget from '@/widgets/SocialStatsWidget';
 import TopLanguagesWidget from '@/widgets/TopLanguagesWidget';
 import ContributionGraphWidget from '@/widgets/ContributionGraphWidget';
 import WaveAnimationWidget from '@/widgets/WaveAnimationWidget';
@@ -337,16 +337,16 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
             onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}        {widgetBlock.widgetId === 'social-stats' && (
-          <EnhancedSocialStatsWidget 
-            socials={socials}
-            theme={widgetConfig?.theme || 'default'}
-            layout={widgetConfig?.layout === 'compact' ? 'compact' : 'default'}
-            showAvatar={true}
-            showBio={false}
-            hideStats={[]}
-            customTitle={widgetConfig?.customTitle}
-            enableAnimations={true}
-            showBorder={!widgetConfig?.hideBorder}
+          <SocialStatsWidget 
+            config={{
+              socials: socials,
+              displayLayout: widgetConfig?.layout === 'compact' ? 'inline' : 'grid',
+              showDetails: true,
+              hideTitle: widgetConfig?.hideBorder,
+              customTitle: widgetConfig?.customTitle,
+              badgeStyle: 'for-the-badge',
+              gridColumns: 3
+            }}
             onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}
@@ -394,7 +394,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
         )}
       </WidgetErrorBoundary>
     );
-  }, [isMounted, memoizedConfigs, stableCallbacks, socials, widgetConfig?.theme, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);
+  }, [isMounted, memoizedConfigs, stableCallbacks, socials, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);
 
   return (
     <div className="lg:col-span-6 flex flex-col h-full overflow-hidden">
