@@ -185,23 +185,21 @@ const generateMarkdown = (config: SocialStatsWidgetConfig) => {
 
 
 const SocialStatsWidget: React.FC<SocialStatsWidgetProps> &
-  MarkdownExportable = ({ config, onConfigChange, onMarkdownGenerated }) => {
-  const {
+  MarkdownExportable = ({ config, onConfigChange, onMarkdownGenerated }) => {  const {
     stats,
     loading,
     error,
     mounted,
     viewMode,
     copied,
+    showConfig,
     lastUsername,
     lastMarkdown,
     setMounted,
     setViewMode,
     setCopied,
-    resetGithubStats,
-    fetchGithubStats,
-    setLastMarkdown,
-  } = useSocialStatsStore();
+    toggleConfig,
+  } = useSocialStatsStore(); // Remove function dependencies that might cause re-renders
   const configRef = useRef(config);
   const onMarkdownGeneratedRef = useRef(onMarkdownGenerated);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -220,12 +218,13 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> &
   }, [setMounted]);
 
   const githubUsername = config.socials?.github?.trim() || "";
-
   useEffect(() => {
     if (!mounted) return;
 
     if (!githubUsername) {
-      resetGithubStats();
+      // Use stable reference to avoid dependency issues
+      const { resetGithubStats: storeResetGithubStats } = useSocialStatsStore.getState();
+      storeResetGithubStats();
       return;
     }
 
@@ -239,7 +238,9 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> &
     }
 
     debounceTimerRef.current = setTimeout(() => {
-      fetchGithubStats(githubUsername);
+      // Use stable reference to avoid dependency issues
+      const { fetchGithubStats: storeFetchGithubStats } = useSocialStatsStore.getState();
+      storeFetchGithubStats(githubUsername);
     }, 1000);
 
     return () => {
@@ -251,23 +252,22 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> &
     mounted,
     githubUsername,
     lastUsername,
-    resetGithubStats,
-    fetchGithubStats,
-  ]);
+  ]); // Remove function dependencies
 
   const currentMarkdown = useMemo(() => {
     if (!mounted) return "";
     return generateMarkdown(config);
   }, [mounted, config]);
-
   useEffect(() => {
     if (!mounted || !onMarkdownGeneratedRef.current) return;
 
     if (lastMarkdown !== currentMarkdown) {
-      setLastMarkdown(currentMarkdown);
+      // Use stable reference to avoid dependency issues
+      const { setLastMarkdown: storeSetLastMarkdown } = useSocialStatsStore.getState();
+      storeSetLastMarkdown(currentMarkdown);
       onMarkdownGeneratedRef.current(currentMarkdown);
     }
-  }, [mounted, currentMarkdown, lastMarkdown, setLastMarkdown]);
+  }, [mounted, currentMarkdown, lastMarkdown]); // Remove setLastMarkdown dependency
 
   const githubStatsUrl = useMemo(() => {
     if (!mounted || !githubUsername) return "";
@@ -349,9 +349,221 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> &
         </div>
       </div>
     );
-  }
-  return (
+  }  return (
     <div className="space-y-6">
+      {/* Controls */}
+      <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleConfig}
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+          >
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Settings
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleViewModeToggle}
+            className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              viewMode === "preview"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+            }`}
+          >
+            <svg
+              className="w-4 h-4 mr-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              {viewMode === "preview" ? (
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+              ) : (
+                <path
+                  fillRule="evenodd"
+                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
+              )}
+            </svg>
+            {viewMode === "preview" ? "Preview" : "Markdown"}
+          </button>
+        </div>
+      </div>
+
+      {/* Configuration Panel */}
+      {showConfig && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Configuration
+          </h3>
+          
+          <div className="space-y-4">
+            {/* Social Platforms */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Social Platforms
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {[
+                  { key: "github", label: "GitHub", placeholder: "username" },
+                  { key: "twitter", label: "Twitter", placeholder: "username" },
+                  { key: "linkedin", label: "LinkedIn", placeholder: "username" },
+                  { key: "instagram", label: "Instagram", placeholder: "username" },
+                  { key: "youtube", label: "YouTube", placeholder: "channel" },
+                  { key: "medium", label: "Medium", placeholder: "username" },
+                  { key: "dev", label: "Dev.to", placeholder: "username" },
+                ].map(({ key, label, placeholder }) => (
+                  <div key={key}>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      {label}
+                    </label>
+                    <input
+                      type="text"
+                      value={(config.socials as any)?.[key] || ""}
+                      onChange={(e) =>
+                        handleConfigChange({
+                          socials: { ...config.socials, [key]: e.target.value },
+                        })
+                      }
+                      placeholder={placeholder}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Display Options */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Display Options
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Layout
+                  </label>
+                  <select
+                    value={config.displayLayout}
+                    onChange={(e) =>
+                      handleConfigChange({
+                        displayLayout: e.target.value as "grid" | "horizontal" | "inline",
+                      })
+                    }
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="grid">Grid</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="inline">Inline</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Badge Style
+                  </label>
+                  <select
+                    value={config.badgeStyle || "for-the-badge"}
+                    onChange={(e) =>
+                      handleConfigChange({
+                        badgeStyle: e.target.value as "flat" | "flat-square" | "plastic" | "for-the-badge",
+                      })
+                    }
+                    className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="flat">Flat</option>
+                    <option value="flat-square">Flat Square</option>
+                    <option value="plastic">Plastic</option>
+                    <option value="for-the-badge">For The Badge</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* GitHub Options */}
+            {config.socials?.github && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  GitHub Stats Options
+                </label>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={config.compactMode || false}
+                        onChange={(e) =>
+                          handleConfigChange({ compactMode: e.target.checked })
+                        }
+                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Compact Mode
+                      </span>
+                    </label>
+
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={config.hideBorder || false}
+                        onChange={(e) =>
+                          handleConfigChange({ hideBorder: e.target.checked })
+                        }
+                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Hide Border
+                      </span>
+                    </label>
+
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={config.hideTitle || false}
+                        onChange={(e) =>
+                          handleConfigChange({ hideTitle: e.target.checked })
+                        }
+                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                        Hide Title
+                      </span>
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                      Custom Title
+                    </label>
+                    <input
+                      type="text"
+                      value={config.customTitle || ""}
+                      onChange={(e) =>
+                        handleConfigChange({ customTitle: e.target.value })
+                      }
+                      placeholder="Custom title for GitHub stats"
+                      className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <div className="p-6">
         {viewMode === "preview" ? (
@@ -547,8 +759,7 @@ const SocialStatsWidget: React.FC<SocialStatsWidgetProps> &
             </div>
             <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm text-gray-100 overflow-auto max-h-96">
               <pre className="whitespace-pre-wrap">{currentMarkdown}</pre>
-            </div>
-          </div>
+            </div>          </div>
         )}
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { Block, WidgetBlock } from '@/interfaces/BlockTypes';
 import GitHubStatsWidget from '@/widgets/GitHubStatsWidget';
 import SocialStatsWidget from '@/widgets/SocialStatsWidget';
@@ -47,15 +47,17 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   widgetConfig,
   username,
   socials,
-  handleWidgetMarkdownGenerated,
-  handleUndo,
+  handleWidgetMarkdownGenerated,  handleUndo,
   handleRedo,
   canUndo,
   canRedo
-}) => {  const [isMounted, setIsMounted] = useState(false);
+}) => {
+  const [isMounted, setIsMounted] = useState(false);
+  const isMountedRef = useRef(false);
 
   useEffect(() => {
     setIsMounted(true);
+    isMountedRef.current = true;
   }, []);
 
   // Create stable callback functions for each block to prevent re-renders
@@ -64,13 +66,16 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     const callbacks: Record<string, (md: string) => void> = {};
     builderBlocks.forEach(block => {
       callbacks[block.id] = (md: string) => {
-        if (isMounted && typeof window !== 'undefined' && handleWidgetMarkdownGenerated) {
+        // Use ref instead of state to avoid recreating callbacks
+        if (isMountedRef.current && typeof window !== 'undefined' && handleWidgetMarkdownGenerated) {
           handleWidgetMarkdownGenerated(block.id, md);
         }
       };
     });
     return callbacks;
-  }, [builderBlocks, handleWidgetMarkdownGenerated, isMounted]);const githubStatsConfig = useMemo(() => ({
+  }, [builderBlocks, handleWidgetMarkdownGenerated]); // Remove isMounted dependency
+
+  const githubStatsConfig = useMemo(() => ({
     username: username,
     theme: widgetConfig?.theme || 'light',
     layoutType: 'full' as const,
@@ -337,11 +342,11 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
             onMarkdownGenerated={stableCallbacks[block.id]}
           />
         )}        {widgetBlock.widgetId === 'social-stats' && (
-          <SocialStatsWidget 
-            config={{
+          <SocialStatsWidget            config={{
               socials: socials,
               displayLayout: widgetConfig?.layout === 'compact' ? 'inline' : 'grid',
               showDetails: true,
+              showImages: true,
               hideTitle: widgetConfig?.hideBorder,
               customTitle: widgetConfig?.customTitle,
               badgeStyle: 'for-the-badge',
