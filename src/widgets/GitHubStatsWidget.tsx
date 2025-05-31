@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   BaseWidgetConfig,
   BaseWidgetProps,
   MarkdownExportable,
 } from "@/interfaces/MarkdownExportable";
 import StableImage from "@/components/StableImage";
-import { useGithubStatsStore, generateUrlsForConfig } from "@/stores/githubStatsStore";
 
 export interface GitHubStatsWidgetConfig extends BaseWidgetConfig {
   username: string;
@@ -61,69 +60,311 @@ interface GitHubStatsWidgetProps extends BaseWidgetProps {
   onMarkdownGenerated?: (markdown: string) => void;
 }
 
+function generateUrlsForConfig(config: GitHubStatsWidgetConfig) {
+  const effectiveConfig = {
+    layoutType: config.layoutType || "stats",
+    layoutStyle: config.layoutStyle || "side-by-side",
+    showTrophies:
+      config.showTrophies ??
+      (config.layoutType === "trophies" || config.layoutType === "full"),
+    showStreaks:
+      config.showStreaks ??
+      (config.layoutType === "streaks" || config.layoutType === "full"),
+    showStats:
+      config.showStats ??
+      ["stats", "combined", "full"].includes(config.layoutType || ""),
+  };
+
+  if (!config.username) {
+    return { statsUrl: "", trophyUrl: "", streakUrl: "", effectiveConfig };
+  }
+
+  // stats
+  const statsParams = new URLSearchParams({
+    username: config.username,
+    theme: config.theme || "default",
+  });
+  if (config.hideBorder) statsParams.append("hide_border", "true");
+  if (config.hideTitle) statsParams.append("hide_title", "true");
+  if (config.compactMode) statsParams.append("layout", "compact");
+  if (config.showIcons) statsParams.append("show_icons", "true");
+  if (config.includePrivate) statsParams.append("count_private", "true");
+  if (config.includeAllCommits)
+    statsParams.append("include_all_commits", "true");
+
+  const statsUrl = effectiveConfig.showStats
+    ? `https://github-readme-stats.vercel.app/api?${statsParams.toString()}`
+    : "";
+
+  const trophyUrl = effectiveConfig.showTrophies
+    ? `https://github-profile-trophy.vercel.app/?username=${
+        config.username
+      }&theme=${config.trophyTheme || "flat"}&margin-w=10&margin-h=10`
+    : "";
+
+  const streakUrl = effectiveConfig.showStreaks
+    ? `https://github-readme-streak-stats.herokuapp.com/?user=${
+        config.username
+      }&theme=${config.streakTheme || config.theme || "default"}&hide_border=${
+        config.hideBorder ? "true" : "false"
+      }`
+    : "";
+
+  return { statsUrl, trophyUrl, streakUrl, effectiveConfig };
+}
+
+// Helper function to generate markdown with config
+function generateMarkdownForConfig(config: GitHubStatsWidgetConfig): string {
+  if (!config.username) return "";
+
+  const { statsUrl, trophyUrl, streakUrl, effectiveConfig } =
+    generateUrlsForConfig(config);
+
+  let md = "";
+
+  if (!config.hideTitle && config.customTitle) {
+    md += `## ${config.customTitle}\n\n`;
+  } else if (!config.hideTitle) {
+    md += `## GitHub Stats\n\n`;
+  }
+
+  if (effectiveConfig.layoutStyle === "side-by-side") {
+    md += `<div align="center">\n\n`;
+    md += `<table border="0" cellspacing="10" cellpadding="0" style="border-collapse: separate; margin: 0 auto;">\n<tr>\n`;
+
+    if (effectiveConfig.showStats && statsUrl) {
+      md += `<td align="center" valign="top" style="padding: 5px;">\n`;
+      md += `<img src="${statsUrl}" alt="GitHub Stats" width="420" height="195" style="border-radius: 8px;" />\n`;
+      md += `</td>\n`;
+    }
+
+    if (trophyUrl && effectiveConfig.showTrophies) {
+      md += `<td align="center" valign="top" style="padding: 5px;">\n`;
+      md += `<img src="${trophyUrl}" alt="GitHub Trophies" width="420" height="195" style="border-radius: 8px;" />\n`;
+      md += `</td>\n`;
+    }
+
+    if (streakUrl && effectiveConfig.showStreaks) {
+      md += `<td align="center" valign="top" style="padding: 5px;">\n`;
+      md += `<img src="${streakUrl}" alt="GitHub Streak" width="420" height="195" style="border-radius: 8px;" />\n`;
+      md += `</td>\n`;
+    }
+
+    md += `</tr>\n</table>\n\n</div>\n\n`;
+  } else if (effectiveConfig.layoutStyle === "grid") {
+    md += `<div align="center">\n\n`;
+    md += `<table border="0" cellspacing="20" cellpadding="0" style="border-collapse: separate; margin: 0 auto;">\n`;
+
+    md += `<tr>\n`;
+    if (effectiveConfig.showStats && statsUrl) {
+      md += `<td align="center" valign="top" style="padding: 10px;">\n`;
+      md += `<img src="${statsUrl}" alt="GitHub Stats" width="400" height="195" style="border-radius: 8px;" />\n`;
+      md += `</td>\n`;
+    }
+    if (trophyUrl && effectiveConfig.showTrophies) {
+      md += `<td align="center" valign="top" style="padding: 10px;">\n`;
+      md += `<img src="${trophyUrl}" alt="GitHub Trophies" width="400" height="195" style="border-radius: 8px;" />\n`;
+      md += `</td>\n`;
+    }
+    md += `</tr>\n`;
+
+    if (streakUrl && effectiveConfig.showStreaks) {
+      md += `<tr>\n`;
+      const colSpan =
+        effectiveConfig.showStats && effectiveConfig.showTrophies ? "2" : "1";
+      md += `<td colspan="${colSpan}" align="center" style="padding: 10px;">\n`;
+      md += `<img src="${streakUrl}" alt="GitHub Streak" width="800" height="180" style="border-radius: 8px;" />\n`;
+      md += `</td>\n`;
+      md += `</tr>\n`;
+    }
+
+    md += `</table>\n\n</div>\n\n`;
+  } else {
+    md += `<div align="center">\n\n`;
+
+    if (effectiveConfig.showStats && statsUrl) {
+      md += `<img src="${statsUrl}" alt="GitHub Stats" width="500" height="195" style="border-radius: 8px; margin: 10px 0;" />\n\n`;
+    }
+
+    if (trophyUrl && effectiveConfig.showTrophies) {
+      md += `<img src="${trophyUrl}" alt="GitHub Trophies" width="500" height="160" style="border-radius: 8px; margin: 10px 0;" />\n\n`;
+    }
+
+    if (streakUrl && effectiveConfig.showStreaks) {
+      md += `<img src="${streakUrl}" alt="GitHub Streak" width="500" height="180" style="border-radius: 8px; margin: 10px 0;" />\n\n`;
+    }
+
+    md += `</div>\n\n`;
+  }
+
+  return md;
+}
+
 const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
-  MarkdownExportable = ({ config, onMarkdownGenerated }) => {
-    const {
-    isLoading,
-    error,
-    generateMarkdown
-  } = useGithubStatsStore();
+  MarkdownExportable = ({ config, onConfigChange, onMarkdownGenerated }) => {  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [githubData, setGithubData] = useState<any>(null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const apiCallTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastFetchedUsernameRef = useRef<string>("");
+  const githubDataCacheRef = useRef<{ [key: string]: { data: any; timestamp: number } }>({});
 
-  // Track mounting state to prevent hydration mismatches
-  const [mounted, setMounted] = useState(false);
-  
-  // Use ref to store callback and prevent re-renders
-  const onMarkdownGeneratedRef = useRef(onMarkdownGenerated);
-  
-  // Update ref when callback changes but don't trigger re-renders
-  useEffect(() => {
-    onMarkdownGeneratedRef.current = onMarkdownGenerated;
-  }, [onMarkdownGenerated]);
+  // Create stable dependencies to prevent unnecessary re-renders
+  const stableDeps = useMemo(() => ({
+    username: config.username,
+    theme: config.theme,
+    layoutType: config.layoutType,
+    layoutStyle: config.layoutStyle,
+    showIcons: config.showIcons,
+    includePrivate: config.includePrivate,
+    includeAllCommits: config.includeAllCommits,
+    hideBorder: config.hideBorder,
+    hideTitle: config.hideTitle,
+    compactMode: config.compactMode,
+    showTrophies: config.showTrophies,
+    showStreaks: config.showStreaks,
+    showStats: config.showStats,
+    hideRank: config.hideRank,
+    customTitle: config.customTitle,
+    trophyTheme: config.trophyTheme,
+    streakTheme: config.streakTheme
+  }), [
+    config.username,
+    config.theme,
+    config.layoutType,
+    config.layoutStyle,
+    config.showIcons,
+    config.includePrivate,
+    config.includeAllCommits,
+    config.hideBorder,
+    config.hideTitle,
+    config.compactMode,
+    config.showTrophies,
+    config.showStreaks,
+    config.showStats,
+    config.hideRank,
+    config.customTitle,
+    config.trophyTheme,
+    config.streakTheme
+  ]);
 
-  // Mount effect - only runs once
-  useEffect(() => {
-    console.log('GitHubStatsWidget: Mounting');
-    setMounted(true);
-  }, []);
+  // Memoize URLs to prevent unnecessary re-calculations
+  const urlsAndConfig = useMemo(() => generateUrlsForConfig(stableDeps as GitHubStatsWidgetConfig), [stableDeps]);
 
-  // Generate URLs and effective config - memoized properly
-  const { statsUrl, trophyUrl, streakUrl, effectiveConfig } = useMemo(() => {
-    console.log('GitHubStatsWidget: Regenerating URLs for config:', config.username);
-    return generateUrlsForConfig(config);
-  }, [config]);
+  const { statsUrl, trophyUrl, streakUrl, effectiveConfig } = urlsAndConfig;
 
-  // Generate cache keys for images
-  const statsCacheKey = useMemo(
-    () => `stats-${config.username}-${config.theme}-${config.layoutType}-${config.showIcons}-${config.hideBorder}`,
-    [config.username, config.theme, config.layoutType, config.showIcons, config.hideBorder]
+  // Generate stable markdown
+  const stableMarkdown = useMemo(
+    () => generateMarkdownForConfig(stableDeps as GitHubStatsWidgetConfig),
+    [stableDeps]
   );
-  
-  const trophyCacheKey = useMemo(
-    () => `trophy-${config.username}-${config.trophyTheme}`,
-    [config.username, config.trophyTheme]
-  );
-  
-  const streakCacheKey = useMemo(
-    () => `streak-${config.username}-${config.streakTheme || config.theme}`,
-    [config.username, config.streakTheme, config.theme]
-  );  // Fetch GitHub data when username changes - stabilized
+
   useEffect(() => {
-    if (mounted && config.username && config.username.trim()) {
-      console.log('GitHubStatsWidget: Fetching data for username:', config.username);
-      // Call fetchGithubData directly from store to avoid dependency issues
-      const { fetchGithubData: storeFetchGithubData } = useGithubStatsStore.getState();
-      storeFetchGithubData(config.username);
+    if (onMarkdownGenerated && stableMarkdown) {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+
+      debounceTimeoutRef.current = setTimeout(() => {
+        onMarkdownGenerated(stableMarkdown);
+      }, 100);
     }
-  }, [mounted, config.username]); // Remove fetchGithubData dependency// Generate and emit markdown when config changes - using ref to avoid dependencies
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };  }, [stableMarkdown, onMarkdownGenerated]);
+
   useEffect(() => {
-    if (mounted && onMarkdownGeneratedRef.current) {
-      console.log('GitHubStatsWidget: Generating markdown');
-      // Call generateMarkdown directly from store to avoid dependency issues
-      const { generateMarkdown: storeGenerateMarkdown } = useGithubStatsStore.getState();
-      const markdown = storeGenerateMarkdown(config);
-      onMarkdownGeneratedRef.current(markdown);
+    let isMounted = true;
+
+    if (apiCallTimeoutRef.current) {
+      clearTimeout(apiCallTimeoutRef.current);
     }
-  }, [mounted, config]); // Remove generateMarkdown dependency
+
+    const fetchGithubData = async () => {
+      if (!stableDeps.username) {
+        setGithubData(null);
+        setError("");
+        setIsLoading(false);
+        return;
+      }
+
+      if (lastFetchedUsernameRef.current === stableDeps.username) {
+        return;
+      }
+
+      const cached = githubDataCacheRef.current[stableDeps.username];
+      if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+        if (isMounted) {
+          setGithubData(cached.data);
+          setError("");
+          setIsLoading(false);
+        }
+        return;
+      }
+
+      setIsLoading(true);
+      setError("");
+      lastFetchedUsernameRef.current = stableDeps.username;      try {
+        // Create headers with GitHub token if available
+        const headers: Record<string, string> = {
+          'Accept': 'application/vnd.github.v3+json',
+          'User-Agent': 'GitHub-README-Generator'
+        };
+        
+        // Add authorization header if token is available (client-side won't have access to process.env)
+        // This will primarily work in server-side contexts
+        if (typeof process !== 'undefined' && process.env?.GITHUB_TOKEN) {
+          headers['Authorization'] = `token ${process.env.GITHUB_TOKEN}`;
+        }
+
+        const response = await fetch(
+          `https://api.github.com/users/${stableDeps.username}`,
+          { headers }
+        );
+        if (!response.ok) {
+          // Enhanced error handling for rate limiting
+          if (response.status === 429) {
+            throw new Error(`GitHub API rate limit exceeded. Please try again later or add a GitHub token.`);
+          }
+          throw new Error(`GitHub user not found: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        // Cache the result
+        githubDataCacheRef.current[stableDeps.username] = {
+          data,
+          timestamp: Date.now()
+        };
+
+        if (isMounted) {
+          setGithubData(data);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(
+            err instanceof Error ? err.message : "Failed to fetch GitHub data"
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    apiCallTimeoutRef.current = setTimeout(fetchGithubData, 500);
+
+    return () => {
+      isMounted = false;
+      if (apiCallTimeoutRef.current) {
+        clearTimeout(apiCallTimeoutRef.current);
+      }
+    };
+  }, [stableDeps.username]);
 
   const getThemeStyles = () => {
     switch (config.theme) {
@@ -139,31 +380,43 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
         return "bg-gradient-to-r from-amber-700 to-amber-600 border-amber-500 text-white";
       default: // light
         return "bg-white border-gray-200 text-gray-900";
-    }  };
+    }
+  };
+  const statsCacheKey = useMemo(
+    () => `stats-${stableDeps.username}-${stableDeps.theme}-${stableDeps.layoutType}-${stableDeps.showIcons}-${stableDeps.hideBorder}`,
+    [stableDeps.username, stableDeps.theme, stableDeps.layoutType, stableDeps.showIcons, stableDeps.hideBorder]
+  );
+  const trophyCacheKey = useMemo(
+    () => `trophy-${stableDeps.username}-${stableDeps.trophyTheme}`,
+    [stableDeps.username, stableDeps.trophyTheme]
+  );
+  const streakCacheKey = useMemo(
+    () => `streak-${stableDeps.username}-${stableDeps.streakTheme || stableDeps.theme}`,
+    [stableDeps.username, stableDeps.streakTheme, stableDeps.theme]
+  );
 
-  // Prevent hydration mismatch by showing loading state until mounted
-  if (!mounted) {
-    return (
-      <div className={`github-stats-widget rounded-lg border overflow-hidden ${getThemeStyles()}`}>
-        <div className="p-4">
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-pulse">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-              <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-between items-center px-4 py-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-xs text-gray-500">Loading...</div>
-          <div className="text-xs text-gray-500">Please wait</div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      if (apiCallTimeoutRef.current) {
+        clearTimeout(apiCallTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className={`github-stats-widget rounded-lg border overflow-hidden ${getThemeStyles()}`}>
+    <div
+      className={`github-stats-widget rounded-lg border overflow-hidden ${getThemeStyles()}`}
+    >
       <div className="p-4">
+        {!config.hideTitle && (
+          <h3 className="text-lg font-medium mb-4 text-center">
+            {config.customTitle || "GitHub Stats"}
+          </h3>
+        )}
+
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
             <div className="text-gray-500">Loading...</div>
@@ -176,6 +429,7 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
           <div className="w-full">
             {effectiveConfig.layoutStyle === "side-by-side" && (
               <div className="flex flex-col xl:flex-row gap-6 justify-center items-center">
+                {" "}
                 {effectiveConfig.showStats && statsUrl && (
                   <div className="flex-shrink-0 w-full max-w-md xl:max-w-none">
                     <StableImage
@@ -227,6 +481,7 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
             {effectiveConfig.layoutStyle === "grid" && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {" "}
                   {effectiveConfig.showStats && statsUrl && (
                     <div className="flex justify-center">
                       <StableImage
@@ -279,6 +534,7 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
 
             {effectiveConfig.layoutStyle === "vertical" && (
               <div className="flex flex-col gap-6 items-center">
+                {" "}
                 {effectiveConfig.showStats && statsUrl && (
                   <div className="w-full max-w-lg">
                     <StableImage
@@ -340,6 +596,7 @@ const GitHubStatsWidget: React.FC<GitHubStatsWidgetProps> &
 };
 
 GitHubStatsWidget.generateMarkdown = function () {
+  // Return a default markdown when no config is available
   return "## GitHub Stats\n\n<!-- GitHub stats will appear here -->";
 };
 

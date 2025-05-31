@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { WidgetTheme } from '@/utils/inlineStylesConverter';
-import { useGithubStatsLayoutStore, WidgetArrangement } from '@/stores/githubStatsLayoutStore';
 
 export interface GitHubStatsLayoutProps {
   username: string;
   onGenerateMarkdown: (markdown: string) => void;
 }
+
+// Widget arrangement options
+type WidgetArrangement = 'sideBySide' | 'statsLanguages' | 'allWidgets';
 
 // Widget Theme options - matches the theme options in inlineStylesConverter.ts
 const themeOptions: WidgetTheme[] = [
@@ -16,51 +18,134 @@ const themeOptions: WidgetTheme[] = [
 ];
 
 const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGenerateMarkdown }) => {
-  // Zustand store state
-  const {
-    arrangement,
-    theme,
-    showPrivate,
-    compactLanguages,
-    showIcons,
-    lastMarkdown,
-    setArrangement,
-    setTheme,
-    setShowPrivate,
-    setCompactLanguages,
-    setShowIcons,
-    generateMarkdown
-  } = useGithubStatsLayoutStore();
+  const [arrangement, setArrangement] = useState<WidgetArrangement>('sideBySide');
+  const [theme, setTheme] = useState<WidgetTheme>('tokyonight');
+  const [showPrivate, setShowPrivate] = useState(false);
+  const [compactLanguages, setCompactLanguages] = useState(true);
+  const [showIcons, setShowIcons] = useState(true);
 
-  // Refs for stable references
-  const onGenerateMarkdownRef = useRef(onGenerateMarkdown);
+  // Helper function to generate GitHub Stats URL with parameters
+  const generateStatsUrl = () => {
+    const params = new URLSearchParams();
+    params.append('theme', theme);
+    params.append('show_icons', String(showIcons));
+    params.append('count_private', String(showPrivate));
+    params.append('hide_border', 'true');
+    return `https://github-readme-stats.vercel.app/api?username=${username}&${params.toString()}`;
+  };
 
-  // Update ref when prop changes
-  useEffect(() => {
-    onGenerateMarkdownRef.current = onGenerateMarkdown;
-  }, [onGenerateMarkdown]);
-  // Generate markdown when username or settings change
-  useEffect(() => {
-    if (username) {
-      // Use stable reference to avoid dependency issues
-      const { generateMarkdown: storeGenerateMarkdown } = useGithubStatsLayoutStore.getState();
-      const markdown = storeGenerateMarkdown(username);
-      if (onGenerateMarkdownRef.current) {
-        onGenerateMarkdownRef.current(markdown);
-      }
+  // Helper function to generate Top Languages URL with parameters
+  const generateLanguagesUrl = () => {
+    const params = new URLSearchParams();
+    params.append('theme', theme);
+    params.append('hide_border', 'true');
+    if (compactLanguages) {
+      params.append('layout', 'compact');
     }
-  }, [username, arrangement, theme, showPrivate, compactLanguages, showIcons]); // Remove generateMarkdown dependency
+    return `https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&${params.toString()}`;
+  };
+  // No trophy or streak functions needed  // Generate markdown based on selected arrangement
+  const generateMarkdown = () => {
+    let markdown = '';
+    
+    switch (arrangement) {
+      case 'sideBySide':        
+        markdown = `<div align="center">
 
-  // Handle generate button click
-  const handleGenerate = () => {
-    if (username) {
-      // Use stable reference to avoid dependency issues
-      const { generateMarkdown: storeGenerateMarkdown } = useGithubStatsLayoutStore.getState();
-      const markdown = storeGenerateMarkdown(username);
-      if (onGenerateMarkdownRef.current) {
-        onGenerateMarkdownRef.current(markdown);
-      }
+<table>
+<tr>
+<td>
+
+![Github Stats](${generateStatsUrl()})
+
+</td>
+<td>
+
+![Top Languages](${generateLanguagesUrl()})
+
+</td>
+</tr>
+<tr>
+<td align="center">
+
+**My GitHub Statistics**
+
+</td>
+<td align="center">
+
+**My Top Languages**
+
+</td>
+</tr>
+</table>
+
+</div>`;
+        break;
+        
+      case 'statsLanguages':
+        // Stat card on top, languages below in a table layout
+        markdown = `<div align="center">
+
+![GitHub Stats](${generateStatsUrl()})
+
+<table>
+<tr>
+<td>
+
+![Most Used Languages](${generateLanguagesUrl()})
+
+</td>
+<td>
+
+![GitHub Stats Details](${generateStatsUrl()}&include_all_commits=true&count_private=true)
+
+</td>
+</tr>
+</table>
+
+</div>`;
+        break;
+        
+      case 'allWidgets':       
+        markdown = `<div align="center">
+
+<table>
+<tr>
+<td>
+
+![GitHub Stats](${generateStatsUrl()})
+
+</td>
+<td>
+
+![Top Languages](${generateLanguagesUrl()})
+
+</td>
+</tr>
+<tr>
+<td colspan="2">
+
+![Contributions Graph](https://github-readme-activity-graph.vercel.app/graph?username=${username}&theme=${theme === 'light' ? 'default' : theme}&area=true&hide_border=true)
+
+</td>
+</tr>
+</table>
+
+</div>`;
+        break;
+        
+      default:
+        markdown = `<div align="center">
+
+![GitHub Stats](${generateStatsUrl()})
+
+![Top Languages](${generateLanguagesUrl()})
+
+</div>`;
+        break;
     }
+    
+    onGenerateMarkdown(markdown);
   };
 
   return (
@@ -168,9 +253,10 @@ const GitHubStatsLayout: React.FC<GitHubStatsLayoutProps> = ({ username, onGener
           </label>
         </div>
       </div>
-        <div className="pt-4">
+      
+      <div className="pt-4">
         <button
-          onClick={handleGenerate}
+          onClick={generateMarkdown}
           className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
           Insert GitHub Stats Layout
