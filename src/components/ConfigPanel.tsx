@@ -1,6 +1,7 @@
 'use client';
 
 import { WidgetConfig } from '@/interfaces/WidgetConfig';
+import SkillsEditor from './SkillsEditor';
 
 interface ConfigOption {
   id: string;
@@ -855,12 +856,13 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         <div className="space-y-4">
           <label className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2 block">
             Other Settings
-          </label>
-          {otherOptions.map((option) => (
+          </label>          {otherOptions.map((option) => (
             <div key={option.id} className="flex flex-col">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {option.label}
-              </label>
+              {option.type !== 'text' || option.id !== 'skills' ? (
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {option.label}
+                </label>
+              ) : null}
               
               {option.type === 'select' && option.options && (
                 <select
@@ -892,9 +894,14 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     onChange={(e) => handleChange(option.id, e.target.value)}
                   />
                 </div>
-              )}
-              
-              {option.type === 'text' && (
+              )}              {option.type === 'text' && option.id === 'skills' ? (
+                <SkillsEditor
+                  value={config[option.id as keyof WidgetConfig] !== undefined ? 
+                    config[option.id as keyof WidgetConfig] as string : option.defaultValue}
+                  onChange={(value) => handleChange(option.id, value)}
+                  label={option.label}
+                />
+              ) : option.type === 'text' ? (
                 <input
                   type="text"
                   className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
@@ -902,7 +909,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     config[option.id as keyof WidgetConfig] as string : option.defaultValue}
                   onChange={(e) => handleChange(option.id, e.target.value)}
                 />
-              )}
+              ) : null}
               
               {option.type === 'range' && (
                 <input

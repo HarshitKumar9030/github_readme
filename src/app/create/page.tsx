@@ -119,6 +119,9 @@ export default function CreatePage() {
   
   // Timeout for debouncing content updates in history
   const contentUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  // Ref to track if history has been initialized to prevent infinite loops
+  const historyInitialized = useRef(false);
 
   const [draggedBlock, setDraggedBlock] = useState<Block | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -196,16 +199,15 @@ export default function CreatePage() {
         );
       }
     }
-  }, []);
-
-  // Initialize history when builderBlocks changes from loading saved data
+  }, []);  // Initialize history when builderBlocks changes from loading saved data
   useEffect(() => {
-    if (builderBlocks.length > 0 && history.length === 1 && history[0].length === 0) {
-      // Only initialize history if it's empty and we have blocks (from saved data)
+    if (!historyInitialized.current && builderBlocks.length > 0) {
+      // Only initialize history if we haven't done so and we have blocks (from saved data)
       setHistory([builderBlocks]);
       setHistoryIndex(0);
+      historyInitialized.current = true;
     }
-  }, [builderBlocks, history]);
+  }, [builderBlocks]);
 
   const generatePreview = useCallback(() => {
     try {

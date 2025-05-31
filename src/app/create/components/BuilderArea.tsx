@@ -61,19 +61,18 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
   }, []);
 
   // Create stable callback functions for each block to prevent re-renders
-  const blockIds = useMemo(() => builderBlocks.map(b => b.id), [builderBlocks]);
-  const stableCallbacks = useMemo(() => {
+  const blockIds = useMemo(() => builderBlocks.map(b => b.id), [builderBlocks]);  const stableCallbacks = useMemo(() => {
     const callbacks: Record<string, (md: string) => void> = {};
     builderBlocks.forEach(block => {
       callbacks[block.id] = (md: string) => {
-        // Use ref instead of state to avoid recreating callbacks
-        if (isMountedRef.current && typeof window !== 'undefined' && handleWidgetMarkdownGenerated) {
+        // Use ref to ensure we're only calling when mounted
+        if (isMountedRef.current && handleWidgetMarkdownGenerated) {
           handleWidgetMarkdownGenerated(block.id, md);
         }
       };
     });
     return callbacks;
-  }, [builderBlocks, handleWidgetMarkdownGenerated]); // Remove isMounted dependency
+  }, [builderBlocks, handleWidgetMarkdownGenerated]);
 
   const githubStatsConfig = useMemo(() => ({
     username: username,

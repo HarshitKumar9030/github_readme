@@ -1,7 +1,14 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 export default function SVGDemoPage() {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const [baseUrl, setBaseUrl] = useState('');
+  
+  useEffect(() => {
+    setBaseUrl(window.location.origin);
+  }, []);
   
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
