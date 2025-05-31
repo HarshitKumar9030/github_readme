@@ -41,6 +41,13 @@
 - **Copy with Formatting** - Preserve all styling and layout
 - **Shareable Preview Links** - Collaborate with team members
 
+### 🤖 **AI-Powered Enhancement**
+- **Gemini Flash 2.5 Integration** - Powered by Google's latest AI model
+- **Intelligent Content Enhancement** - Automatically improve descriptions and structure
+- **Multiple Enhancement Types** - Choose from comprehensive, structure, content, or formatting improvements
+- **Real-Time Preview** - See enhanced content in both markdown and rendered views
+- **Smart Personalization** - AI considers your GitHub profile and social links for context
+
 ---
 
 ## 🏗️ Tech Stack
@@ -91,6 +98,7 @@
    MONGODB_URI=your_mongodb_connection_string
    GITHUB_TOKEN=your_github_personal_access_token
    NEXTAUTH_SECRET=your_nextauth_secret
+   GEMINI_API_KEY=your_google_gemini_api_key
    ```
 
 4. **Run the development server**
@@ -152,6 +160,19 @@ GET /api/repo-showcase?username=octocat&repo=Hello-World&theme=radical
 ### Animated Progress Bars
 ```http
 GET /api/animated-progress?skills=JavaScript,Python,React&values=90,85,80&theme=gradient
+```
+
+### AI Enhancement
+```http
+POST /api/ai-enhance
+Content-Type: application/json
+
+{
+  "content": "Your README content",
+  "enhancementType": "comprehensive|structure|content|formatting",
+  "username": "your-github-username",
+  "socials": { "github": "...", "linkedin": "..." }
+}
 ```
 
 **[📖 Full API Documentation](https://github-readme-harshit.vercel.app/documentation)**

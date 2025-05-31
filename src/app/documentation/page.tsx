@@ -222,8 +222,7 @@ import { YourProject } from 'your-project';
                       <h4 className="font-semibold">{widget.name}</h4>
                       <p className="text-gray-600 dark:text-gray-400">{widget.desc}</p>
                     </div>
-                  </motion.div>
-                ))}
+                  </motion.div>                ))}
               </div>
             </div>
           ),
@@ -232,6 +231,101 @@ import { YourProject } from 'your-project';
 
 <!-- Top Languages -->
 ![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=yourusername&layout=compact&theme=dark)`
+        },
+        {
+          id: 'ai-enhancement',
+          title: 'AI-Powered Enhancement',
+          content: (
+            <div className="space-y-6">
+              <p className="text-lg leading-relaxed">
+                Transform your README content with our cutting-edge AI enhancement feature, powered by Google&apos;s Gemini Flash 2.5 model.
+              </p>
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
+                <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-4 flex items-center gap-2">
+                  <span>🤖</span>
+                  AI Enhancement Types
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    {
+                      type: 'Comprehensive Enhancement',
+                      icon: '🚀',
+                      description: 'Complete makeover including structure, content, and formatting',
+                      features: ['Reorganizes entire structure', 'Enhances content quality', 'Optimizes formatting', 'Adds missing sections']
+                    },
+                    {
+                      type: 'Structure & Organization',
+                      icon: '🏗️',
+                      description: 'Improve heading hierarchy and section order',
+                      features: ['Better heading hierarchy', 'Logical section ordering', 'Improved navigation', 'Clear content flow']
+                    },
+                    {
+                      type: 'Content Enhancement',
+                      icon: '✨',
+                      description: 'Make descriptions more engaging and professional',
+                      features: ['More engaging descriptions', 'Clearer explanations', 'Professional tone', 'Added helpful details']
+                    },
+                    {
+                      type: 'Visual & Formatting',
+                      icon: '🎨',
+                      description: 'Optimize markdown formatting and GitHub compatibility',
+                      features: ['Better visual hierarchy', 'GitHub-optimized formatting', 'Improved spacing', 'Visual elements & badges']
+                    }
+                  ].map((enhancement, idx) => (
+                    <div key={idx} className="bg-white dark:bg-gray-800/50 rounded-lg p-4 border border-purple-200 dark:border-purple-700">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xl">{enhancement.icon}</span>
+                        <h5 className="font-semibold text-gray-900 dark:text-white">{enhancement.type}</h5>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{enhancement.description}</p>
+                      <ul className="space-y-1">
+                        {enhancement.features.map((feature, featureIdx) => (
+                          <li key={featureIdx} className="text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1">
+                            <span>•</span>
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
+                  <span>💡</span>
+                  How to Use AI Enhancement
+                </h4>
+                <ol className="space-y-2 text-blue-700 dark:text-blue-300">
+                  <li className="flex items-start gap-2">
+                    <span className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
+                    Create your README content using templates and widgets
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
+                    Click the AI Enhance button in the footer toolbar
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">3</span>
+                    Select your preferred enhancement type
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">4</span>
+                    Preview the enhanced content in both markdown and rendered views
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">5</span>
+                    Apply the enhancement to update your README
+                  </li>
+                </ol>
+              </div>
+            </div>
+          ),
+          tips: [
+            'Start with basic content - AI works best when it has something to enhance',
+            'Try different enhancement types to see what works best for your project',
+            'Use the preview modes to see how your enhanced README will look',
+            'AI enhancement considers your GitHub username and social links for personalization'
+          ]
         }
       ]
     },

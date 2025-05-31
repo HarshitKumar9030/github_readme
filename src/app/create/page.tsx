@@ -12,6 +12,7 @@ import BuilderSidebar from "./components/BuilderSidebar";
 import BuilderArea from "./components/BuilderArea";
 import PropertiesPanel from "./components/PropertiesPanel";
 import FooterBar from "./components/FooterBar";
+import AIEnhancementModal from "@/components/AIEnhancementModal";
 
 // Services
 import LocalStorageService from "@/services/LocalStorageService";
@@ -149,16 +150,135 @@ export default function CreatePage() {
     "blocks" | "templates" | "social" | "settings"
   >("blocks");  const [projectName, setProjectName] = useState<string>("My README");
   const [username, setUsername] = useState<string>("octocat"); // Default GitHub username for demo
-  const { theme, setTheme } = useTheme();
-  const [showExportModal, setShowExportModal] = useState(false);
+  const { theme, setTheme } = useTheme();  const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showAIEnhanceModal, setShowAIEnhanceModal] = useState(false);
   const [projects, setProjects] = useState<ReadmeProject[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-  const [livePreviewMode, setLivePreviewMode] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);  const [livePreviewMode, setLivePreviewMode] = useState(false);
   const [previewContent, setPreviewContent] = useState<string>("");
   const [markdownCache, setMarkdownCache] = useState<Record<string, string>>(
     {}
-  );
+  );  // Function to parse enhanced markdown back into builder blocks
+  const parseMarkdownToBlocks = useCallback((markdown: string): Block[] => {
+    const blocks: Block[] = [];
+    const lines = markdown.split('\n');
+    let currentContent = '';
+    let insideCodeBlock = false;
+    let blockCounter = 1;
+    
+    const createContentBlock = (content: string): ContentBlock => {
+      const trimmedContent = content.trim();
+      let label = `Content Block ${blockCounter++}`;
+      
+      // Try to extract a meaningful label from the content
+      const firstLine = trimmedContent.split('\n')[0];
+      if (firstLine.startsWith('#')) {
+        // Header found, use it as label
+        label = firstLine.replace(/^#+\s*/, '').trim() || label;
+      } else if (firstLine.length > 0 && firstLine.length < 50) {
+        // Short first line, might be a good label
+        label = firstLine.trim() || label;
+      }
+      
+      return {
+        id: `content-${Date.now()}-${Math.random()}`,
+        type: 'content',
+        label,
+        content: trimmedContent
+      };
+    };
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Handle code blocks
+      if (line.startsWith('```')) {
+        if (!insideCodeBlock) {
+          // Starting a code block
+          insideCodeBlock = true;
+          if (currentContent.trim()) {
+            blocks.push(createContentBlock(currentContent));
+            currentContent = '';
+          }
+          currentContent = line + '\n';
+        } else {
+          // Ending a code block
+          insideCodeBlock = false;
+          currentContent += line + '\n';
+          blocks.push(createContentBlock(currentContent));
+          currentContent = '';
+        }
+        continue;
+      }
+      
+      if (insideCodeBlock) {
+        currentContent += line + '\n';
+        continue;
+      }
+      
+      // Handle headers and sections
+      if (line.startsWith('#')) {
+        // Save previous content if any
+        if (currentContent.trim()) {
+          blocks.push(createContentBlock(currentContent));
+          currentContent = '';
+        }
+        currentContent = line + '\n';
+      } else if (line.trim() === '' && currentContent.endsWith('\n\n')) {
+        // Skip multiple empty lines
+        continue;
+      } else {
+        currentContent += line + '\n';
+      }
+    }
+    
+    // Add remaining content
+    if (currentContent.trim()) {
+      blocks.push(createContentBlock(currentContent));
+    }
+    
+    return blocks;
+  }, []);
+
+  // AI Enhancement handler
+  const handleAIEnhancement = useCallback((enhancedContent: string) => {
+    try {
+      // Parse enhanced content back into builder blocks
+      const newBlocks = parseMarkdownToBlocks(enhancedContent);
+      
+      // Update builder blocks with enhanced content
+      setBuilderBlocks(newBlocks);
+      
+      // Clear preview content to use the new blocks
+      setPreviewContent('');
+      
+      // Close AI modal
+      setShowAIEnhanceModal(false);
+      
+      // Auto-open preview to show the enhancement
+      setShowPreview(true);
+      
+      // Show success message
+      setToastMessage(`README enhanced successfully! Generated ${newBlocks.length} content blocks from enhanced content.`);
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 4000);
+      
+      // Clear markdown cache to force regeneration
+      setMarkdownCache({});
+      
+    } catch (error) {
+      console.error('Error parsing enhanced content:', error);
+      
+      // Fallback: just update preview content
+      setPreviewContent(enhancedContent);
+      setShowAIEnhanceModal(false);
+      setShowPreview(true);
+      
+      setToastMessage("README enhanced successfully! Note: Content is displayed in preview mode only.");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 4000);
+    }
+  }, [parseMarkdownToBlocks]);
 
   // Handle markdown generation from widget components
   const handleWidgetMarkdownGenerated = (blockId: string, markdown: string) => {
@@ -987,14 +1107,13 @@ export default function CreatePage() {
                 />
               </div>
             </div>
-          </div>
-
-          {/* Footer Actions */}
+          </div>          {/* Footer Actions */}
           <FooterBar
             setShowPreview={setShowPreview}
             setShowImportModal={setShowImportModal}
             exportToFile={exportToFile}
             saveProject={saveProject}
+            onAIEnhanceClick={() => setShowAIEnhanceModal(true)}
           />
         </div>
         {/* Preview Modal */}{" "}
@@ -1146,8 +1265,20 @@ export default function CreatePage() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>        )}
+        
+        {/* AI Enhancement Modal */}
+        {showAIEnhanceModal && (
+          <AIEnhancementModal
+            isOpen={showAIEnhanceModal}
+            onClose={() => setShowAIEnhanceModal(false)}
+            content={previewContent || generatePreview()}
+            onApplyEnhancement={handleAIEnhancement}
+            username={username}
+            socials={socials}
+          />
         )}
+        
         {/* Toast notifications would go here */}
       </div>
     </div>

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-slot": "^1.2.2",
     "@upstash/context7-mcp": "^1.0.8",
