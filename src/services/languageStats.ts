@@ -1,8 +1,3 @@
-/*
-    Ultra-fast language statistics service with parallel processing and beautiful SVG UI.
-    Uses concurrent API calls, MongoDB caching, and advanced data processing for maximum performance.
-*/  
-
 import { NextResponse } from 'next/server';
 import { cacheHelpers } from './cacheStats';
 
@@ -31,16 +26,24 @@ export async function GET(request: Request) {
   const startTime = performance.now();
   
   try {
-    const { searchParams } = new URL(request.url);    const username = searchParams.get('username') || 'octocat';
-    const theme = searchParams.get('theme') || 'dark';
-    const size = parseInt(searchParams.get('size') || '500'); // Increased default size
-    const chartType = searchParams.get('chartType') || 'donut'; // donut, bar, pie
-    const maxLanguages = Math.min(parseInt(searchParams.get('maxLanguages') || '8'), 8); // Strict limit of 8 languages
-    const type = searchParams.get('type') || 'svg'; // 'svg' or 'raw' for JSON output
+    const { searchParams } = new URL(request.url);
     
-    // Multi-tier caching: Memory -> MongoDB -> API
-    const cacheKey = `${username}-${maxLanguages}`;
-      // Check memory cache first (fastest)
+    const username = searchParams.get('username') || 'octocat';
+    const theme = searchParams.get('theme') || 'dark';
+    const size = parseInt(searchParams.get('size') || '400');
+    const chartType = searchParams.get('chartType') || 'donut'; // donut, bar, pie
+    const maxLanguages = Math.min(parseInt(searchParams.get('maxLanguages') || '8'), 8);
+    const minPercentage = parseFloat(searchParams.get('minPercentage') || '0');
+    const hideBorder = searchParams.get('hideBorder') === 'true';
+    const hideTitle = searchParams.get('hideTitle') === 'true';
+    const customTitle = searchParams.get('customTitle') || '';
+    const showPercentages = searchParams.get('showPercentages') === 'true';
+    const type = searchParams.get('type') || 'svg';
+    
+    // Create comprehensive cache key including all options
+    const cacheKey = `${username}-${maxLanguages}-${minPercentage}`;
+    
+    // Check memory cache first (fastest)
     const memCached = memoryCache.get(cacheKey);
     if (memCached && (Date.now() - memCached.timestamp) < MEMORY_CACHE_DURATION) {
       console.log(`⚡ Memory cache hit for ${username}`);
@@ -61,7 +64,13 @@ export async function GET(request: Request) {
         });
       }
       
-      const svg = generateEnhancedSVG(memCached.data, theme, size, chartType, performance.now() - startTime);
+      const svg = generateEnhancedSVG(memCached.data, theme, size, chartType, performance.now() - startTime, {
+        hideBorder,
+        hideTitle,
+        customTitle,
+        showPercentages,
+        minPercentage
+      });
       return new NextResponse(svg, {
         headers: {
           'Content-Type': 'image/svg+xml',
@@ -94,7 +103,13 @@ export async function GET(request: Request) {
         });
       }
       
-      const svg = generateEnhancedSVG(mongoData, theme, size, chartType, performance.now() - startTime);
+      const svg = generateEnhancedSVG(mongoData, theme, size, chartType, performance.now() - startTime, {
+        hideBorder,
+        hideTitle,
+        customTitle,
+        showPercentages,
+        minPercentage
+      });
       return new NextResponse(svg, {
         headers: {
           'Content-Type': 'image/svg+xml',
@@ -178,8 +193,7 @@ export async function GET(request: Request) {
 
     // Calculate total bytes for percentages
     const totalBytes = Object.values(languageStats).reduce((sum, stat) => sum + stat.bytes, 0);
-    
-    // Convert to structured data and sort
+      // Convert to structured data and sort
     const languageData: LanguageData[] = Object.entries(languageStats)
       .map(([name, stat]) => ({
         name,
@@ -188,8 +202,9 @@ export async function GET(request: Request) {
         color: getEnhancedColorForLanguage(name, theme),
         repos: stat.repos.size
       }))
+      .filter(lang => lang.percentage >= minPercentage) // Apply minimum percentage filter
       .sort((a, b) => b.bytes - a.bytes)
-      .slice(0, maxLanguages);    // Cache the results in both MongoDB (long-term) and memory (short-term)
+      .slice(0, maxLanguages);// Cache the results in both MongoDB (long-term) and memory (short-term)
     await Promise.all([
       cacheHelpers.cacheLanguageStats(username, languageData, maxLanguages),
       // Also store in memory cache for ultra-fast access
@@ -218,7 +233,13 @@ export async function GET(request: Request) {
     }
     
     // Generate beautiful SVG
-    const svg = generateEnhancedSVG(languageData, theme, size, chartType, performance.now() - startTime);
+    const svg = generateEnhancedSVG(languageData, theme, size, chartType, performance.now() - startTime, {
+      hideBorder,
+      hideTitle,
+      customTitle,
+      showPercentages,
+      minPercentage
+    });
     
     return new NextResponse(svg, {
       headers: {
@@ -321,17 +342,23 @@ function generateEnhancedSVG(
   theme: string, 
   size: number, 
   chartType: string,
-  processingTime: number
+  processingTime: number,
+  options: {
+    hideBorder?: boolean;
+    hideTitle?: boolean;
+    customTitle?: string;
+    showPercentages?: boolean;
+    minPercentage?: number;
+  } = {}
 ): string {
   const isDark = theme === 'dark';
   const bgColor = isDark ? '#0d1117' : '#ffffff';
   const textColor = isDark ? '#e6edf3' : '#24292f';
   const borderColor = isDark ? '#21262d' : '#d0d7de';
   const accentColor = isDark ? '#238636' : '#0969da';
-  
-  // Fixed dimensions for better layout control
+    // Fixed dimensions for better layout control
   const padding = 25;
-  const headerHeight = 50;
+  const headerHeight = options.hideTitle ? 25 : 50;
   const footerHeight = 30;
   
   // Fixed legend width to prevent overflow
@@ -382,26 +409,24 @@ function generateEnhancedSVG(
           .badge-text { font: bold 10px 'Segoe UI', system-ui, sans-serif; fill: white; text-anchor: middle; }
         </style>
       </defs>
-      
-      <!-- Background -->
+        <!-- Background -->
       <rect width="${totalWidth}" height="${svgHeight}" fill="url(#bgGradient)" rx="15" ry="15" />
-      <rect width="${totalWidth}" height="${svgHeight}" fill="none" stroke="${borderColor}" stroke-width="1" rx="15" ry="15" />
+      ${!options.hideBorder ? `<rect width="${totalWidth}" height="${svgHeight}" fill="none" stroke="${borderColor}" stroke-width="1" rx="15" ry="15" />` : ''}
       
       <!-- Title -->
+      ${!options.hideTitle ? `
       <text x="${padding}" y="40" class="chart-title">
-        <tspan>🌐 Top Programming Languages</tspan>
-      </text>
+        <tspan>${options.customTitle || '🌐 Top Programming Languages'}</tspan>
+      </text>` : ''}
       
       <!-- Processing time badge -->
       <rect x="${totalWidth - 140}" y="20" width="120" height="25" fill="${accentColor}" rx="12" opacity="0.9" filter="url(#shadow)" />
       <text x="${totalWidth - 80}" y="37" class="badge-text">
         ⚡ ${processingTime.toFixed(1)}ms
       </text>
-  `;
-  if (chartType === 'donut' || chartType === 'pie') {
-    svgContent += generateResponsiveDonutChart(languageData, chartSize, padding, chartType === 'pie', headerHeight);
-  } else {
-    svgContent += generateResponsiveBarChart(languageData, chartSize, svgHeight, padding, isDark, headerHeight);
+  `;  if (chartType === 'donut' || chartType === 'pie') {
+    svgContent += generateResponsiveDonutChart(languageData, chartSize, padding, chartType === 'pie', headerHeight, options.showPercentages);
+  } else {    svgContent += generateResponsiveBarChart(languageData, chartSize, svgHeight, padding, isDark, headerHeight, options.showPercentages);
   }
   
   // Generate responsive legend
@@ -412,7 +437,7 @@ function generateEnhancedSVG(
   return svgContent;
 }
 
-function generateResponsiveDonutChart(languageData: LanguageData[], size: number, padding: number, isPie: boolean, headerHeight: number): string {
+function generateResponsiveDonutChart(languageData: LanguageData[], size: number, padding: number, isPie: boolean, headerHeight: number, showPercentages: boolean = true): string {
   const centerX = size / 2;
   const centerY = (size + headerHeight) / 2;
   const maxRadius = Math.min(size - padding * 2, size - headerHeight - padding) / 2 - 20;
@@ -454,9 +479,8 @@ function generateResponsiveDonutChart(languageData: LanguageData[], size: number
         <title>${lang.name}: ${lang.percentage.toFixed(1)}% (${lang.repos} repos)</title>
       </path>
     `;
-    
-    // Add percentage text for larger segments
-    if (lang.percentage > 3) {
+      // Add percentage text for larger segments
+    if (showPercentages && lang.percentage > 3) {
       const textAngle = currentAngle + angle / 2;
       const textRadius = isPie ? radius * 0.75 : (radius + innerRadius) / 2;
       const textX = centerX + Math.cos((textAngle * Math.PI) / 180) * textRadius;
@@ -488,7 +512,7 @@ function generateResponsiveDonutChart(languageData: LanguageData[], size: number
   return paths;
 }
 
-function generateResponsiveBarChart(languageData: LanguageData[], size: number, svgHeight: number, padding: number, isDark: boolean, headerHeight: number): string {
+function generateResponsiveBarChart(languageData: LanguageData[], size: number, svgHeight: number, padding: number, isDark: boolean, headerHeight: number, showPercentages: boolean = true): string {
   const chartHeight = svgHeight - headerHeight - padding * 2 - 20;
   const chartWidth = size - padding * 2;
   const barHeight = Math.max(25, Math.min(40, chartHeight / languageData.length - 8));
@@ -527,14 +551,15 @@ function generateResponsiveBarChart(languageData: LanguageData[], size: number, 
         <title>${lang.name}: ${lang.percentage.toFixed(1)}% (${lang.repos} repos)</title>
         <animate attributeName="width" from="0" to="${barWidth}" dur="1.5s" fill="freeze" begin="${index * 0.2}s" />
       </rect>
-      
-      <text x="${padding + 12}" y="${y + barHeight / 2 + 5}" class="language-name" fill="white">
+        <text x="${padding + 12}" y="${y + barHeight / 2 + 5}" class="language-name" fill="white">
         ${lang.name}
       </text>
       
+      ${showPercentages ? `
       <text x="${padding + chartWidth * 0.95 - 12}" y="${y + barHeight / 2 + 5}" class="percentage-text" text-anchor="end" fill="${lang.color}">
         ${lang.percentage.toFixed(1)}%
       </text>
+      ` : ''}
     `;
   });
   

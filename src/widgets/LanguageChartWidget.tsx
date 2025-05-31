@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import { createAbsoluteUrl } from '@/utils/urlHelpers';
+import { useLanguageChartStore } from '@/stores/languageChartStore';
 
 export interface LanguageChartWidgetConfig extends BaseWidgetConfig {
   username: string;
@@ -27,77 +28,82 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
   onConfigChange,
   onMarkdownGenerated
 }) => {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const svgUrl = useMemo(() => {
-    if (!config.username?.trim()) {
-      return '';
-    }
+  // Zustand store hooks
+  const { 
+    svgUrl, 
+    loading, 
+    error, 
+    mounted,
+    setMounted,
+    generateLanguageChart,
+    resetState 
+  } = useLanguageChartStore();
 
-    const params = new URLSearchParams({
-      username: config.username,
-      theme: config.theme || 'dark',
-      size: (config.size || 400).toString(),
-      chartType: config.chartType || 'donut',
-      maxLanguages: Math.min(config.maxLanguages || 8, 8).toString()
-    });
+  const effectiveConfig = useMemo(() => ({
+    username: config.username || '',
+    theme: config.theme || 'dark',
+    size: config.size || 400,
+    chartType: config.chartType || 'donut',
+    maxLanguages: config.maxLanguages || 8,
+    minPercentage: config.minPercentage,
+    hideBorder: config.hideBorder,
+    hideTitle: config.hideTitle,
+    customTitle: config.customTitle,
+    showPercentages: config.showPercentages
+  }), [config]);
 
-    if (config.minPercentage) {
-      params.set('minPercentage', config.minPercentage.toString());
-    }
-
-    return createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
-  }, [config.username, config.theme, config.size, config.chartType, config.maxLanguages, config.minPercentage]);
-
-  const generateMarkdown = useMemo(() => {
-    if (!config.username?.trim()) {
+  const generateMarkdown = useCallback((): string => {
+    if (!effectiveConfig.username?.trim()) {
       return '<!-- Language Chart: Please configure username -->';
     }
+    
     const params = new URLSearchParams({
-      username: config.username,
-      theme: config.theme || 'dark',
-      size: (config.size || 400).toString(),
-      chartType: config.chartType || 'donut',
-      maxLanguages: Math.min(config.maxLanguages || 8, 8).toString()
-    });    if (config.minPercentage) {
-      params.set('minPercentage', config.minPercentage.toString());
+      username: effectiveConfig.username,
+      theme: effectiveConfig.theme,
+      size: effectiveConfig.size.toString(),
+      chartType: effectiveConfig.chartType,
+      maxLanguages: Math.min(effectiveConfig.maxLanguages, 8).toString()
+    });
+
+    if (effectiveConfig.minPercentage) {
+      params.set('minPercentage', effectiveConfig.minPercentage.toString());
     }
 
     const url = createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
-    
-    const chartTypeEmoji = config.chartType === 'pie' ? '🥧' : config.chartType === 'bar' ? '📊' : '🍩';
-    return `![${chartTypeEmoji} ${config.username}'s Language Chart](${url})`;
-  }, [config.username, config.theme, config.size, config.chartType, config.maxLanguages, config.minPercentage]);
+    const chartTypeEmoji = effectiveConfig.chartType === 'pie' ? '🥧' : effectiveConfig.chartType === 'bar' ? '📊' : '🍩';
+    return `![${chartTypeEmoji} ${effectiveConfig.username}'s Language Chart](${url})`;
+  }, [effectiveConfig]);
 
   useEffect(() => {
-    if (!svgUrl) {
-      setError('');
-      setIsLoading(false);
-      return;
+    setMounted(true);
+    return () => {
+      resetState();
+    };
+  }, [setMounted, resetState]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    generateLanguageChart(effectiveConfig);
+  }, [
+    mounted,
+    generateLanguageChart,
+    effectiveConfig.username,
+    effectiveConfig.theme,
+    effectiveConfig.size,
+    effectiveConfig.chartType,
+    effectiveConfig.maxLanguages,
+    effectiveConfig.minPercentage
+  ]);
+
+  useEffect(() => {
+    if (svgUrl && onMarkdownGenerated) {
+      const timeoutId = setTimeout(() => {
+        onMarkdownGenerated(generateMarkdown());
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
-    
-    setIsLoading(true);
-    setError('');
-    
-    const timeoutId = setTimeout(async () => {
-      try {
-        const response = await fetch(svgUrl);        if (!response.ok) {
-          throw new Error(`Failed to generate chart: ${response.status}`);
-        }
-        if (onMarkdownGenerated) {
-          onMarkdownGenerated(generateMarkdown);
-        }
-        setIsLoading(false);
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Unknown error occurred';
-        setError(errorMsg);
-        console.warn('Language chart error:', errorMsg);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 500); 
-    
-    return () => clearTimeout(timeoutId);
   }, [svgUrl, onMarkdownGenerated, generateMarkdown]);
 
   const handleConfigChange = useCallback((updates: Partial<LanguageChartWidgetConfig>) => {
@@ -110,7 +116,7 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
       <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">Preview</h3>
-          {isLoading && (
+          {loading && (
             <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
               <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
               Processing...
@@ -118,7 +124,7 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
           )}
         </div>
         
-        {!config.username?.trim() ? (
+        {!effectiveConfig.username?.trim() ? (
           <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <div className="text-4xl mb-4">🚀</div>
             <div className="text-lg font-medium mb-2">Ultra-Fast Language Charts</div>
@@ -136,17 +142,17 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
           <div className="text-center py-8">
             <div className="text-4xl mb-4">⚠️</div>
             <div className="text-red-600 dark:text-red-400 font-medium mb-2">
-              {error.includes('404') ? 'User not found' : 
-               error.includes('403') ? 'Rate limit exceeded' : 
+              {error.includes('404') || error.includes('not found') ? 'User not found' : 
+               error.includes('403') || error.includes('rate limit') ? 'Rate limit exceeded' : 
                'Chart generation failed'}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              {error.includes('404') ? `Username "${config.username}" doesn't exist on GitHub` :
-               error.includes('403') ? 'GitHub API rate limit exceeded. Please try again in a few minutes.' :
+              {error.includes('404') || error.includes('not found') ? `Username "${effectiveConfig.username}" doesn't exist on GitHub` :
+               error.includes('403') || error.includes('rate limit') ? 'GitHub API rate limit exceeded. Please try again in a few minutes.' :
                error}
             </div>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => generateLanguageChart(effectiveConfig)}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
             >
               🔄 Retry
@@ -158,19 +164,17 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
               <div className="relative group">
                 <Image
                   src={svgUrl}
-                  alt={`${config.username}'s Language Chart`}
-                  width={config.size || 400}
-                  height={config.size || 400}
+                  alt={`${effectiveConfig.username}'s Language Chart`}
+                  width={effectiveConfig.size}
+                  height={effectiveConfig.size}
                   className="max-w-full h-auto rounded-lg shadow-lg transition-transform group-hover:scale-105"
-                  onError={() => setError('Failed to load chart. Please check the username.')}
-                  onLoad={() => setError('')}
+                  onError={() => generateLanguageChart(effectiveConfig)}
                   unoptimized
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"></div>
               </div>
             </div>
             
-            {/* Performance Info */}
             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
               <div className="flex items-center gap-2 text-green-700 dark:text-green-300 text-sm">
                 <span className="text-lg">⚡</span>
@@ -189,7 +193,6 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
   );
 };
 
-// Add MarkdownExportable interface to the component
 (LanguageChartWidget as any).generateMarkdown = (config: LanguageChartWidgetConfig): string => {
   if (!config.username?.trim()) {
     return '<!-- Language Chart: Please configure username -->';
@@ -205,9 +208,8 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
   if (config.minPercentage) {
     params.set('minPercentage', config.minPercentage.toString());
   }
-  // Use the deployed domain or localhost for development
-  const url = createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
   
+  const url = createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
   const chartTypeEmoji = config.chartType === 'pie' ? '🥧' : config.chartType === 'bar' ? '📊' : '🍩';
   return `![${chartTypeEmoji} ${config.username}'s Language Chart](${url})`;
 };
