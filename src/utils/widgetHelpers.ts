@@ -24,10 +24,9 @@ export const deepEqual = (a: any, b: any): boolean => {
   if (a === null || a === undefined || b === null || b === undefined) {
     return false;
   }
+    if (a.prototype !== b.prototype) return false;
   
-  if (a.prototype !== b.prototype) return false;
-  
-  let keys = Object.keys(a);
+  const keys = Object.keys(a);
   if (keys.length !== Object.keys(b).length) {
     return false;
   }
@@ -151,13 +150,14 @@ export const memoize = <T extends (...args: any[]) => any>(
     if (cache.has(key)) {
       return cache.get(key)!;
     }
-    
-    const result = fn(...args);
+      const result = fn(...args);
     cache.set(key, result);
     
     if (cache.size > 100) {
       const firstKey = cache.keys().next().value;
-      cache.delete(firstKey);
+      if (firstKey !== undefined) {
+        cache.delete(firstKey);
+      }
     }
     
     return result;

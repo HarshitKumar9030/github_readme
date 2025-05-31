@@ -78,9 +78,8 @@ export const useWidget = (
     debounceMs = 300,
     retryCount = 2
   } = config;
-
   const [state, dispatch] = useReducer(widgetReducer, initialState);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
   const lastDepsRef = useRef<any[]>([]);
 
@@ -118,7 +117,6 @@ export const useWidget = (
       }
     }
   }, [widgetGenerator, enabled, state.mounted, retryCount]);
-
   // Debounced effect for widget generation
   useEffect(() => {
     if (!enabled || !dependenciesChanged()) return;
@@ -139,7 +137,7 @@ export const useWidget = (
         clearTimeout(debounceTimeoutRef.current);
       }
     };
-  }, [generateWidget, enabled, dependenciesChanged, debounceMs]);
+  }, [generateWidget, enabled, dependenciesChanged, debounceMs, dependencies]);
 
   // Mount effect
   useEffect(() => {
