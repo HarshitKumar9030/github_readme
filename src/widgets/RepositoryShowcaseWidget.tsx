@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
-import { createAbsoluteUrl } from '@/utils/urlHelpers';
+import { useRepositoryShowcaseStore } from '@/stores/repositoryShowcaseStore';
 
 export interface RepositoryShowcaseWidgetConfig extends BaseWidgetConfig {
   username: string;
@@ -50,10 +50,9 @@ const generateMarkdownForConfig = (config: RepositoryShowcaseWidgetConfig): stri
   if (formattedRepos.length === 0) {
     return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
   }
-
   const params = new URLSearchParams({
     repos: formattedRepos.join(','),
-    theme: config.theme || 'default',
+    theme: config.theme || 'light',
     layout: config.repoLayout || 'single',
     sortBy: config.sortBy || 'stars',
     repoLimit: (config.repoLimit || 6).toString(),
@@ -80,26 +79,28 @@ const generateMarkdownForConfig = (config: RepositoryShowcaseWidgetConfig): stri
   return `![Repository Showcase](https://your-domain.com/api/repo-showcase?${params.toString()})`;
 };
 
-const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & MarkdownExportable = ({
+/**
+ * Repository Showcase Widget that displays a showcase of repositories
+ */
+const RepositoryShowcaseWidgetComponent: React.FC<RepositoryShowcaseWidgetProps> = React.memo(({
   config,
   onConfigChange,
   onMarkdownGenerated
 }) => {
-  const [svgUrl, setSvgUrl] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>('');
-  const [mounted, setMounted] = useState<boolean>(false);
-
-  // Ensure component is only interactive after mounting (client-side)
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Memoize the effective config to prevent unnecessary re-calculations
+  // Zustand store hooks
+  const { 
+    svgUrl, 
+    loading, 
+    error, 
+    mounted,
+    setMounted,
+    generateRepositoryShowcase,
+    resetState 
+  } = useRepositoryShowcaseStore();  // Memoize effective config to prevent unnecessary recalculations
   const effectiveConfig = useMemo(() => ({
     username: config.username || '',
     showcaseRepos: Array.isArray(config.showcaseRepos) ? config.showcaseRepos : [],
-    theme: config.theme || 'default',
+    theme: config.theme || 'light',
     repoLayout: config.repoLayout || 'single',
     sortBy: config.sortBy || 'stars',
     repoLimit: config.repoLimit || 6,
@@ -115,108 +116,59 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
     customTitle: config.customTitle || ''
   }), [config]);
 
-  // Single function to generate and load the repository showcase - similar to AnimatedProgressWidget
-  const generateRepositoryShowcase = useCallback(async () => {
-    // Don't generate URL until component is mounted to avoid hydration mismatch
-    if (!mounted) {
-      setSvgUrl('');
-      return;
-    }
+  // Memoize the repos string for stable comparison
+  const showcaseReposString = useMemo(() => 
+    JSON.stringify(effectiveConfig.showcaseRepos), 
+    [effectiveConfig.showcaseRepos]
+  );  // Memoize markdown generation function
+  const generateMarkdown = useCallback((): string => {
+    if (!svgUrl) return '';
 
-    // Ensure showcaseRepos is an array and has content
-    if (effectiveConfig.showcaseRepos.length === 0) {
-      setSvgUrl('');
-      return;
-    }
+    return generateMarkdownForConfig(effectiveConfig);
+  }, [svgUrl, effectiveConfig]);
 
-    // Convert repository names to owner/repo format if needed
-    const formattedRepos = effectiveConfig.showcaseRepos.map((repo: any) => {
-      if (typeof repo !== 'string') return ''; // Skip invalid entries
-      if (repo.includes('/')) {
-        return repo; // Already in owner/repo format
-      } else if (effectiveConfig.username?.trim()) {
-        return `${effectiveConfig.username}/${repo}`; // Add username as owner
-      }
-      return repo;
-    }).filter((repo: string) => repo && repo.includes('/')); // Only keep valid owner/repo pairs
-
-    if (formattedRepos.length === 0) {
-      setSvgUrl('');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const params = new URLSearchParams({
-        repos: formattedRepos.join(','),
-        theme: effectiveConfig.theme,
-        layout: effectiveConfig.repoLayout,
-        sortBy: effectiveConfig.sortBy,
-        repoLimit: effectiveConfig.repoLimit.toString(),
-        cardWidth: effectiveConfig.repoCardWidth.toString(),
-        cardHeight: effectiveConfig.repoCardHeight.toString()
-      });
-
-      if (effectiveConfig.showStats !== undefined) {
-        params.set('showStats', effectiveConfig.showStats.toString());
-      }
-      if (effectiveConfig.showLanguage !== undefined) {
-        params.set('showLanguage', effectiveConfig.showLanguage.toString());
-      }
-      if (effectiveConfig.showDescription !== undefined) {
-        params.set('showDescription', effectiveConfig.showDescription.toString());
-      }
-      if (effectiveConfig.showTopics !== undefined) {
-        params.set('showTopics', effectiveConfig.showTopics.toString());
-      }
-      if (effectiveConfig.showLastUpdated !== undefined) {
-        params.set('showLastUpdated', effectiveConfig.showLastUpdated.toString());
-      }
-
-      const url = createAbsoluteUrl(`/api/repo-showcase?${params.toString()}`);
-      
-      // Test the URL by making a request
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error('Failed to generate repository showcase');
-      }
-      
-      setSvgUrl(url);
-      
-      // Generate and emit markdown only after successful load
-      if (onMarkdownGenerated) {
-        const markdown = generateMarkdownForConfig(config);
-        onMarkdownGenerated(markdown);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      setSvgUrl('');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [mounted, effectiveConfig, onMarkdownGenerated, config]);
-  // Single useEffect with debouncing - similar to AnimatedProgressWidget pattern
+  // Mount effect
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      generateRepositoryShowcase();
-    }, 300); // 300ms debounce
+    setMounted(true);
+    return () => {
+      resetState();
+    };
+  }, [setMounted, resetState]);  // Repository showcase generation effect - using specific dependencies to prevent loops
+  useEffect(() => {
+    if (!mounted) return;
 
-    return () => clearTimeout(timeoutId);
-  }, [generateRepositoryShowcase]);
-
-  const handleConfigChange = (updates: Partial<RepositoryShowcaseWidgetConfig>) => {
-    if (onConfigChange) {
-      const newConfig = { ...config, ...updates };
-      onConfigChange(newConfig);
+    generateRepositoryShowcase(effectiveConfig);
+  }, [
+    mounted,
+    generateRepositoryShowcase,
+    effectiveConfig.username,
+    showcaseReposString, // Use memoized string instead of JSON.stringify
+    effectiveConfig.theme,
+    effectiveConfig.repoLayout,
+    effectiveConfig.sortBy,
+    effectiveConfig.repoLimit,
+    effectiveConfig.repoCardWidth,
+    effectiveConfig.repoCardHeight,
+    effectiveConfig.showStats,
+    effectiveConfig.showLanguage,
+    effectiveConfig.showDescription,
+    effectiveConfig.showTopics,
+    effectiveConfig.showLastUpdated
+  ]);
+  // Markdown generation effect
+  useEffect(() => {
+    if (svgUrl && onMarkdownGenerated) {
+      const timeoutId = setTimeout(() => {
+        onMarkdownGenerated(generateMarkdown());
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
-  };
-  // Calculate display dimensions for different layouts
-  const getDisplayDimensions = () => {
-    const cardWidth = effectiveConfig.repoCardWidth;
-    const cardHeight = effectiveConfig.repoCardHeight;
-    const layout = effectiveConfig.repoLayout;
+  }, [svgUrl, onMarkdownGenerated, generateMarkdown]);// Calculate display dimensions for different layouts - memoized for performance
+  const displayDimensions = useMemo(() => {
+    const cardWidth = effectiveConfig.repoCardWidth ?? 400;
+    const cardHeight = effectiveConfig.repoCardHeight ?? 200;
+    const layout = effectiveConfig.repoLayout ?? 'single';
     
     let displayWidth = cardWidth;
     let displayHeight = cardHeight;
@@ -233,15 +185,20 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
         displayWidth = cardWidth * 3 + 20;
         break;
       case 'list':
-        const showcaseReposLength = effectiveConfig.showcaseRepos.length;
-        displayHeight = cardHeight * Math.min(showcaseReposLength || 1, effectiveConfig.repoLimit) + 
-                       (Math.min(showcaseReposLength || 1, effectiveConfig.repoLimit) - 1) * 10;
+        const showcaseReposLength = effectiveConfig.showcaseRepos?.length ?? 0;
+        displayHeight = cardHeight * Math.min(showcaseReposLength || 1, effectiveConfig.repoLimit ?? 6) + 
+                       (Math.min(showcaseReposLength || 1, effectiveConfig.repoLimit ?? 6) - 1) * 10;
         break;
     }
     
     return { width: displayWidth, height: displayHeight };
-  };
-  const displayDimensions = getDisplayDimensions();
+  }, [
+    effectiveConfig.repoCardWidth,
+    effectiveConfig.repoCardHeight,
+    effectiveConfig.repoLayout,
+    effectiveConfig.showcaseRepos?.length,
+    effectiveConfig.repoLimit
+  ]);
 
   // Show static version during SSR/hydration
   if (!mounted) {
@@ -256,43 +213,72 @@ const RepositoryShowcaseWidget: React.FC<RepositoryShowcaseWidgetProps> & Markdo
       </div>
     );
   }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">Preview</h3>
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <span className="ml-2 text-gray-600 dark:text-gray-400">Generating repository showcase...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">Preview</h3>
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-600 dark:text-red-400 text-sm mb-2">Error: {error}</p>
+            <button
+              onClick={() => generateRepositoryShowcase(effectiveConfig)}
+              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold mb-3">Preview</h3>
         
-        {effectiveConfig.showcaseRepos.length === 0 ? (
+        {(effectiveConfig.showcaseRepos?.length ?? 0) === 0 ? (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             Add repositories to showcase
           </div>
-        ) : isLoading ? (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            Loading repository showcase...
-          </div>
-        ) : error ? (
-          <div className="text-center py-8 text-red-500 dark:text-red-400">
-            Error: {error}
-          </div>
         ) : svgUrl ? (
-          <div className="flex justify-center">            <Image
+          <div className="flex justify-center">
+            <Image
               src={svgUrl}
               alt="Repository Showcase"
               width={displayDimensions.width}
               height={displayDimensions.height}
               className="max-w-full h-auto"
-              unoptimized
-              onError={() => setError('Failed to load repository showcase image')}
-              onLoad={() => {
-                setIsLoading(false);
-                setError('');
-              }}
+              style={{ maxWidth: '100%', height: 'auto' }}
+              unoptimized={true}
+              priority={false}
             />
           </div>
         ) : null}
       </div>
     </div>
   );
-};
+});
+
+RepositoryShowcaseWidgetComponent.displayName = 'RepositoryShowcaseWidget';
+
+// Create the final component with MarkdownExportable
+const RepositoryShowcaseWidget = RepositoryShowcaseWidgetComponent as React.FC<RepositoryShowcaseWidgetProps> & MarkdownExportable;
 
 RepositoryShowcaseWidget.generateMarkdown = (): string => {
   // This provides a default markdown template for repository showcase
