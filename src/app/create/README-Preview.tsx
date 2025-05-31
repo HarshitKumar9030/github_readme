@@ -1,17 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeRaw from "rehype-raw";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import React, { useState, useCallback, useEffect } from "react";
 import { convertToGitHubCompatible } from "@/utils/inlineStylesConverter";
 import {
   copyGitHubMarkdown,
   downloadGitHubMarkdown,
 } from "@/utils/clipboardUtils";
+import MarkdownRenderer from "@/components/MarkdownRenderer";
+import EnhancedWidgetPreview from "@/components/EnhancedWidgetPreview";
+import { parseWidgetsFromMarkdown, ParsedWidget } from "@/utils/widgetParser";
 
 interface ReadmePreviewProps {
   content: string;
@@ -21,205 +18,11 @@ interface ReadmePreviewProps {
   onLiveModeToggle?: (enabled: boolean) => void;
 }
 
-// Simple inline markdown renderer component
-const InlineMarkdownRenderer = ({ content }: { content: string }) => {
-  const [isDark, setIsDark] = useState(false);
-
-  React.useEffect(() => {
-    const checkTheme = () => {
-      setIsDark(document.documentElement.classList.contains('dark'));
-    };
-    checkTheme();
-    
-    const observer = new MutationObserver(checkTheme);
-    observer.observe(document.documentElement, { 
-      attributes: true, 
-      attributeFilter: ['class'] 
-    });
-    
-    return () => observer.disconnect();
-  }, []);
-  return (
-    <div className="prose prose-gray dark:prose-invert max-w-none">      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw]}
-        skipHtml={false}
-        allowedElements={undefined}
-        disallowedElements={[]}
-        components={{code({ node, className, children, ...props }: any) {
-            const match = /language-(\w+)/.exec(className || '');
-            const isInline = !className || !match;
-            return !isInline ? (
-              <SyntaxHighlighter
-                style={tomorrow}
-                language={match[1]}
-                PreTag="div"
-                className="rounded-md"
-              >
-                {String(children).replace(/\n$/, '')}
-              </SyntaxHighlighter>
-            ) : (
-              <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono" {...props}>
-                {children}
-              </code>
-            );
-          },          img({ src, alt, width, height, ...props }) {
-            const imageWidth = typeof width === 'number' ? width : parseInt(width as string) || 800;
-            const imageHeight = typeof height === 'number' ? height : parseInt(height as string) || 400;
-            const imageSrc = typeof src === 'string' ? src : '';
-            
-            return (
-              <Image
-                src={imageSrc}
-                alt={alt || ''}
-                width={imageWidth}
-                height={imageHeight}
-                className="max-w-full h-auto rounded-lg shadow-sm border border-gray-200 dark:border-gray-700"
-                style={{ maxWidth: '100%', height: 'auto' }}
-                unoptimized={true}
-                {...props}
-              />
-            );
-          },
-          a({ href, children, ...props }) {
-            return (
-              <a
-                href={href}
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-blue-600 dark:decoration-blue-400"
-                target="_blank"
-                rel="noopener noreferrer"
-                {...props}
-              >
-                {children}
-              </a>
-            );
-          },
-          table({ children, ...props }) {
-            return (
-              <div className="overflow-x-auto my-4">
-                <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600 rounded-lg" {...props}>
-                  {children}
-                </table>
-              </div>
-            );
-          },
-          th({ children, ...props }) {
-            return (
-              <th className="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 px-4 py-2 text-left font-semibold text-gray-900 dark:text-white" {...props}>
-                {children}
-              </th>
-            );
-          },
-          td({ children, ...props }) {
-            return (
-              <td className="border border-gray-300 dark:border-gray-600 px-4 py-2 text-gray-800 dark:text-gray-200" {...props}>
-                {children}
-              </td>
-            );
-          },
-          blockquote({ children, ...props }) {
-            return (
-              <blockquote className="border-l-4 border-blue-500 dark:border-blue-400 pl-4 py-2 my-4 bg-blue-50 dark:bg-blue-900/20 italic text-gray-700 dark:text-gray-300" {...props}>
-                {children}
-              </blockquote>
-            );
-          },
-          h1({ children, ...props }) {
-            return (
-              <h1 className="text-3xl font-bold mt-8 mb-6 text-gray-900 dark:text-white border-b-2 border-gray-200 dark:border-gray-700 pb-3" {...props}>
-                {children}
-              </h1>
-            );
-          },
-          h2({ children, ...props }) {
-            return (
-              <h2 className="text-2xl font-semibold mt-6 mb-4 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2" {...props}>
-                {children}
-              </h2>
-            );
-          },
-          h3({ children, ...props }) {
-            return (
-              <h3 className="text-xl font-semibold mt-5 mb-3 text-gray-900 dark:text-white" {...props}>
-                {children}
-              </h3>
-            );
-          },
-          ul({ children, ...props }) {
-            return (
-              <ul className="list-disc list-inside my-4 space-y-1 text-gray-800 dark:text-gray-200" {...props}>
-                {children}
-              </ul>
-            );
-          },
-          ol({ children, ...props }) {
-            return (
-              <ol className="list-decimal list-inside my-4 space-y-1 text-gray-800 dark:text-gray-200" {...props}>
-                {children}
-              </ol>
-            );
-          },          p({ children, ...props }) {
-            return (
-              <p className="my-4 text-gray-800 dark:text-gray-200 leading-relaxed" {...props}>
-                {children}
-              </p>
-            );
-          },
-          // GFM-specific components
-          input({ type, checked, ...props }) {
-            if (type === 'checkbox') {
-              return (
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  readOnly
-                  className="mr-2 accent-blue-600"
-                  {...props}
-                />
-              );
-            }
-            return <input type={type} {...props} />;
-          },
-          li({ children, ...props }) {
-            return (
-              <li className="my-1 text-gray-800 dark:text-gray-200" {...props}>
-                {children}
-              </li>
-            );
-          },
-          del({ children, ...props }) {
-            return (
-              <del className="line-through text-gray-600 dark:text-gray-400" {...props}>
-                {children}
-              </del>
-            );
-          },
-          hr({ ...props }) {
-            return (
-              <hr className="my-8 border-t border-gray-300 dark:border-gray-600" {...props} />
-            );
-          },
-          strong({ children, ...props }) {
-            return (
-              <strong className="font-bold text-gray-900 dark:text-white" {...props}>
-                {children}
-              </strong>
-            );
-          },
-          em({ children, ...props }) {
-            return (
-              <em className="italic text-gray-800 dark:text-gray-200" {...props}>
-                {children}
-              </em>
-            );
-          },
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
-  );
-};
+interface DetectedWidget {
+  type: string;
+  data: any;
+  id: string;
+}
 
 export default function ReadmePreview({
   content,
@@ -228,9 +31,43 @@ export default function ReadmePreview({
   liveMode = false,
   onLiveModeToggle,
 }: ReadmePreviewProps) {
-  const [viewMode, setViewMode] = useState<"preview" | "raw">("preview");
+  const [viewMode, setViewMode] = useState<"preview" | "raw" | "widgets">("preview");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copying" | "copied">("idle");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [detectedWidgets, setDetectedWidgets] = useState<DetectedWidget[]>([]);
+  const [parsedWidgets, setParsedWidgets] = useState<ParsedWidget[]>([]);
+  const [showWidgetHighlights, setShowWidgetHighlights] = useState(false);
+
+  // Parse widgets from content on change
+  useEffect(() => {
+    const parseResult = parseWidgetsFromMarkdown(content);
+    setParsedWidgets(parseResult.widgets);
+  }, [content]);
+
+  // Handle widget detection from MarkdownRenderer
+  const handleWidgetDetected = useCallback((widgetType: string, widgetData: any) => {
+    const widgetId = `${widgetType}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newWidget: DetectedWidget = {
+      type: widgetType,
+      data: widgetData,
+      id: widgetId
+    };
+    
+    setDetectedWidgets(prev => {
+      // Avoid duplicates by checking if same widget already exists
+      const isDuplicate = prev.some(w => 
+        w.type === newWidget.type && 
+        w.data.src === newWidget.data.src
+      );
+      if (isDuplicate) return prev;
+      return [...prev, newWidget];
+    });
+  }, []);
+
+  // Handle parsed widget removal
+  const handleWidgetRemove = useCallback((widgetId: string) => {
+    setParsedWidgets(prev => prev.filter(w => w.id !== widgetId));
+  }, []);
 
   const handleCopy = async () => {
     setCopyStatus("copying");
@@ -282,8 +119,7 @@ export default function ReadmePreview({
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                 📄 README Preview
               </h2>
-              
-              {/* View Toggle */}
+                {/* View Toggle */}
               <div className="flex bg-gray-200 dark:bg-gray-700 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode("preview")}
@@ -294,6 +130,20 @@ export default function ReadmePreview({
                   }`}
                 >
                   👁️ Preview
+                </button>                <button
+                  onClick={() => setViewMode("widgets")}
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 relative ${
+                    viewMode === "widgets"
+                      ? "bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm"
+                      : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                  }`}
+                >
+                  🧩 Widgets
+                  {(detectedWidgets.length > 0 || parsedWidgets.length > 0) && (
+                    <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {Math.max(detectedWidgets.length, parsedWidgets.length)}
+                    </span>
+                  )}
                 </button>
                 <button
                   onClick={() => setViewMode("raw")}
@@ -305,9 +155,7 @@ export default function ReadmePreview({
                 >
                   📝 Raw
                 </button>
-              </div>
-
-              {/* Live Mode */}
+              </div>              {/* Live Mode */}
               {onLiveModeToggle && (
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   <input
@@ -323,6 +171,19 @@ export default function ReadmePreview({
                       }`}
                     />
                     Live Updates
+                  </span>
+                </label>
+              )}              {/* Widget Highlights */}
+              {viewMode === "preview" && (detectedWidgets.length > 0 || parsedWidgets.length > 0) && (
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <input
+                    type="checkbox"
+                    checked={showWidgetHighlights}
+                    onChange={(e) => setShowWidgetHighlights(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span className="flex items-center gap-2">
+                    🔍 Highlight Widgets ({Math.max(detectedWidgets.length, parsedWidgets.length)})
                   </span>
                 </label>
               )}
@@ -393,9 +254,7 @@ export default function ReadmePreview({
               </button>
             </div>
           </div>
-        </div>
-
-        {/* Content */}
+        </div>        {/* Content */}
         <div 
           className="flex-1 overflow-hidden"
           style={{ minHeight: 0 }}
@@ -403,7 +262,128 @@ export default function ReadmePreview({
           {viewMode === "preview" ? (
             <div className="h-full overflow-auto bg-white dark:bg-gray-900">
               <div className="max-w-4xl mx-auto p-8">
-                <InlineMarkdownRenderer content={content} />
+                <MarkdownRenderer 
+                  content={content}
+                  githubCompatible={true}
+                  enhancedWidgetRendering={true}
+                  onWidgetDetected={handleWidgetDetected}
+                  livePreview={liveMode}
+                  showAnchorLinks={true}
+                  className="prose-lg"
+                />
+                  {/* Widget Overlay Highlights */}
+                {showWidgetHighlights && (detectedWidgets.length > 0 || parsedWidgets.length > 0) && (
+                  <div className="fixed bottom-4 right-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-3 max-w-sm shadow-lg z-40">
+                    <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                      🧩 Detected Widgets ({Math.max(detectedWidgets.length, parsedWidgets.length)})
+                    </h4>
+                    <div className="space-y-1">
+                      {/* Show parsed widgets first as they're more comprehensive */}
+                      {parsedWidgets.length > 0 ? (
+                        parsedWidgets.map((widget, idx) => (
+                          <div key={widget.id} className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="capitalize">{widget.type.replace('-', ' ')}</span>
+                          </div>
+                        ))
+                      ) : (
+                        detectedWidgets.map((widget, idx) => (
+                          <div key={widget.id} className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            <span className="capitalize">{widget.type.replace('-', ' ')}</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>          ) : viewMode === "widgets" ? (
+            <div className="h-full overflow-auto bg-gray-50 dark:bg-gray-800">
+              <div className="max-w-6xl mx-auto p-8">
+                {parsedWidgets.length > 0 ? (
+                  <EnhancedWidgetPreview 
+                    widgets={parsedWidgets}
+                    onWidgetRemove={handleWidgetRemove}
+                    enableValidation={true}
+                    showStatistics={true}
+                    enableInteraction={true}
+                  />
+                ) : detectedWidgets.length > 0 ? (
+                  <div className="space-y-6">
+                    <div className="mb-6">
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        🧩 Widget Analysis
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400">
+                        Basic widget detection results. For enhanced analysis, ensure your content includes parseable widget markdown.
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {detectedWidgets.map((widget, idx) => (
+                        <div key={widget.id} className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div>
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white capitalize">
+                                {widget.type.replace('-', ' ')} Widget
+                              </h4>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                Widget #{idx + 1} • Detected from image source
+                              </p>
+                            </div>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                              {widget.type}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Source URL
+                              </label>
+                              <code className="block text-xs bg-gray-100 dark:bg-gray-800 p-2 rounded border break-all">
+                                {widget.data.src}
+                              </code>
+                            </div>
+                            
+                            {widget.data.alt && (
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  Alt Text
+                                </label>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                  {widget.data.alt}
+                                </p>
+                              </div>
+                            )}
+                            
+                            {widget.data.title && (
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                  Title
+                                </label>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                  {widget.data.title}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">🔍</div>
+                    <h4 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      No widgets detected yet
+                    </h4>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Widgets will appear here as they&apos;re detected in your README content
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -413,9 +393,7 @@ export default function ReadmePreview({
               </pre>
             </div>
           )}
-        </div>
-
-        {/* Footer */}
+        </div>        {/* Footer */}
         <div 
           className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3"
           style={{ flexShrink: 0 }}
@@ -427,10 +405,19 @@ export default function ReadmePreview({
               </span>
               <span className="flex items-center gap-1">
                 📄 {content.split("\n").length.toLocaleString()} lines
-              </span>
-              <span className="flex items-center gap-1">
+              </span>              <span className="flex items-center gap-1">
                 🔤 {content.split(/\s+/).filter(w => w.length > 0).length.toLocaleString()} words
               </span>
+              {(parsedWidgets.length > 0 || detectedWidgets.length > 0) && (
+                <span className="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium">
+                  🧩 {Math.max(parsedWidgets.length, detectedWidgets.length)} widget{Math.max(parsedWidgets.length, detectedWidgets.length) !== 1 ? 's' : ''}
+                  {parsedWidgets.length > 0 && detectedWidgets.length > 0 && parsedWidgets.length !== detectedWidgets.length && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                      ({parsedWidgets.length} parsed, {detectedWidgets.length} detected)
+                    </span>
+                  )}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-6">
               <span className="flex items-center gap-2 text-green-600 dark:text-green-400 font-medium">
@@ -443,6 +430,11 @@ export default function ReadmePreview({
                 <span className="flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium">
                   <span className="w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
                   Live Mode
+                </span>
+              )}
+              {showWidgetHighlights && (
+                <span className="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-medium">
+                  🔍 Widget Highlights
                 </span>
               )}
             </div>

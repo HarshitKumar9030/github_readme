@@ -147,13 +147,295 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
       setProcessingStep(0);
       setProcessingProgress(10);
       
-      console.log('📡 Sending request to AI API endpoint: /api/ai-enhance');
-      
+      console.log('📡 Sending request to AI API endpoint: /api/ai-enhance');      // Comprehensive widgets information for AI enhancement
+      const availableWidgets = {
+        'GitHub Stats Widget': {
+          description: 'Dynamic GitHub statistics widget that displays real-time profile metrics including stars, commits, pull requests, issues, and contribution data.',
+          features: [
+            'Real-time GitHub statistics display',
+            'Repository stars, forks, and watchers count',
+            'Total commits, PRs, and issues metrics',
+            'Contribution streak tracking',
+            'Profile views and follower count',
+            'Language statistics integration',
+            'Trophy and achievement system',
+            'Customizable card layouts and themes'
+          ],
+          themes: ['default', 'dark', 'radical', 'merko', 'gruvbox', 'tokyonight', 'onedark', 'cobalt', 'synthwave', 'highcontrast', 'dracula'],
+          layouts: ['default', 'compact', 'grid'],
+          useCases: [
+            'Showcasing GitHub activity and contributions',
+            'Highlighting open source involvement',
+            'Displaying coding consistency and streaks',
+            'Professional portfolio statistics'
+          ],
+          markdownExample: `![GitHub Stats](https://github-readme-stats.vercel.app/api?username=USERNAME&show_icons=true&theme=radical&count_private=true)`,
+          customization: {
+            'show_icons': 'Display icons for each statistic',
+            'count_private': 'Include private repository contributions',
+            'theme': 'Visual theme selection from 11+ options',
+            'hide': 'Hide specific stats (stars, commits, prs, issues)',
+            'show_owner': 'Show repository owner in stats'
+          }
+        },
+        'Top Languages Widget': {
+          description: 'Visual representation of programming languages used across repositories with beautiful charts and customizable layouts.',
+          features: [
+            'Programming language distribution analysis',
+            'Percentage-based language breakdown',
+            'Repository language scanning',
+            'Multiple chart layout options',
+            'Custom color themes and styling',
+            'Language filtering and exclusion',
+            'Compact and detailed view modes'
+          ],
+          themes: ['default', 'dark', 'radical', 'merko', 'gruvbox', 'tokyonight', 'onedark', 'cobalt', 'synthwave', 'highcontrast', 'dracula'],
+          layouts: ['compact', 'normal', 'donut', 'donut-vertical', 'pie'],
+          useCases: [
+            'Showcasing technical skill diversity',
+            'Highlighting primary programming languages',
+            'Demonstrating technology stack expertise',
+            'Portfolio language proficiency display'
+          ],
+          markdownExample: `![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=USERNAME&layout=compact&theme=radical&hide=html,css)`,
+          customization: {
+            'layout': 'Chart layout (compact, normal, donut, pie)',
+            'langs_count': 'Number of languages to display (default: 5)',
+            'hide': 'Exclude specific languages from display',
+            'exclude_repo': 'Exclude specific repositories from analysis',
+            'card_width': 'Customize card width in pixels'
+          }
+        },
+        'Repository Showcase Widget': {
+          description: 'Feature-rich repository cards that highlight your best projects with stats, descriptions, topics, and customizable layouts.',
+          features: [
+            'Repository information cards',
+            'Star, fork, and issue count display',
+            'Language and topic tag visualization',
+            'Repository description preview',
+            'Last update timestamp',
+            'Multiple card layout options',
+            'Custom sorting capabilities',
+            'Repository filtering by criteria'
+          ],
+          layouts: ['default', 'compact', 'grid', 'horizontal', 'vertical'],
+          sortOptions: ['stars', 'forks', 'updated', 'created', 'pushed', 'name', 'size'],
+          useCases: [
+            'Highlighting flagship projects',
+            'Showcasing repository statistics',
+            'Creating project portfolio sections',
+            'Demonstrating coding activity and maintenance'
+          ],
+          markdownExample: `[![Repo Card](https://github-readme-stats.vercel.app/api/pin/?username=USERNAME&repo=REPO_NAME&theme=radical)](https://github.com/USERNAME/REPO_NAME)`,
+          customization: {
+            'show_owner': 'Display repository owner',
+            'theme': 'Visual theme selection',
+            'show_description': 'Show repository description',
+            'show_language': 'Display primary language',
+            'border_radius': 'Card border radius customization'
+          }
+        },
+        'Contribution Graph Widget': {
+          description: 'GitHub-style contribution activity visualization with customizable themes, multiple chart types, and detailed activity tracking.',
+          features: [
+            'GitHub contribution calendar visualization',
+            'Activity heatmap display',
+            'Commit frequency tracking',
+            'Multiple visualization styles',
+            'Custom theme support',
+            'Year-over-year comparison',
+            'Streak and consistency metrics',
+            'Interactive hover details'
+          ],
+          themes: ['github', 'github_dark', 'radical', 'react', 'vue', 'dracula', 'tokyo_night', 'monokai', 'synthwave', 'cobalt', 'discord'],
+          layouts: ['default', 'compact', 'grid'],
+          useCases: [
+            'Visualizing coding consistency',
+            'Showcasing long-term commitment',
+            'Highlighting contribution patterns',
+            'Demonstrating development activity'
+          ],
+          markdownExample: `![Contribution Graph](https://github-readme-activity-graph.vercel.app/graph?username=USERNAME&theme=radical&area=true&hide_border=true)`,
+          customization: {
+            'theme': 'Color scheme selection',
+            'area': 'Fill area under the graph',
+            'hide_border': 'Remove border around graph',
+            'bg_color': 'Custom background color',
+            'color': 'Custom graph line color'
+          }
+        },
+        'Social Stats Widget': {
+          description: 'Professional social media integration with beautiful badges, platform links, and customizable styling for building online presence.',
+          features: [
+            'Social platform badge generation',
+            'Professional profile linking',
+            'Multiple badge style options',
+            'Platform-specific icons and colors',
+            'Grid and list layout options',
+            'Custom badge text and colors',
+            'Click-through analytics support',
+            'Mobile-responsive design'
+          ],
+          platforms: ['GitHub', 'LinkedIn', 'Twitter', 'Instagram', 'YouTube', 'Discord', 'Telegram', 'WhatsApp', 'Stack Overflow', 'Dev.to', 'Medium'],
+          badgeStyles: ['flat', 'flat-square', 'plastic', 'for-the-badge', 'social'],
+          useCases: [
+            'Professional networking display',
+            'Social media portfolio integration',
+            'Contact information showcase',
+            'Building online brand presence'
+          ],
+          markdownExample: `[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/USERNAME)`,
+          customization: {
+            'style': 'Badge visual style selection',
+            'logo': 'Platform logo inclusion',
+            'logoColor': 'Custom logo color',
+            'color': 'Custom badge background color',
+            'labelColor': 'Custom label background color'
+          }
+        },
+        'Animated Progress Widget': {
+          description: 'Custom skill visualization with animated progress bars, skill ratings, and beautiful color gradients for showcasing technical abilities.',
+          features: [
+            'Animated skill progress bars',
+            'Custom skill categories and levels',
+            'Gradient color schemes',
+            'Animation timing control',
+            'Progress percentage display',
+            'Skill grouping and categorization',
+            'Interactive hover effects',
+            'Mobile-responsive layouts'
+          ],
+          customizable: [
+            'Skill names and categories',
+            'Progress levels (0-100%)',
+            'Color schemes and gradients',
+            'Animation duration and easing',
+            'Bar height and spacing',
+            'Font and text styling'
+          ],
+          useCases: [
+            'Technical skill demonstration',
+            'Programming language proficiency',
+            'Tool and framework experience',
+            'Professional competency showcase'
+          ],
+          markdownExample: `<img src="https://skillicons.dev/icons?i=js,ts,react,nodejs,python,java&theme=dark" />`,
+          animationOptions: {
+            'duration': 'Animation speed (1-10 seconds)',
+            'easing': 'Animation curve (linear, ease, bounce)',
+            'delay': 'Staggered animation delay',
+            'loop': 'Continuous animation loop'
+          }
+        },
+        'Wave Animation Widget': {
+          description: 'Dynamic SVG wave animations for adding visual appeal and modern aesthetics to profile sections with customizable patterns.',
+          features: [
+            'Smooth SVG wave animations',
+            'Multiple wave pattern styles',
+            'Custom color gradients',
+            'Animation speed control',
+            'Wave amplitude and frequency adjustment',
+            'Responsive design compatibility',
+            'Overlay and background modes',
+            'CSS animation integration'
+          ],
+          customizable: [
+            'Wave colors and gradients',
+            'Animation speed and direction',
+            'Wave count and amplitude',
+            'Container dimensions',
+            'Opacity and blend modes',
+            'Pattern complexity'
+          ],
+          useCases: [
+            'Profile header decoration',
+            'Section divider animations',
+            'Background visual enhancement',
+            'Modern aesthetic appeal'
+          ],
+          markdownExample: `<img src="https://github.com/USERNAME/USERNAME/blob/main/assets/wave.svg" width="100%" />`,
+          waveTypes: [
+            'Sine waves', 'Cosine patterns', 'Complex harmonics', 'Layered waves', 'Gradient fills'
+          ]
+        },
+        'Language Chart Widget': {
+          description: 'Interactive programming language distribution visualizations with multiple chart types, custom colors, and detailed statistics.',
+          features: [
+            'Multiple chart type support',
+            'Language percentage calculations',
+            'Interactive pie and donut charts',
+            'Bar chart representations',
+            'Custom color palettes',
+            'Language filtering options',
+            'Repository inclusion/exclusion',
+            'Export and embedding options'
+          ],
+          chartTypes: ['donut', 'pie', 'horizontal-bar', 'vertical-bar', 'treemap'],
+          customizable: [
+            'Chart type selection',
+            'Color scheme customization',
+            'Language count limits',
+            'Percentage thresholds',
+            'Chart dimensions',
+            'Legend positioning'
+          ],
+          useCases: [
+            'Technical portfolio visualization',
+            'Programming language expertise',
+            'Technology stack demonstration',
+            'Skill diversity showcase'
+          ],
+          markdownExample: `![Language Chart](https://github-readme-stats.vercel.app/api/top-langs/?username=USERNAME&layout=donut&theme=radical)`,
+          chartOptions: {
+            'layout': 'Chart layout style',
+            'langs_count': 'Number of languages to include',
+            'hide': 'Languages to exclude from chart',
+            'theme': 'Visual theme selection'
+          }
+        },
+        'Typing Animation Widget': {
+          description: 'Dynamic typing effect animations for headers, descriptions, and text content with customizable fonts, speed, and cursor styling.',
+          features: [
+            'Realistic typing animation effects',
+            'Custom text content support',
+            'Font family and size options',
+            'Typing speed control',
+            'Cursor blink customization',
+            'Multi-line text support',
+            'Loop and repeat options',
+            'Color and styling customization'
+          ],
+          customizable: [
+            'Text content and messages',
+            'Font family and weight',
+            'Animation speed and timing',
+            'Cursor style and color',
+            'Container dimensions',
+            'Background and text colors'
+          ],
+          useCases: [
+            'Dynamic profile headers',
+            'Animated introductions',
+            'Engaging text presentations',
+            'Interactive welcome messages'
+          ],
+          markdownExample: `<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=F75C7E&width=435&lines=Hello+World!;I'm+a+Developer;Welcome+to+my+profile!" />`,
+          animationSettings: {
+            'font': 'Typography selection',
+            'size': 'Text size in pixels',
+            'color': 'Text color customization',
+            'pause': 'Pause duration between lines',
+            'multiline': 'Multi-line text support'
+          }
+        }
+      };
+
       const requestBody = {
         content,
         enhancementType: selectedType,
         username,
-        socials
+        socials,
+        availableWidgets
       };
       
       console.log('📦 Request body prepared:', {
@@ -486,15 +768,14 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
             </motion.button>
           </div>
         </div>        <div className="flex-1 overflow-hidden relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800" ref={modalContentRef}>
-          {/* Subtle background pattern */}
-          <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05]">
-            <svg width="60" height="60" viewBox="0 0 60 60" className="w-full h-full">
+          {/* Subtle background pattern */}          <div className="absolute inset-0 opacity-[0.01] dark:opacity-[0.02]">
+            <svg width="40" height="40" viewBox="0 0 40 40" className="w-full h-full">
               <defs>
-                <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                  <path d="M 60 0 L 0 0 0 60" fill="none" stroke="currentColor" strokeWidth="1"/>
+                <pattern id="subtle-dots" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <circle cx="20" cy="20" r="1" fill="currentColor" opacity="0.3"/>
                 </pattern>
               </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
+              <rect width="100%" height="100%" fill="url(#subtle-dots)" />
             </svg>
           </div>
           

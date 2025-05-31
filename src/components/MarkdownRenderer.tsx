@@ -53,6 +53,9 @@ interface MarkdownRendererProps {
   showLineNumbers?: boolean;
   enableMath?: boolean;
   showAnchorLinks?: boolean;
+  enhancedWidgetRendering?: boolean;
+  onWidgetDetected?: (widgetType: string, widgetData: any) => void;
+  livePreview?: boolean;
 }
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
@@ -61,7 +64,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   githubCompatible = true,
   showLineNumbers = false,
   enableMath = false,
-  showAnchorLinks = true
+  showAnchorLinks = true,
+  enhancedWidgetRendering = false,
+  onWidgetDetected,
+  livePreview = false
 }) => {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -291,8 +297,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     >
                       {children}
                     </code>
-                  );
-                },                // Enhanced image component with GitHub-compatible features
+                  );                },                // Enhanced image component with GitHub-compatible features and widget detection
                 img: ({ src, alt, title, ...props }: ImageProps) => {
                   if (!src) return null;
                   
@@ -308,6 +313,27 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                   const isWaveAnimation = srcString.includes('/api/wave-animation');
                   const isLanguageChart = srcString.includes('/api/language-chart');
                   const isAnimatedProgress = srcString.includes('/api/animated-progress');
+                  const isContributionGraph = srcString.includes('github-readme-activity-graph') || 
+                                            srcString.includes('contribution-graph');
+                  
+                  // Widget detection for enhanced rendering
+                  if (enhancedWidgetRendering && onWidgetDetected) {
+                    if (isGitHubStats) {
+                      onWidgetDetected('github-stats', { src: srcString, alt, title });
+                    } else if (isRepoShowcase) {
+                      onWidgetDetected('repository-showcase', { src: srcString, alt, title });
+                    } else if (isTypingAnimation) {
+                      onWidgetDetected('typing-animation', { src: srcString, alt, title });
+                    } else if (isWaveAnimation) {
+                      onWidgetDetected('wave-animation', { src: srcString, alt, title });
+                    } else if (isLanguageChart) {
+                      onWidgetDetected('language-chart', { src: srcString, alt, title });
+                    } else if (isAnimatedProgress) {
+                      onWidgetDetected('animated-progress', { src: srcString, alt, title });
+                    } else if (isContributionGraph) {
+                      onWidgetDetected('contribution-graph', { src: srcString, alt, title });
+                    }
+                  }
                   
                   const isBadge = 
                     srcString.includes('img.shields.io') ||
