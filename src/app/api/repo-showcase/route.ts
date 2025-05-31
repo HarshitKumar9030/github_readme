@@ -36,17 +36,37 @@ export async function GET(request: NextRequest) {
   const username = searchParams.get('username');
   const repo = searchParams.get('repo');
   const repos = searchParams.get('repos'); // Comma-separated list of username/repo pairs
-  const cardWidth = parseInt(searchParams.get('cardWidth') || searchParams.get('width') || '400');
-  const cardHeight = parseInt(searchParams.get('cardHeight') || searchParams.get('height') || '200');
+  
+  // Handle cardSize parameter for better UX
+  const cardSize = searchParams.get('cardSize') || 'medium';
+  const cardSizeMap = {
+    small: { width: 300, height: 150 },
+    medium: { width: 350, height: 175 },
+    large: { width: 400, height: 200 }
+  };
+  const defaultDimensions = cardSizeMap[cardSize as keyof typeof cardSizeMap] || cardSizeMap.medium;
+  
+  const cardWidth = parseInt(searchParams.get('cardWidth') || searchParams.get('width') || defaultDimensions.width.toString());
+  const cardHeight = parseInt(searchParams.get('cardHeight') || searchParams.get('height') || defaultDimensions.height.toString());
   const theme = searchParams.get('theme') || 'default';
   const layout = searchParams.get('layout') || 'single';
   const sortBy = searchParams.get('sortBy') || 'stars';
-  const repoLimit = parseInt(searchParams.get('repoLimit') || '6');
+  const maxRepos = parseInt(searchParams.get('maxRepos') || searchParams.get('repoLimit') || '4');
+  
+  // Handle cardSpacing parameter
+  const cardSpacing = searchParams.get('cardSpacing') || 'normal';
+  const spacingMap = {
+    tight: 5,
+    normal: 10,
+    loose: 15
+  };
+  const spacing = parseInt(searchParams.get('spacing') || spacingMap[cardSpacing as keyof typeof spacingMap]?.toString() || '10');
+  
   const showStats = searchParams.get('showStats') !== 'false';
   const showLanguage = searchParams.get('showLanguage') !== 'false';
   const showDescription = searchParams.get('showDescription') !== 'false';
-  const showTopics = searchParams.get('showTopics') === 'true';
-  const showLastUpdated = searchParams.get('showLastUpdated') === 'true';
+  const showTopics = searchParams.get('showTopics') !== 'false';
+  const showLastUpdated = searchParams.get('showLastUpdated') !== 'false';
   
   // Support both single repo (legacy) and multiple repos
   let repositoriesToFetch: string[] = [];
@@ -64,9 +84,8 @@ export async function GET(request: NextRequest) {
   if (repositoriesToFetch.length === 0) {
     return new NextResponse('No valid repositories specified', { status: 400 });
   }
-  
-  // Limit the number of repositories
-  repositoriesToFetch = repositoriesToFetch.slice(0, Math.min(repoLimit, 6));
+    // Limit the number of repositories
+  repositoriesToFetch = repositoriesToFetch.slice(0, Math.min(maxRepos, 6));
   try {
     // Create headers with GitHub token if available
     const headers: Record<string, string> = {
@@ -171,11 +190,10 @@ export async function GET(request: NextRequest) {
     };
     
     let svg: string;
-    
-    if (layout === 'single') {
+      if (layout === 'single') {
       svg = generateSingleRepoSVG(successfulRepos[0], options);
     } else {
-      svg = generateMultiRepoSVG(successfulRepos, layout, options);
+      svg = generateMultiRepoSVG(successfulRepos, layout, options, spacing);
     }
     
     return new NextResponse(svg.trim(), {
@@ -294,23 +312,65 @@ function generateSingleRepoSVG(repoData: RepoData, options: SVGOptions): string 
   const selectedTheme = getTheme(theme);
   const languageColor = getLanguageColor(repoData.primaryLanguage || repoData.language || 'Unknown');
   
-  // Calculate layout
-  const padding = 16;
-  const titleY = padding + 20;
-  const descY = showDescription ? titleY + 25 : titleY + 10;
-  const topicsY = showTopics && repoData.topics && repoData.topics.length > 0 ? descY + 20 : descY;
-  const statsY = cardHeight - padding - 5;
-  const langY = showLanguage ? statsY - 20 : statsY;
-  const updatedY = showLastUpdated ? langY - 15 : langY;
+  // Enhanced layout calculations with responsive spacing
+  const basePadding = Math.max(16, Math.floor(cardWidth * 0.05)); // Responsive padding (5% of width, min 16px)
+  const padding = basePadding;
+  const iconSize = 16;
   
-  // Truncate description
-  const maxDescLength = Math.floor(cardWidth / 8);
+  // Header section positioning
+  const headerHeight = 24;
+  const titleY = padding + 16; // Baseline for repository name
+  
+  // Content spacing calculations
+  const sectionGap = Math.max(12, Math.floor(cardHeight * 0.08)); // Responsive gap (8% of height, min 12px)
+  const contentStartY = titleY + headerHeight;
+  
+  // Description positioning
+  const descY = showDescription ? contentStartY + sectionGap : contentStartY;
+  const descHeight = showDescription ? Math.max(16, Math.floor(cardHeight * 0.12)) : 0;
+  
+  // Topics positioning with dynamic spacing
+  const topicsStartY = showDescription ? descY + descHeight + (sectionGap * 0.8) : descY;
+  const topicsY = showTopics && repoData.topics && repoData.topics.length > 0 ? topicsStartY : topicsStartY;
+  
+  // Footer elements positioned from bottom up with consistent spacing
+  const footerMargin = Math.max(14, Math.floor(cardHeight * 0.08)); // Responsive bottom margin
+  const footerLineHeight = 20; // Consistent line height for footer elements
+  
+  let currentBottomY = cardHeight - footerMargin;
+  
+  // Stats positioned at bottom-right
+  const statsY = showStats ? currentBottomY - 4 : currentBottomY;
+  if (showStats) currentBottomY -= footerLineHeight;
+  
+  // Language positioned above stats if both exist, otherwise at bottom
+  const langY = showLanguage && (repoData.primaryLanguage || repoData.language) && (repoData.primaryLanguage || repoData.language) !== 'Unknown' 
+    ? currentBottomY - 4 : currentBottomY;
+  if (showLanguage && (repoData.primaryLanguage || repoData.language) && (repoData.primaryLanguage || repoData.language) !== 'Unknown') 
+    currentBottomY -= footerLineHeight;
+  
+  // Last updated positioned above language
+  const updatedY = showLastUpdated ? currentBottomY - 4 : currentBottomY;
+  
+  // Enhanced description truncation with word-aware breaking
+  const charWidthEstimate = 7.5; // More accurate character width estimation
+  const maxDescLength = Math.floor((cardWidth - padding * 2) / charWidthEstimate);
   const description = repoData.description || 'No description available';
-  const truncatedDesc = description.length > maxDescLength 
-    ? description.substring(0, maxDescLength - 3) + '...' 
-    : description;
   
-  return `
+  // Word-aware truncation for better readability
+  let truncatedDesc = description;
+  if (description.length > maxDescLength) {
+    const words = description.split(' ');
+    let result = '';
+    for (const word of words) {
+      if ((result + word).length > maxDescLength - 3) {
+        break;
+      }
+      result += (result ? ' ' : '') + word;
+    }
+    truncatedDesc = result + (result.length < description.length ? '...' : '');
+  }
+    return `
     <svg width="${cardWidth}" height="${cardHeight}" viewBox="0 0 ${cardWidth} ${cardHeight}" 
          xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -324,158 +384,382 @@ function generateSingleRepoSVG(repoData: RepoData, options: SVGOptions): string 
         </linearGradient>
       </defs>
       
-      <!-- Background -->
+      <!-- Enhanced background with subtle elevation -->
       <rect width="100%" height="100%" fill="${selectedTheme.background}" 
-            stroke="${selectedTheme.border}" stroke-width="1" rx="6"/>
+            stroke="${selectedTheme.border}" stroke-width="1" rx="10" 
+            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.05))"/>
       
-      <!-- Repository Icon -->
+      <!-- Header section with improved icon and title layout -->
       <g transform="translate(${padding}, ${padding + 2})">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}">
-          <path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/>
-        </svg>
+        <!-- Repository Icon with better positioning -->
+        <g transform="translate(0, 0)">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}" opacity="0.85">
+            <path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z"/>
+          </svg>
+        </g>
+        
+        <!-- Repository Name with improved typography -->
+        <text x="${iconSize + 10}" y="14" fill="${selectedTheme.titleColor}" 
+              font-size="15" font-weight="600" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+              letter-spacing="-0.01em">
+          ${repoData.name}
+        </text>
       </g>
       
-      <!-- Repository Name -->
-      <text x="${padding + 24}" y="${titleY}" fill="${selectedTheme.titleColor}" 
-            font-size="16" font-weight="600" font-family="system-ui, -apple-system, sans-serif">
-        ${repoData.name}
-      </text>
-      
-      <!-- Fork indicator -->
+      <!-- Fork indicator with refined positioning -->
       ${repoData.fork ? `
         <g transform="translate(${cardWidth - padding - 60}, ${padding + 2})">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}" opacity="0.65">
             <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
           </svg>
-          <text x="20" y="12" fill="${selectedTheme.textColor}" font-size="10" font-family="system-ui">
+          <text x="20" y="12" fill="${selectedTheme.textColor}" 
+                font-size="9" font-family="system-ui, -apple-system, sans-serif" 
+                opacity="0.75" font-weight="500">
             Forked
           </text>
         </g>
       ` : ''}
       
-      <!-- Description -->
+      <!-- Description with enhanced typography and spacing -->
       ${showDescription ? `
         <text x="${padding}" y="${descY}" fill="${selectedTheme.descriptionColor}" 
-              font-size="12" font-family="system-ui, -apple-system, sans-serif">
+              font-size="12" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" 
+              opacity="0.85" line-height="1.4">
           ${truncatedDesc}
         </text>
       ` : ''}
       
-      <!-- Topics -->
+      <!-- Topics with improved visual design -->
       ${showTopics && repoData.topics && repoData.topics.length > 0 ? `
         <g transform="translate(${padding}, ${topicsY})">
-          ${repoData.topics.slice(0, 3).map((topic, index) => `
-            <rect x="${index * 70}" y="-8" width="65" height="16" rx="8" fill="${selectedTheme.border}"/>
-            <text x="${index * 70 + 8}" y="2" fill="${selectedTheme.textColor}" font-size="10" font-family="system-ui">
-              ${topic.length > 8 ? topic.substring(0, 8) + '..' : topic}
-            </text>
-          `).join('')}
+          ${repoData.topics.slice(0, 3).map((topic, index) => {
+            const topicWidth = Math.min(70, topic.length * 6 + 16); // Dynamic width based on content
+            return `
+              <g transform="translate(${index * (topicWidth + 8)}, 0)">
+                <rect x="0" y="-8" width="${topicWidth}" height="16" rx="8" 
+                      fill="${selectedTheme.border}" opacity="0.7" 
+                      stroke="${selectedTheme.border}" stroke-opacity="0.3"/>
+                <text x="${topicWidth / 2}" y="2" fill="${selectedTheme.textColor}" 
+                      font-size="9" font-family="system-ui" font-weight="500" 
+                      text-anchor="middle" opacity="0.9">
+                  ${topic.length > 10 ? topic.substring(0, 10) + '..' : topic}
+                </text>
+              </g>
+            `;
+          }).join('')}
         </g>
       ` : ''}
       
-      <!-- Last Updated -->
+      <!-- Footer section with improved hierarchy -->
       ${showLastUpdated ? `
         <text x="${padding}" y="${updatedY}" fill="${selectedTheme.textColor}" 
-              font-size="10" font-family="system-ui, -apple-system, sans-serif">
+              font-size="10" font-family="system-ui, -apple-system, sans-serif" 
+              opacity="0.65" font-weight="400">
           Updated ${formatDate(repoData.updated_at)}
         </text>
       ` : ''}
       
-      <!-- Language -->
+      <!-- Language indicator with enhanced visual design -->
       ${showLanguage && (repoData.primaryLanguage || repoData.language) && (repoData.primaryLanguage || repoData.language) !== 'Unknown' ? `
         <g transform="translate(${padding}, ${langY})">
-          <circle cx="6" cy="0" r="6" fill="${languageColor}"/>
-          <text x="18" y="4" fill="${selectedTheme.textColor}" 
-                font-size="12" font-family="system-ui, -apple-system, sans-serif">
+          <circle cx="7" cy="-1" r="7" fill="${languageColor}" opacity="0.9"/>
+          <circle cx="7" cy="-1" r="5" fill="${languageColor}"/>
+          <text x="20" y="3" fill="${selectedTheme.textColor}" 
+                font-size="11" font-family="system-ui, -apple-system, sans-serif" 
+                font-weight="500" opacity="0.85">
             ${repoData.primaryLanguage || repoData.language}
           </text>
         </g>
       ` : ''}
       
-      <!-- Stats -->
+      <!-- Stats section with refined layout and spacing -->
       ${showStats ? `
         <g transform="translate(${cardWidth - padding - 120}, ${statsY})">
-          <!-- Stars -->
+          <!-- Stars with improved icon and text alignment -->
           <g>
-            <svg x="0" y="-8" width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}">
+            <svg x="0" y="-8" width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}" opacity="0.8">
               <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25zm0 2.445L6.615 5.5a.75.75 0 01-.564.41l-3.097.45 2.24 2.184a.75.75 0 01.216.664l-.528 3.084 2.769-1.456a.75.75 0 01.698 0l2.77 1.456-.53-3.084a.75.75 0 01.216-.664l2.24-2.183-3.096-.45a.75.75 0 01-.564-.41L8 2.694v.001z"/>
             </svg>
-            <text x="20" y="4" fill="${selectedTheme.statColor}" 
-                  font-size="12" font-family="system-ui, -apple-system, sans-serif">
+            <text x="20" y="3" fill="${selectedTheme.statColor}" 
+                  font-size="11" font-family="system-ui, -apple-system, sans-serif" 
+                  font-weight="600" opacity="0.9">
               ${formatNumber(repoData.stargazers_count)}
             </text>
           </g>
           
-          <!-- Forks -->
-          <g transform="translate(60, 0)">
-            <svg x="0" y="-8" width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}">
+          <!-- Forks with consistent styling -->
+          <g transform="translate(63, 0)">
+            <svg x="0" y="-8" width="16" height="16" viewBox="0 0 16 16" fill="${selectedTheme.iconColor}" opacity="0.8">
               <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
             </svg>
-            <text x="20" y="4" fill="${selectedTheme.statColor}" 
-                  font-size="12" font-family="system-ui, -apple-system, sans-serif">
+            <text x="20" y="3" fill="${selectedTheme.statColor}" 
+                  font-size="11" font-family="system-ui, -apple-system, sans-serif" 
+                  font-weight="600" opacity="0.9">
               ${formatNumber(repoData.forks_count)}
             </text>
           </g>
         </g>
       ` : ''}
       
-      <!-- Subtle animation -->
-      <rect x="0" y="0" width="100%" height="100%" fill="url(#fadeIn)" opacity="0.1"/>
+      <!-- Subtle hover animation overlay -->
+      <rect x="0" y="0" width="100%" height="100%" 
+            fill="url(#fadeIn)" opacity="0.03" rx="10"/>
     </svg>
   `;
 }
 
-function generateMultiRepoSVG(repositories: RepoData[], layout: string, options: SVGOptions): string {
-  const { cardWidth, cardHeight } = options;
+function generateMultiRepoSVG(repositories: RepoData[], layout: string, options: SVGOptions, spacing: number = 10): string {
+  const { cardWidth, cardHeight, theme } = options;
+  const selectedTheme = getTheme(theme);
   
-  // Calculate grid dimensions
+  // Calculate grid dimensions based on layout and repository count
   let cols = 1, rows = 1;
+  const repoCount = repositories.length;
+  
   switch (layout) {
-    case 'grid-2x1':
-      cols = 2; rows = 1;
+    case 'horizontal':
+      cols = Math.min(repoCount, 4);
+      rows = 1;
       break;
-    case 'grid-2x2':
-      cols = 2; rows = 2;
+    case 'vertical':
+      cols = 1;
+      rows = repoCount;
       break;
-    case 'grid-3x1':
-      cols = 3; rows = 1;
+    case 'compact-grid':
+      if (repoCount === 1) {
+        cols = 1; rows = 1;
+      } else if (repoCount === 2) {
+        cols = 2; rows = 1;
+      } else if (repoCount <= 4) {
+        cols = 2; rows = 2;
+      } else {
+        cols = Math.ceil(Math.sqrt(repoCount));
+        rows = Math.ceil(repoCount / cols);
+      }
       break;
-    case 'list':
-      cols = 1; rows = repositories.length;
-      break;
+    case 'single':
     default:
-      cols = Math.ceil(Math.sqrt(repositories.length));
-      rows = Math.ceil(repositories.length / cols);
+      cols = 1; rows = 1;
+      break;
   }
   
-  const padding = 10;
-  const totalWidth = cols * cardWidth + (cols - 1) * padding;
-  const totalHeight = rows * cardHeight + (rows - 1) * padding;
+  const totalWidth = cols * cardWidth + (cols - 1) * spacing;
+  const totalHeight = rows * cardHeight + (rows - 1) * spacing;
   
+  // Generate shared defs section to avoid duplication
   let svgContent = `
     <svg width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}" 
          xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="fadeIn" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0)" stop-opacity="0">
+            <animate attributeName="stop-opacity" values="0;1" dur="1s" fill="freeze"/>
+          </stop>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)" stop-opacity="1">
+            <animate attributeName="stop-opacity" values="0;1" dur="1s" fill="freeze"/>
+          </stop>
+        </linearGradient>
+      </defs>
   `;
   
   repositories.slice(0, cols * rows).forEach((repo, index) => {
     const col = index % cols;
     const row = Math.floor(index / cols);
-    const x = col * (cardWidth + padding);
-    const y = row * (cardHeight + padding);
-      const singleSVG = generateSingleRepoSVG(repo, options);
-    const svgMatch = singleSVG.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);
+    const x = col * (cardWidth + spacing);
+    const y = row * (cardHeight + spacing);
     
-    if (svgMatch) {
-      svgContent += `
-        <g transform="translate(${x}, ${y})">
-          ${svgMatch[1]}
-        </g>
-      `;
-    }
+    // Generate card content directly instead of extracting from SVG
+    svgContent += generateRepoCard(repo, options, x, y);
   });
   
   svgContent += '</svg>';
   return svgContent;
+}
+
+function generateRepoCard(repoData: RepoData, options: SVGOptions, x: number, y: number): string {
+  const { cardWidth, cardHeight, theme, showStats, showLanguage, showDescription, showTopics, showLastUpdated } = options;
+  const selectedTheme = getTheme(theme);
+  const languageColor = getLanguageColor(repoData.primaryLanguage || repoData.language || 'Unknown');
+  
+  // Enhanced layout calculations with responsive spacing
+  const basePadding = Math.max(16, Math.floor(cardWidth * 0.05)); // Responsive padding (5% of width, min 16px)
+  const padding = basePadding;
+  const iconSize = 16;
+  
+  // Header section positioning
+  const headerHeight = 24;
+  const titleY = padding + 16; // Baseline for repository name
+  
+  // Content spacing calculations
+  const sectionGap = Math.max(12, Math.floor(cardHeight * 0.08)); // Responsive gap (8% of height, min 12px)
+  const contentStartY = titleY + headerHeight;
+  
+  // Description positioning
+  const descY = showDescription ? contentStartY + sectionGap : contentStartY;
+  const descHeight = showDescription ? Math.max(16, Math.floor(cardHeight * 0.12)) : 0;
+  
+  // Topics positioning with dynamic spacing
+  const topicsStartY = showDescription ? descY + descHeight + (sectionGap * 0.8) : descY;
+  const topicsY = showTopics && repoData.topics && repoData.topics.length > 0 ? topicsStartY : topicsStartY;
+  const topicsHeight = showTopics && repoData.topics && repoData.topics.length > 0 ? 20 : 0;
+  
+  // Footer elements positioned from bottom up with consistent spacing
+  const footerMargin = Math.max(14, Math.floor(cardHeight * 0.08)); // Responsive bottom margin
+  const footerLineHeight = 20; // Consistent line height for footer elements
+  
+  let currentBottomY = cardHeight - footerMargin;
+  
+  // Stats positioned at bottom-right
+  const statsY = showStats ? currentBottomY - 4 : currentBottomY;
+  if (showStats) currentBottomY -= footerLineHeight;
+  
+  // Language positioned above stats if both exist, otherwise at bottom
+  const langY = showLanguage && (repoData.primaryLanguage || repoData.language) && (repoData.primaryLanguage || repoData.language) !== 'Unknown' 
+    ? currentBottomY - 4 : currentBottomY;
+  if (showLanguage && (repoData.primaryLanguage || repoData.language) && (repoData.primaryLanguage || repoData.language) !== 'Unknown') 
+    currentBottomY -= footerLineHeight;
+  
+  // Last updated positioned above language
+  const updatedY = showLastUpdated ? currentBottomY - 4 : currentBottomY;
+  
+  // Enhanced description truncation with word-aware breaking
+  const charWidthEstimate = 7.5; // More accurate character width estimation
+  const maxDescLength = Math.floor((cardWidth - padding * 2) / charWidthEstimate);
+  const description = repoData.description || 'No description available';
+  
+  // Word-aware truncation for better readability
+  let truncatedDesc = description;
+  if (description.length > maxDescLength) {
+    const words = description.split(' ');
+    let result = '';
+    for (const word of words) {
+      if ((result + word).length > maxDescLength - 3) {
+        break;
+      }
+      result += (result ? ' ' : '') + word;
+    }
+    truncatedDesc = result + (result.length < description.length ? '...' : '');
+  }
+    return `
+    <g transform="translate(${x}, ${y})">
+      <!-- Enhanced background with subtle elevation -->
+      <rect width="${cardWidth}" height="${cardHeight}" fill="${selectedTheme.background}" 
+            stroke="${selectedTheme.border}" stroke-width="1" rx="10" 
+            filter="drop-shadow(0 1px 2px rgba(0,0,0,0.05))"/>
+      
+      <!-- Header section with improved icon and title layout -->
+      <g transform="translate(${padding}, ${padding + 2})">
+        <!-- Repository Icon with better positioning -->
+        <g transform="translate(0, 0)">
+          <path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9zm10.5-1V9h-8c-.356 0-.694.074-1 .208V2.5a1 1 0 011-1h8zM5 12.25v3.25a.25.25 0 00.4.2l1.45-1.087a.25.25 0 01.3 0L8.6 15.7a.25.25 0 00.4-.2v-3.25a.25.25 0 00-.25-.25h-3.5a.25.25 0 00-.25.25z" 
+                fill="${selectedTheme.iconColor}" opacity="0.85"/>
+        </g>
+        
+        <!-- Repository Name with improved typography -->
+        <text x="${iconSize + 10}" y="14" fill="${selectedTheme.titleColor}" 
+              font-size="15" font-weight="600" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"
+              letter-spacing="-0.01em">
+          ${repoData.name}
+        </text>
+      </g>
+      
+      <!-- Fork indicator with refined positioning -->
+      ${repoData.fork ? `
+        <g transform="translate(${cardWidth - padding - 50}, ${padding + 2})">
+          <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z" 
+                fill="${selectedTheme.iconColor}" opacity="0.65"/>
+          <text x="18" y="12" fill="${selectedTheme.textColor}" 
+                font-size="9" font-family="system-ui, -apple-system, sans-serif" 
+                opacity="0.75" font-weight="500">
+            Forked
+          </text>
+        </g>
+      ` : ''}
+      
+      <!-- Description with enhanced typography and spacing -->
+      ${showDescription ? `
+        <text x="${padding}" y="${descY}" fill="${selectedTheme.descriptionColor}" 
+              font-size="12" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" 
+              opacity="0.85" line-height="1.4">
+          ${truncatedDesc}
+        </text>
+      ` : ''}
+      
+      <!-- Topics with improved visual design -->
+      ${showTopics && repoData.topics && repoData.topics.length > 0 ? `
+        <g transform="translate(${padding}, ${topicsY})">
+          ${repoData.topics.slice(0, 3).map((topic, index) => {
+            const topicWidth = Math.min(70, topic.length * 6 + 16); // Dynamic width based on content
+            return `
+              <g transform="translate(${index * (topicWidth + 8)}, 0)">
+                <rect x="0" y="-8" width="${topicWidth}" height="16" rx="8" 
+                      fill="${selectedTheme.border}" opacity="0.7" 
+                      stroke="${selectedTheme.border}" stroke-opacity="0.3"/>
+                <text x="${topicWidth / 2}" y="2" fill="${selectedTheme.textColor}" 
+                      font-size="9" font-family="system-ui" font-weight="500" 
+                      text-anchor="middle" opacity="0.9">
+                  ${topic.length > 10 ? topic.substring(0, 10) + '..' : topic}
+                </text>
+              </g>
+            `;
+          }).join('')}
+        </g>
+      ` : ''}
+      
+      <!-- Footer section with improved hierarchy -->
+      ${showLastUpdated ? `
+        <text x="${padding}" y="${updatedY}" fill="${selectedTheme.textColor}" 
+              font-size="10" font-family="system-ui, -apple-system, sans-serif" 
+              opacity="0.65" font-weight="400">
+          Updated ${formatDate(repoData.updated_at)}
+        </text>
+      ` : ''}
+      
+      <!-- Language indicator with enhanced visual design -->
+      ${showLanguage && (repoData.primaryLanguage || repoData.language) && (repoData.primaryLanguage || repoData.language) !== 'Unknown' ? `
+        <g transform="translate(${padding}, ${langY})">
+          <circle cx="7" cy="-1" r="7" fill="${languageColor}" opacity="0.9"/>
+          <circle cx="7" cy="-1" r="5" fill="${languageColor}"/>
+          <text x="20" y="3" fill="${selectedTheme.textColor}" 
+                font-size="11" font-family="system-ui, -apple-system, sans-serif" 
+                font-weight="500" opacity="0.85">
+            ${repoData.primaryLanguage || repoData.language}
+          </text>
+        </g>
+      ` : ''}
+      
+      <!-- Stats section with refined layout and spacing -->
+      ${showStats ? `
+        <g transform="translate(${cardWidth - padding - 115}, ${statsY})">
+          <!-- Stars with improved icon and text alignment -->
+          <g>
+            <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25zm0 2.445L6.615 5.5a.75.75 0 01-.564.41l-3.097.45 2.24 2.184a.75.75 0 01.216.664l-.528 3.084 2.769-1.456a.75.75 0 01.698 0l2.77 1.456-.53-3.084a.75.75 0 01.216-.664l2.24-2.183-3.096-.45a.75.75 0 01-.564-.41L8 2.694v.001z" 
+                  fill="${selectedTheme.iconColor}" opacity="0.8" transform="translate(0, -8)"/>
+            <text x="18" y="3" fill="${selectedTheme.statColor}" 
+                  font-size="11" font-family="system-ui, -apple-system, sans-serif" 
+                  font-weight="600" opacity="0.9">
+              ${formatNumber(repoData.stargazers_count)}
+            </text>
+          </g>
+          
+          <!-- Forks with consistent styling -->
+          <g transform="translate(58, 0)">
+            <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z" 
+                  fill="${selectedTheme.iconColor}" opacity="0.8" transform="translate(0, -8)"/>
+            <text x="18" y="3" fill="${selectedTheme.statColor}" 
+                  font-size="11" font-family="system-ui, -apple-system, sans-serif" 
+                  font-weight="600" opacity="0.9">
+              ${formatNumber(repoData.forks_count)}
+            </text>
+          </g>
+        </g>
+      ` : ''}
+      
+      <!-- Subtle hover animation overlay -->
+      <rect x="0" y="0" width="${cardWidth}" height="${cardHeight}" 
+            fill="url(#fadeIn)" opacity="0.03" rx="10"/>
+    </g>
+  `;
 }
 
 function generateErrorSVG(width: number, height: number, title: string, subtitle: string): string {

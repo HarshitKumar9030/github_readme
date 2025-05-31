@@ -377,36 +377,48 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       max: 5,
       step: 0.5
     }
-  ];
-  // Repository Showcase specific options
-  const repoShowcaseOptions: ConfigOption[] = [
-    {
-      id: 'username',
-      label: 'GitHub Username',
-      type: 'text',
-      defaultValue: '',
-      placeholder: 'Enter GitHub username'
-    },
-    {
+  ];  // Repository Showcase specific options
+  const repoShowcaseOptions: ConfigOption[] = [    {
       id: 'showcaseRepos',
-      label: 'Showcase Repositories',
+      label: 'Repository Names (Max 4)',
       type: 'textarea',
       defaultValue: '',
-      placeholder: 'Enter repository names, comma-separated (e.g., repo1, repo2, repo3)'
-    },    {
+      placeholder: 'Enter repository names, separated by commas or line breaks:\nrepo1, repo2, repo3\nor\nowner/repo1\nowner/repo2\n\nNote: If no owner is specified, your GitHub username will be used.'
+    },
+    {
       id: 'repoLayout',
       label: 'Layout Style',
       type: 'select',
-      defaultValue: 'single',
+      defaultValue: 'compact-grid',
       options: [
-        { value: 'single', label: 'Single Repository' },
-        { value: 'grid-2x1', label: 'Grid 2×1 (2 repositories)' },
-        { value: 'grid-2x2', label: 'Grid 2×2 (4 repositories)' },
-        { value: 'grid-3x1', label: 'Grid 3×1 (3 repositories)' },
-        { value: 'list', label: 'Vertical List' }
+        { value: 'single', label: 'Single Card' },
+        { value: 'compact-grid', label: 'Compact Grid (Auto-fit)' },
+        { value: 'horizontal', label: 'Horizontal Strip' },
+        { value: 'vertical', label: 'Vertical Stack' }
       ]
     },
     {
+      id: 'cardSize',
+      label: 'Card Size',
+      type: 'select',
+      defaultValue: 'medium',
+      options: [
+        { value: 'small', label: 'Small (300px)' },
+        { value: 'medium', label: 'Medium (350px)' },
+        { value: 'large', label: 'Large (400px)' }
+      ]
+    },
+    {
+      id: 'cardSpacing',
+      label: 'Card Spacing',
+      type: 'select',
+      defaultValue: 'normal',
+      options: [
+        { value: 'tight', label: 'Tight (5px)' },
+        { value: 'normal', label: 'Normal (10px)' },
+        { value: 'loose', label: 'Loose (15px)' }
+      ]
+    },    {
       id: 'sortBy',
       label: 'Sort Repositories By',
       type: 'select',
@@ -420,18 +432,17 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       ]
     },
     {
-      id: 'repoLimit',
-      label: 'Repository Limit',
+      id: 'maxRepos',
+      label: 'Maximum Repositories',
       type: 'select',
       defaultValue: 4,
       options: [
         { value: '1', label: '1 repository' },
         { value: '2', label: '2 repositories' },
         { value: '3', label: '3 repositories' },
-        { value: '4', label: '4 repositories' },
-        { value: '6', label: '6 repositories' }
+        { value: '4', label: '4 repositories' }
       ]
-    },    {
+    },{
       id: 'showStats',
       label: 'Show Stats (Stars & Forks)',
       type: 'toggle',
@@ -694,21 +705,30 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
     }
   };
 
-  const options = getOptionsForWidgetType();
-  const handleChange = (id: string, value: any) => {
-    // Special handling for showcaseRepos - convert string to array when needed
+  const options = getOptionsForWidgetType();  const handleChange = (id: string, value: any) => {
+    // Special handling for showcaseRepos - keep as string for better UX, convert to array on blur
     if (id === 'showcaseRepos' && typeof value === 'string') {
-      const repoArray = value.trim() 
-        ? value.split(',').map(repo => repo.trim()).filter(repo => repo.length > 0)
-        : [];
       onChange({
         ...config,
-        [id]: repoArray
+        [id]: value as any // Keep as string for better typing experience
       });
     } else {
       onChange({
         ...config,
         [id]: value
+      });
+    }
+  };
+
+  // Helper function to convert showcaseRepos string to array when needed
+  const handleRepoBlur = (value: string) => {
+    if (typeof value === 'string') {
+      const repoArray = value.trim() 
+        ? value.split(/[,\n]/).map(repo => repo.trim()).filter(repo => repo.length > 0)
+        : [];
+      onChange({
+        ...config,
+        showcaseRepos: repoArray
       });
     }
   };
@@ -895,18 +915,28 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
                     config[option.id as keyof WidgetConfig] as number : option.defaultValue}
                   onChange={(e) => handleChange(option.id, Number(e.target.value))}
                 />
-              )}
-                {option.type === 'textarea' && (
+              )}                {option.type === 'textarea' && (
                 <textarea
                   className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   value={(() => {
-                    const configValue = config[option.id as keyof WidgetConfig];
-                    if (option.id === 'showcaseRepos' && Array.isArray(configValue)) {
-                      return configValue.join(', ');
+                    const currentValue = config[option.id as keyof WidgetConfig];
+                    if (option.id === 'showcaseRepos') {
+                      // Handle showcaseRepos specially
+                      if (typeof currentValue === 'string') {
+                        return currentValue;
+                      } else if (Array.isArray(currentValue)) {
+                        return currentValue.join(', ');
+                      }
+                      return option.defaultValue || '';
                     }
-                    return configValue !== undefined ? configValue as string : option.defaultValue;
+                    return currentValue !== undefined ? currentValue as string : option.defaultValue;
                   })()}
                   onChange={(e) => handleChange(option.id, e.target.value)}
+                  onBlur={(e) => {
+                    if (option.id === 'showcaseRepos') {
+                      handleRepoBlur(e.target.value);
+                    }
+                  }}
                   rows={3}
                   placeholder={option.placeholder}
                 />

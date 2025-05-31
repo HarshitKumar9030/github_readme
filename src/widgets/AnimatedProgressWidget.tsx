@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import { useWidget } from '@/hooks/useWidget';
 import WidgetContainer from '@/components/WidgetContainer';
+import { createAbsoluteUrl } from '@/utils/urlHelpers';
 
 interface Skill {
   name: string;
@@ -97,12 +98,10 @@ const AnimatedProgressWidgetComponent = memo(({
       show_progress_text: (config.showProgressText ?? true).toString(),
       theme: 'default',
       width: '400',
-      height: '300'
-    });
+      height: '300'    });
 
     // Use the deployed domain or localhost for development
-    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000';
-    const url = `${baseUrl}/api/animated-progress?${params.toString()}`;
+    const url = createAbsoluteUrl(`/api/animated-progress?${params.toString()}`);
     
     return `![Animated Progress](${url})`;
   }, []);

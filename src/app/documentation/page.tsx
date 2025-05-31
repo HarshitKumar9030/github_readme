@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { getBaseUrl } from '@/utils/env';
 
 // Types
 interface DocSection {
@@ -19,9 +20,37 @@ interface DocSubsection {
   id: string;
   title: string;
   content: React.ReactNode;
-  codeExample?: string;
-  tips?: string[];
+  codeExample?: string;  tips?: string[];
 }
+
+// Helper function to generate API examples with correct base URL
+const generateAPIExamples = (): string => {
+  const baseUrl = getBaseUrl();
+  return `// GitHub Stats Example
+<img src="${baseUrl}/api/github-stats-svg?username=octocat&theme=dark&layout=compact" />
+
+// Language Chart Example  
+<img src="${baseUrl}/api/language-chart?username=octocat&langs_count=8" />
+
+// Repository Showcase Example
+<img src="${baseUrl}/api/repo-showcase?username=octocat&repo=Hello-World&theme=radical" />
+
+// Animated Progress Example
+<img src="${baseUrl}/api/animated-progress?skills=JavaScript,Python,React&values=90,85,80&theme=gradient" />
+
+// Typing Animation Example
+<img src="${baseUrl}/api/typing-animation?text=Welcome to my profile!&fontSize=28&color=0066cc" />
+
+// Wave Animation Example
+<img src="${baseUrl}/api/wave-animation?height=120&color=667eea&waves=4" />
+
+// Fetch as SVG for manipulation
+fetch('/api/github-stats-svg?username=octocat&theme=dark')
+  .then(response => response.text())
+  .then(svg => {
+    document.getElementById('stats-container').innerHTML = svg;
+  });`;
+};
 
 const DocumentationPage: React.FC = () => {
   const [activeSection, setActiveSection] = useState('getting-started');
@@ -378,34 +407,10 @@ import { YourProject } from 'your-project';
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
+                ))}              </div>
             </div>
           ),
-          codeExample: `// GitHub Stats Example
-<img src="https://your-domain.com/api/github-stats-svg?username=octocat&theme=dark&layout=compact" />
-
-// Language Chart Example  
-<img src="https://your-domain.com/api/language-chart?username=octocat&langs_count=8" />
-
-// Repository Showcase Example
-<img src="https://your-domain.com/api/repo-showcase?username=octocat&repo=Hello-World&theme=radical" />
-
-// Animated Progress Example
-<img src="https://your-domain.com/api/animated-progress?skills=JavaScript,Python,React&values=90,85,80&theme=gradient" />
-
-// Typing Animation Example
-<img src="https://your-domain.com/api/typing-animation?text=Welcome to my profile!&fontSize=28&color=0066cc" />
-
-// Wave Animation Example
-<img src="https://your-domain.com/api/wave-animation?height=120&color=667eea&waves=4" />
-
-// Fetch as SVG for manipulation
-fetch('/api/github-stats-svg?username=octocat&theme=dark')
-  .then(response => response.text())
-  .then(svg => {
-    document.getElementById('stats-container').innerHTML = svg;
-  });`
+          codeExample: generateAPIExamples()
         }
       ]
     },

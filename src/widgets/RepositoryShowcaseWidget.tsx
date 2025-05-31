@@ -4,20 +4,21 @@ import React, { useEffect, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import { useRepositoryShowcaseStore } from '@/stores/repositoryShowcaseStore';
+import { getBaseUrl } from '@/utils/env';
 
 export interface RepositoryShowcaseWidgetConfig extends BaseWidgetConfig {
-  username: string;
+  username?: string; // Optional - will be provided by parent component
   showcaseRepos?: string[];
-  repoLayout?: 'single' | 'grid-2x1' | 'grid-2x2' | 'grid-3x1' | 'list';
+  repoLayout?: 'single' | 'compact-grid' | 'horizontal' | 'vertical';
   sortBy?: 'stars' | 'forks' | 'updated' | 'name' | 'created';
-  repoLimit?: number;
+  maxRepos?: number;
+  cardSize?: 'small' | 'medium' | 'large';
+  cardSpacing?: 'tight' | 'normal' | 'loose';
   showStats?: boolean;
   showLanguage?: boolean;
   showDescription?: boolean;
   showTopics?: boolean;
   showLastUpdated?: boolean;
-  repoCardWidth?: number;
-  repoCardHeight?: number;
   hideBorder?: boolean;
   hideTitle?: boolean;
   customTitle?: string;
@@ -30,34 +31,58 @@ interface RepositoryShowcaseWidgetProps extends BaseWidgetProps {
 
 // Helper function to generate markdown for a specific config
 const generateMarkdownForConfig = (config: RepositoryShowcaseWidgetConfig): string => {
-  // Ensure showcaseRepos is an array and has content
-  const showcaseRepos = Array.isArray(config?.showcaseRepos) ? config.showcaseRepos : [];
+  // Ensure showcaseRepos is an array and has content, limit to max 4
+  const showcaseRepos = Array.isArray(config?.showcaseRepos) ? 
+    config.showcaseRepos.slice(0, config.maxRepos || 4) : [];
+  const baseUrl = getBaseUrl();
+  
   if (!config || showcaseRepos.length === 0) {
-    return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
+    return `![Repository Showcase](${baseUrl}/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)`;
   }
   
   // Convert repository names to owner/repo format if needed
   const formattedRepos = showcaseRepos.map(repo => {
     if (typeof repo !== 'string') return ''; // Skip invalid entries
-    if (repo.includes('/')) {
-      return repo; // Already in owner/repo format
+    
+    // Clean the repo name (remove whitespace, newlines)
+    const cleanRepo = repo.trim().replace(/\n/g, '');
+    if (!cleanRepo) return '';
+    
+    if (cleanRepo.includes('/')) {
+      return cleanRepo; // Already in owner/repo format
     } else if (config.username?.trim()) {
-      return `${config.username}/${repo}`; // Add username as owner
+      return `${config.username}/${cleanRepo}`; // Add username as owner
     }
-    return repo;
+    return cleanRepo;
   }).filter(repo => repo && repo.includes('/')); // Only keep valid owner/repo pairs
 
   if (formattedRepos.length === 0) {
-    return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
+    return `![Repository Showcase](${baseUrl}/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)`;
   }
+
+  // Calculate optimal card dimensions based on layout and card size
+  const getCardDimensions = () => {
+    const sizeMap = {
+      small: { width: 300, height: 150 },
+      medium: { width: 350, height: 175 },
+      large: { width: 400, height: 200 }
+    };
+    return sizeMap[config.cardSize || 'medium'];
+  };
+
+  const cardDims = getCardDimensions();
+  const spacingMap = { tight: 5, normal: 10, loose: 15 };
+  const spacing = spacingMap[config.cardSpacing || 'normal'];
+
   const params = new URLSearchParams({
     repos: formattedRepos.join(','),
     theme: config.theme || 'light',
-    layout: config.repoLayout || 'single',
+    layout: config.repoLayout || 'compact-grid',
     sortBy: config.sortBy || 'stars',
-    repoLimit: (config.repoLimit || 6).toString(),
-    cardWidth: (config.repoCardWidth || 400).toString(),
-    cardHeight: (config.repoCardHeight || 200).toString()
+    maxRepos: (config.maxRepos || 4).toString(),
+    cardWidth: cardDims.width.toString(),
+    cardHeight: cardDims.height.toString(),
+    spacing: spacing.toString()
   });
 
   if (config.showStats !== undefined) {
@@ -76,7 +101,7 @@ const generateMarkdownForConfig = (config: RepositoryShowcaseWidgetConfig): stri
     params.set('showLastUpdated', config.showLastUpdated.toString());
   }
 
-  return `![Repository Showcase](https://your-domain.com/api/repo-showcase?${params.toString()})`;
+  return `![Repository Showcase](${baseUrl}/api/repo-showcase?${params.toString()})`;
 };
 
 /**
@@ -99,13 +124,14 @@ const RepositoryShowcaseWidgetComponent: React.FC<RepositoryShowcaseWidgetProps>
   } = useRepositoryShowcaseStore();  // Memoize effective config to prevent unnecessary recalculations
   const effectiveConfig = useMemo(() => ({
     username: config.username || '',
-    showcaseRepos: Array.isArray(config.showcaseRepos) ? config.showcaseRepos : [],
+    showcaseRepos: Array.isArray(config.showcaseRepos) ? 
+      config.showcaseRepos.slice(0, config.maxRepos || 4) : [],
     theme: config.theme || 'light',
-    repoLayout: config.repoLayout || 'single',
+    repoLayout: config.repoLayout || 'compact-grid',
     sortBy: config.sortBy || 'stars',
-    repoLimit: config.repoLimit || 6,
-    repoCardWidth: config.repoCardWidth || 400,
-    repoCardHeight: config.repoCardHeight || 200,
+    maxRepos: config.maxRepos || 4,
+    cardSize: config.cardSize || 'medium',
+    cardSpacing: config.cardSpacing || 'normal',
     showStats: config.showStats !== false,
     showLanguage: config.showLanguage !== false,
     showDescription: config.showDescription !== false,
@@ -146,9 +172,9 @@ const RepositoryShowcaseWidgetComponent: React.FC<RepositoryShowcaseWidgetProps>
     effectiveConfig.theme,
     effectiveConfig.repoLayout,
     effectiveConfig.sortBy,
-    effectiveConfig.repoLimit,
-    effectiveConfig.repoCardWidth,
-    effectiveConfig.repoCardHeight,
+    effectiveConfig.maxRepos,
+    effectiveConfig.cardSize,
+    effectiveConfig.cardSpacing,
     effectiveConfig.showStats,
     effectiveConfig.showLanguage,
     effectiveConfig.showDescription,
@@ -166,38 +192,61 @@ const RepositoryShowcaseWidgetComponent: React.FC<RepositoryShowcaseWidgetProps>
     }
   }, [svgUrl, onMarkdownGenerated, generateMarkdown]);// Calculate display dimensions for different layouts - memoized for performance
   const displayDimensions = useMemo(() => {
-    const cardWidth = effectiveConfig.repoCardWidth ?? 400;
-    const cardHeight = effectiveConfig.repoCardHeight ?? 200;
-    const layout = effectiveConfig.repoLayout ?? 'single';
+    // Get card dimensions based on size setting
+    const sizeMap = {
+      small: { width: 300, height: 150 },
+      medium: { width: 350, height: 175 },
+      large: { width: 400, height: 200 }
+    };
     
-    let displayWidth = cardWidth;
-    let displayHeight = cardHeight;
+    const cardDims = sizeMap[effectiveConfig.cardSize || 'medium'];
+    const spacingMap = { tight: 5, normal: 10, loose: 15 };
+    const spacing = spacingMap[effectiveConfig.cardSpacing || 'normal'];
+    const layout = effectiveConfig.repoLayout || 'compact-grid';
+    const repoCount = effectiveConfig.showcaseRepos?.length ?? 0;
+    const maxRepos = Math.min(repoCount, effectiveConfig.maxRepos || 4);
+    
+    let displayWidth = cardDims.width;
+    let displayHeight = cardDims.height;
     
     switch (layout) {
-      case 'grid-2x1':
-        displayWidth = cardWidth * 2 + 10;
+      case 'compact-grid':
+        if (maxRepos === 1) {
+          // Single card
+          displayWidth = cardDims.width;
+          displayHeight = cardDims.height;
+        } else if (maxRepos === 2) {
+          // 2 cards horizontally
+          displayWidth = cardDims.width * 2 + spacing;
+          displayHeight = cardDims.height;
+        } else if (maxRepos <= 4) {
+          // 2x2 grid for 3-4 repos
+          displayWidth = cardDims.width * 2 + spacing;
+          displayHeight = cardDims.height * 2 + spacing;
+        }
         break;
-      case 'grid-2x2':
-        displayWidth = cardWidth * 2 + 10;
-        displayHeight = cardHeight * 2 + 10;
+      case 'horizontal':
+        displayWidth = cardDims.width * Math.min(maxRepos, 4) + spacing * (Math.min(maxRepos, 4) - 1);
+        displayHeight = cardDims.height;
         break;
-      case 'grid-3x1':
-        displayWidth = cardWidth * 3 + 20;
+      case 'vertical':
+        displayWidth = cardDims.width;
+        displayHeight = cardDims.height * maxRepos + spacing * (maxRepos - 1);
         break;
-      case 'list':
-        const showcaseReposLength = effectiveConfig.showcaseRepos?.length ?? 0;
-        displayHeight = cardHeight * Math.min(showcaseReposLength || 1, effectiveConfig.repoLimit ?? 6) + 
-                       (Math.min(showcaseReposLength || 1, effectiveConfig.repoLimit ?? 6) - 1) * 10;
+      case 'single':
+      default:
+        displayWidth = cardDims.width;
+        displayHeight = cardDims.height;
         break;
     }
     
     return { width: displayWidth, height: displayHeight };
   }, [
-    effectiveConfig.repoCardWidth,
-    effectiveConfig.repoCardHeight,
+    effectiveConfig.cardSize,
+    effectiveConfig.cardSpacing,
     effectiveConfig.repoLayout,
     effectiveConfig.showcaseRepos?.length,
-    effectiveConfig.repoLimit
+    effectiveConfig.maxRepos
   ]);
 
   // Show static version during SSR/hydration
@@ -282,7 +331,8 @@ const RepositoryShowcaseWidget = RepositoryShowcaseWidgetComponent as React.FC<R
 
 RepositoryShowcaseWidget.generateMarkdown = (): string => {
   // This provides a default markdown template for repository showcase
-  return '![Repository Showcase](https://your-domain.com/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)';
+  const baseUrl = getBaseUrl();
+  return `![Repository Showcase](${baseUrl}/api/repo-showcase?repos=owner/repo1,owner/repo2&theme=github)`;
 };
 
 export default RepositoryShowcaseWidget;

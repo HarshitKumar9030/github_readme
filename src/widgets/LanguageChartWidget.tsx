@@ -59,14 +59,11 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
       size: (config.size || 400).toString(),
       chartType: config.chartType || 'donut',
       maxLanguages: Math.min(config.maxLanguages || 8, 8).toString()
-    });
-
-    if (config.minPercentage) {
+    });    if (config.minPercentage) {
       params.set('minPercentage', config.minPercentage.toString());
     }
 
-    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000';
-    const url = `${baseUrl}/api/language-chart?${params.toString()}`;
+    const url = createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
     
     const chartTypeEmoji = config.chartType === 'pie' ? '🥧' : config.chartType === 'bar' ? '📊' : '🍩';
     return `![${chartTypeEmoji} ${config.username}'s Language Chart](${url})`;
@@ -208,10 +205,8 @@ const LanguageChartWidget: React.FC<LanguageChartWidgetProps> = ({
   if (config.minPercentage) {
     params.set('minPercentage', config.minPercentage.toString());
   }
-
   // Use the deployed domain or localhost for development
-  const baseUrl = process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : 'http://localhost:3000';
-  const url = `${baseUrl}/api/language-chart?${params.toString()}`;
+  const url = createAbsoluteUrl(`/api/language-chart?${params.toString()}`);
   
   const chartTypeEmoji = config.chartType === 'pie' ? '🥧' : config.chartType === 'bar' ? '📊' : '🍩';
   return `![${chartTypeEmoji} ${config.username}'s Language Chart](${url})`;

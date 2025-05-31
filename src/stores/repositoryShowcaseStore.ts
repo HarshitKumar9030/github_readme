@@ -36,26 +36,40 @@ const formatRepositories = (config: RepositoryShowcaseWidgetConfig): string[] =>
   
   return showcaseRepos.map((repo: any) => {
     if (typeof repo !== 'string') return ''; // Skip invalid entries
-    if (repo.includes('/')) {
-      return repo; // Already in owner/repo format
+    
+    // Clean the repo name (remove whitespace, newlines, and other control characters)
+    const cleanRepo = repo.trim().replace(/[\n\r\t]/g, '');
+    if (!cleanRepo) return '';
+    
+    if (cleanRepo.includes('/')) {
+      return cleanRepo; // Already in owner/repo format
     } else if (config.username?.trim()) {
-      return `${config.username}/${repo}`; // Add username as owner
+      return `${config.username}/${cleanRepo}`; // Add username as owner
     }
-    return repo;
+    return cleanRepo;
   }).filter((repo: string) => repo && repo.includes('/')); // Only keep valid owner/repo pairs
 };
 
 // Helper function to generate repository showcase parameters
 const generateRepositoryParams = (config: RepositoryShowcaseWidgetConfig): URLSearchParams => {
   const formattedRepos = formatRepositories(config);
+  
+  // Calculate card dimensions based on cardSize
+  const sizeMap = {
+    small: { width: 300, height: 150 },
+    medium: { width: 350, height: 175 },
+    large: { width: 400, height: 200 }
+  };
+  const cardDims = sizeMap[config.cardSize || 'medium'];
     const params = new URLSearchParams({
     repos: formattedRepos.join(','),
     theme: config.theme || 'light',
     layout: config.repoLayout || 'single',
     sortBy: config.sortBy || 'stars',
-    repoLimit: (config.repoLimit || 6).toString(),
-    cardWidth: (config.repoCardWidth || 400).toString(),
-    cardHeight: (config.repoCardHeight || 200).toString()
+    maxRepos: (config.maxRepos || 4).toString(),
+    cardWidth: cardDims.width.toString(),
+    cardHeight: cardDims.height.toString(),
+    spacing: getSpacingValue(config.cardSpacing || 'normal').toString()
   });
 
   if (config.showStats !== undefined) {
@@ -77,20 +91,30 @@ const generateRepositoryParams = (config: RepositoryShowcaseWidgetConfig): URLSe
   return params;
 };
 
-const createCacheKey = (config: RepositoryShowcaseWidgetConfig): string => {  return JSON.stringify({
+// Helper function to convert spacing names to pixel values
+const getSpacingValue = (spacing: string): number => {
+  const spacingMap = { tight: 5, normal: 10, loose: 15 };
+  return spacingMap[spacing as keyof typeof spacingMap] || 10;
+};
+
+const createCacheKey = (config: RepositoryShowcaseWidgetConfig): string => {
+  return JSON.stringify({
     username: config.username || '',
     showcaseRepos: Array.isArray(config.showcaseRepos) ? config.showcaseRepos : [],
     theme: config.theme || 'light',
     repoLayout: config.repoLayout || 'single',
     sortBy: config.sortBy || 'stars',
-    repoLimit: config.repoLimit || 6,
-    repoCardWidth: config.repoCardWidth || 400,
-    repoCardHeight: config.repoCardHeight || 200,
+    maxRepos: config.maxRepos || 4,
+    cardSize: config.cardSize || 'medium',
+    cardSpacing: config.cardSpacing || 'normal',
     showStats: config.showStats !== false,
     showLanguage: config.showLanguage !== false,
     showDescription: config.showDescription !== false,
     showTopics: config.showTopics !== false,
-    showLastUpdated: config.showLastUpdated !== false
+    showLastUpdated: config.showLastUpdated !== false,
+    hideBorder: config.hideBorder === true,
+    hideTitle: config.hideTitle === true,
+    customTitle: config.customTitle || ''
   });
 };
 
