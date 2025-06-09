@@ -211,15 +211,14 @@ export default function AboutPage() {
               <br />
               Generator
             </motion.h1>
-            
-            <motion.p 
+              <motion.p 
               className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.4 }}
             >
-              Create stunning GitHub profile READMEs effortlessly with our powerful, intuitive generator. 
-              Built with developers in mind to help showcase your projects and skills beautifully.
+              I created this powerful, intuitive generator to help fellow developers create stunning GitHub profile READMEs effortlessly. 
+              Built with love and attention to detail to help you showcase your projects and skills beautifully.
             </motion.p>
 
             {/* Stats Grid */}
@@ -354,7 +353,7 @@ export default function AboutPage() {
                   >
                     ⚡
                   </motion.span>
-                  Our Mission
+                  My Mission
                 </motion.div>
                 
                 <motion.h2 
@@ -373,10 +372,9 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.2 }}
-                >
-                  README Generator was created to help developers create beautiful, professional GitHub profile READMEs 
-                  without having to write complex markdown or HTML. Our goal is to make it easier for developers to 
-                  showcase their skills and projects in a visually appealing way using our intuitive drag-and-drop builder 
+                >                  README Generator was created to help developers create beautiful, professional GitHub profile READMEs 
+                  without having to write complex markdown or HTML. My goal is to make it easier for developers to 
+                  showcase their skills and projects in a visually appealing way using my intuitive drag-and-drop builder 
                   and integrated GitHub widgets.
                 </motion.p>
               </div>
@@ -487,8 +485,7 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.7, delay: 0.2 }}
-                >
-                  Our README Generator provides an intuitive interface for creating custom GitHub profile 
+                >                  My README Generator provides an intuitive interface for creating custom GitHub profile 
                   READMEs. Simply choose a template, customize it with your information, and export the 
                   markdown to use in your GitHub profile.
                 </motion.p>
@@ -510,7 +507,7 @@ export default function AboutPage() {
                     {
                       step: "01",
                       title: "Choose Your Template",
-                      description: "Browse our collection of professionally designed templates and select the one that best fits your style.",
+                      description: "Browse my collection of professionally designed templates and select the one that best fits your style.",
                       icon: "📋",
                       color: "blue",
                       position: "left"
@@ -518,7 +515,7 @@ export default function AboutPage() {
                     {
                       step: "02", 
                       title: "Customize Everything",
-                      description: "Add your personal information, skills, projects, and preferences using our intuitive interface.",
+                      description: "Add your personal information, skills, projects, and preferences using my intuitive interface.",
                       icon: "✨",
                       color: "purple",
                       position: "right"
@@ -526,7 +523,7 @@ export default function AboutPage() {
                     {
                       step: "03",
                       title: "Preview in Real-time", 
-                      description: "See your README come to life with our live preview feature as you make changes.",
+                      description: "See your README come to life with my live preview feature as you make changes.",
                       icon: "👀",
                       color: "indigo",
                       position: "left"
@@ -636,7 +633,7 @@ export default function AboutPage() {
                   >
                     💎
                   </motion.span>
-                  Why Choose Us
+                  Why Choose This
                 </motion.div>
                 
                 <motion.h2 
@@ -655,7 +652,7 @@ export default function AboutPage() {
                   {
                     icon: "⚡",
                     title: "Lightning Fast",
-                    description: "Create professional READMEs in minutes instead of hours with our easy-to-use templates and intuitive interface.",
+                    description: "Create professional READMEs in minutes instead of hours with my easy-to-use templates and intuitive interface.",
                     gradient: "from-yellow-400 to-orange-500",
                     bgGradient: "from-yellow-50 to-orange-50",
                     darkBgGradient: "from-yellow-900/20 to-orange-900/20"
@@ -663,7 +660,7 @@ export default function AboutPage() {
                   {
                     icon: "🚀",
                     title: "No Coding Required",
-                    description: "Our intuitive drag-and-drop interface means you don't need to write any markdown, HTML, or code.",
+                    description: "My intuitive drag-and-drop interface means you don't need to write any markdown, HTML, or code.",
                     gradient: "from-blue-400 to-purple-500",
                     bgGradient: "from-blue-50 to-purple-50",
                     darkBgGradient: "from-blue-900/20 to-purple-900/20"

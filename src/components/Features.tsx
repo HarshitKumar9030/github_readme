@@ -38,7 +38,7 @@ const Features = () => {
       label: 'Customization',
       icon: '/globe.svg',
       title: 'Fully Customize Every Element',
-      description: 'Make your README truly yours with our powerful yet intuitive customization tools.',
+      description: 'Make your README truly yours with my powerful yet intuitive customization tools.',
       imageSrc: '/customize-screen.svg',
       bulletPoints: [
         'Drag-and-drop section reordering',

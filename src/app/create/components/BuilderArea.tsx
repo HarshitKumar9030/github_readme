@@ -59,20 +59,21 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     setIsMounted(true);
     isMountedRef.current = true;
   }, []);
-
   // Create stable callback functions for each block to prevent re-renders
-  const blockIds = useMemo(() => builderBlocks.map(b => b.id), [builderBlocks]);  const stableCallbacks = useMemo(() => {
+  const blockIds = useMemo(() => builderBlocks.map(b => b.id), [builderBlocks]);
+  
+  const stableCallbacks = useMemo(() => {
     const callbacks: Record<string, (md: string) => void> = {};
-    builderBlocks.forEach(block => {
-      callbacks[block.id] = (md: string) => {
+    blockIds.forEach(blockId => {
+      callbacks[blockId] = (md: string) => {
         // Use ref to ensure we're only calling when mounted
         if (isMountedRef.current && handleWidgetMarkdownGenerated) {
-          handleWidgetMarkdownGenerated(block.id, md);
+          handleWidgetMarkdownGenerated(blockId, md);
         }
       };
     });
     return callbacks;
-  }, [builderBlocks, handleWidgetMarkdownGenerated]);
+  }, [blockIds, handleWidgetMarkdownGenerated]);
 
   const githubStatsConfig = useMemo(() => ({
     username: username,
@@ -287,8 +288,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
         </div>
       );
     }
-  };
-  const renderWidget = useCallback((block: Block) => {
+  };  const renderWidget = useCallback((block: Block) => {
     if (!isMounted) {
       return (
         <div className="p-4 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/50 rounded-md">
@@ -304,13 +304,16 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     const widgetBlock = block as WidgetBlock;
 
     return (
-      <WidgetErrorBoundary widgetId={widgetBlock.widgetId}>        {widgetBlock.widgetId === 'github-stats' && (
+      <WidgetErrorBoundary widgetId={widgetBlock.widgetId}>
+        {widgetBlock.widgetId === 'github-stats' && (
           <GitHubStatsWidget 
             config={memoizedConfigs.githubStats}
             onMarkdownGenerated={stableCallbacks[block.id]}
           />
-        )}        {widgetBlock.widgetId === 'social-stats' && (
-          <SocialStatsWidget            config={{
+        )}
+        {widgetBlock.widgetId === 'social-stats' && (
+          <SocialStatsWidget
+            config={{
               socials: socials,
               displayLayout: widgetConfig?.layout === 'compact' ? 'inline' : 'grid',
               showDetails: true,
@@ -357,7 +360,8 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
           <AnimatedProgressWidget
             config={memoizedConfigs.animatedProgress}
             onMarkdownGenerated={stableCallbacks[block.id]}
-          />        )}
+          />
+        )}
       </WidgetErrorBoundary>
     );
   }, [isMounted, memoizedConfigs, stableCallbacks, socials, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);

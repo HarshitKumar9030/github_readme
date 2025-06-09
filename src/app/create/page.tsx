@@ -28,6 +28,9 @@ import { Socials } from "@/interfaces/Socials";
 import { WidgetConfig } from "@/interfaces/WidgetConfig";
 import { AutoSaveData, ReadmeProject } from "@/interfaces/ProjectInterfaces";
 
+// Constants
+const AUTOSAVE_KEY = "readme-generator-autosave";
+
 export default function CreatePage() {
   // Define available blocks
   const availableBlocks: Block[] = [
@@ -54,12 +57,14 @@ export default function CreatePage() {
       type: "widget",
       label: "Top Languages",
       widgetId: "top-languages",
-    },    {
+    },
+    {
       id: "widget-3",
       type: "widget",
       label: "Social Stats",
       widgetId: "social-stats",
-    },    {
+    },
+    {
       id: "widget-4",
       type: "widget",
       label: "Contribution Graph",
@@ -76,12 +81,14 @@ export default function CreatePage() {
       type: "widget",
       label: "Language Chart",
       widgetId: "language-chart",
-    },    {
+    },
+    {
       id: "widget-7",
       type: "widget",
       label: "Repository Showcase",
       widgetId: "repo-showcase",
-    },    {
+    },
+    {
       id: "widget-8",
       type: "widget",
       label: "Animated Progress",
@@ -108,12 +115,12 @@ export default function CreatePage() {
   ];
 
   // State
-  const [builderBlocks, setBuilderBlocks] = useState<Block[]>([]);  // Undo/Redo state management
+  const [builderBlocks, setBuilderBlocks] = useState<Block[]>([]); // Undo/Redo state management
   const [history, setHistory] = useState<Block[][]>([[]]);
   const [historyIndex, setHistoryIndex] = useState(0);
-  
+
   const contentUpdateTimeout = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Ref to track if history  been initialized to prevent infinite loops
   const historyInitialized = useRef(false);
 
@@ -141,131 +148,138 @@ export default function CreatePage() {
   const [showMobileWarning, setShowMobileWarning] = useState(true);
   const [activeTab, setActiveTab] = useState<
     "blocks" | "templates" | "social" | "settings"
-  >("blocks");  const [projectName, setProjectName] = useState<string>("My README");
+  >("blocks");
+  const [projectName, setProjectName] = useState<string>("My README");
   const [username, setUsername] = useState<string>("octocat"); // Default GitHub username for demo
-  const { theme, setTheme } = useTheme();  const [showExportModal, setShowExportModal] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [showExportModal, setShowExportModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAIEnhanceModal, setShowAIEnhanceModal] = useState(false);
   const [projects, setProjects] = useState<ReadmeProject[]>([]);
-  const [showPreview, setShowPreview] = useState(false);  const [livePreviewMode, setLivePreviewMode] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [livePreviewMode, setLivePreviewMode] = useState(false);
   const [previewContent, setPreviewContent] = useState<string>("");
   const [markdownCache, setMarkdownCache] = useState<Record<string, string>>(
     {}
-  );  // Function to parse enhanced markdown back into builder blocks
+  ); // Function to parse enhanced markdown back into builder blocks
   const parseMarkdownToBlocks = useCallback((markdown: string): Block[] => {
     const blocks: Block[] = [];
-    const lines = markdown.split('\n');
-    let currentContent = '';
+    const lines = markdown.split("\n");
+    let currentContent = "";
     let insideCodeBlock = false;
     let blockCounter = 1;
-    
+
     const createContentBlock = (content: string): ContentBlock => {
       const trimmedContent = content.trim();
       let label = `Content Block ${blockCounter++}`;
-      
-      const firstLine = trimmedContent.split('\n')[0];
-      if (firstLine.startsWith('#')) {
-        label = firstLine.replace(/^#+\s*/, '').trim() || label;
+
+      const firstLine = trimmedContent.split("\n")[0];
+      if (firstLine.startsWith("#")) {
+        label = firstLine.replace(/^#+\s*/, "").trim() || label;
       } else if (firstLine.length > 0 && firstLine.length < 50) {
         label = firstLine.trim() || label;
       }
-      
+
       return {
         id: `content-${Date.now()}-${Math.random()}`,
-        type: 'content',
+        type: "content",
         label,
-        content: trimmedContent
+        content: trimmedContent,
       };
     };
-    
+
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      
+
       // Handle code blocks
-      if (line.startsWith('```')) {
+      if (line.startsWith("```")) {
         if (!insideCodeBlock) {
           // Starting a code block
           insideCodeBlock = true;
           if (currentContent.trim()) {
             blocks.push(createContentBlock(currentContent));
-            currentContent = '';
+            currentContent = "";
           }
-          currentContent = line + '\n';
+          currentContent = line + "\n";
         } else {
           insideCodeBlock = false;
-          currentContent += line + '\n';
+          currentContent += line + "\n";
           blocks.push(createContentBlock(currentContent));
-          currentContent = '';
+          currentContent = "";
         }
         continue;
       }
-      
+
       if (insideCodeBlock) {
-        currentContent += line + '\n';
+        currentContent += line + "\n";
         continue;
       }
-      
-      if (line.startsWith('#')) {
+
+      if (line.startsWith("#")) {
         if (currentContent.trim()) {
           blocks.push(createContentBlock(currentContent));
-          currentContent = '';
+          currentContent = "";
         }
-        currentContent = line + '\n';
-      } else if (line.trim() === '' && currentContent.endsWith('\n\n')) {
+        currentContent = line + "\n";
+      } else if (line.trim() === "" && currentContent.endsWith("\n\n")) {
         continue;
       } else {
-        currentContent += line + '\n';
+        currentContent += line + "\n";
       }
     }
-    
+
     // Add remaining content
     if (currentContent.trim()) {
       blocks.push(createContentBlock(currentContent));
     }
-    
+
     return blocks;
   }, []);
 
-  const handleAIEnhancement = useCallback((enhancedContent: string) => {
-    try {
-      const newBlocks = parseMarkdownToBlocks(enhancedContent);
-      
-      setBuilderBlocks(newBlocks);
-      
-      setPreviewContent('');
-      
-      setShowAIEnhanceModal(false);
-      
-      setShowPreview(true);
-      
-      setToastMessage(`README enhanced successfully! Generated ${newBlocks.length} content blocks from enhanced content.`);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 4000);
-      
-      // Clear markdown cache to force regeneration
-      setMarkdownCache({});
-      
-    } catch (error) {
-      console.error('Error parsing enhanced content:', error);
-      
-      // Fallback: just update preview content
-      setPreviewContent(enhancedContent);
-      setShowAIEnhanceModal(false);
-      setShowPreview(true);
-      
-      setToastMessage("README enhanced successfully! Note: Content is displayed in preview mode only.");
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 4000);
-    }
-  }, [parseMarkdownToBlocks]);
+  const handleAIEnhancement = useCallback(
+    (enhancedContent: string) => {
+      try {
+        const newBlocks = parseMarkdownToBlocks(enhancedContent);
 
-  const handleWidgetMarkdownGenerated = (blockId: string, markdown: string) => {
+        setBuilderBlocks(newBlocks);
+
+        setPreviewContent("");
+
+        setShowAIEnhanceModal(false);
+
+        setShowPreview(true);
+
+        setToastMessage(
+          `README enhanced successfully! Generated ${newBlocks.length} content blocks from enhanced content.`
+        );
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+
+        // Clear markdown cache to force regeneration
+        setMarkdownCache({});
+      } catch (error) {
+        console.error("Error parsing enhanced content:", error);
+
+        // Fallback: just update preview content
+        setPreviewContent(enhancedContent);
+        setShowAIEnhanceModal(false);
+        setShowPreview(true);
+
+        setToastMessage(
+          "README enhanced successfully! Note: Content is displayed in preview mode only."
+        );
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 4000);
+      }
+    },
+    [parseMarkdownToBlocks]
+  );
+  const handleWidgetMarkdownGenerated = useCallback((blockId: string, markdown: string) => {
     setMarkdownCache((prev) => ({
       ...prev,
       [blockId]: markdown,
     }));
-  };
-
+  }, []);
   // Load saved data on component mount
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -295,26 +309,30 @@ export default function CreatePage() {
             includeAllCommits: true,
           }
         );
+
+        // Initialize history after loading saved data
+        setHistory([savedData.blocks || []]);
+        setHistoryIndex(0);
+        historyInitialized.current = true;
+      } else {
+        // Initialize history with empty state if no saved data
+        setHistory([[]]);
+        setHistoryIndex(0);
+        historyInitialized.current = true;
       }
     }
-  }, []);  // Initialize history when builderBlocks changes from loading saved data
-  useEffect(() => {
-    if (!historyInitialized.current && builderBlocks.length > 0) {
-      setHistory([builderBlocks]);
-      setHistoryIndex(0);
-      historyInitialized.current = true;
-    }
-  }, [builderBlocks]);
-
+  }, []);
   const generatePreview = useCallback(() => {
     try {
       let markdown = "";
 
       const sanitizedProjectName = projectName?.trim() || "My Awesome Project";
-      markdown += `# ${sanitizedProjectName}\n\n`;      // Add user profile badge if username is provided
+      markdown += `# ${sanitizedProjectName}\n\n`; // Add user profile badge if username is provided
       if (username?.trim()) {
         markdown += `<div align="center">\n\n`;
-        markdown += `[![Profile Badge](https://img.shields.io/badge/Profile-${encodeURIComponent(username)}-blue?style=for-the-badge&logo=github)](https://github.com/${username})\n\n`;
+        markdown += `[![Profile Badge](https://img.shields.io/badge/Profile-${encodeURIComponent(
+          username
+        )}-blue?style=for-the-badge&logo=github)](https://github.com/${username})\n\n`;
         markdown += `</div>\n\n`;
         markdown += `> Created by **[${username}](https://github.com/${username})**\n\n`;
       }
@@ -454,9 +472,7 @@ export default function CreatePage() {
     socials,
     widgetConfig,
     markdownCache,
-  ]);
-
-  // Live preview update effect
+  ]);  // Live preview update effect
   useEffect(() => {
     if (livePreviewMode || showPreview) {
       const newContent = generatePreview();
@@ -471,7 +487,8 @@ export default function CreatePage() {
     markdownCache,
     livePreviewMode,
     showPreview,
-    generatePreview,
+    // Note: generatePreview is removed to prevent infinite loops
+    // The function will always have the latest values due to closure
   ]);
   // Save current state as a project
   const saveProject = useCallback(() => {
@@ -576,7 +593,8 @@ export default function CreatePage() {
     e.preventDefault();
     setDragOver(true);
   };
-  const handleDragLeave = () => setDragOver(false);  const handleDrop = (e: React.DragEvent) => {
+  const handleDragLeave = () => setDragOver(false);
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
     if (draggedBlock) {
@@ -592,7 +610,9 @@ export default function CreatePage() {
     setSelectedBlockId(id === selectedBlockId ? null : id);
   };
   const handleRemoveBlock = (id: string): void => {
-    updateBuilderBlocksWithHistory(builderBlocks.filter((block) => block.id !== id));
+    updateBuilderBlocksWithHistory(
+      builderBlocks.filter((block) => block.id !== id)
+    );
     if (selectedBlockId === id) {
       setSelectedBlockId(null);
     }
@@ -626,14 +646,14 @@ export default function CreatePage() {
     // Remove any future history when making a new change
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push([...newBlocks]);
-    
+
     // Limit history to prevent memory issues (keep last 50 states)
     if (newHistory.length > 50) {
       newHistory.shift();
     } else {
       setHistoryIndex(historyIndex + 1);
     }
-    
+
     setHistory(newHistory);
     setBuilderBlocks(newBlocks);
   };
@@ -652,405 +672,498 @@ export default function CreatePage() {
       setBuilderBlocks([...history[newIndex]]);
     }
   }, [historyIndex, history]);
-
   // Check if undo/redo is available
   const canUndo = historyIndex > 0;
-  const canRedo = historyIndex < history.length - 1;  function loadTemplate(templateType: string): void {
-    // Use deterministic ID generation to prevent hydration mismatches
-    const baseId = `template-${templateType}`;
-    let counter = 0;
-    const generateId = () => `${baseId}-${++counter}`;
-    
-    let newBlocks: Block[] = [];
+  const canRedo = historyIndex < history.length - 1;
 
-    switch (templateType) {      case "classic":
-        newBlocks = [
-          {
-            id: generateId(),
-            type: "template",
-            label: "Classic Template",
-            templateId: "classic",
-          },          // Enhanced header
-          {
-            id: generateId(),
-            type: "content",
-            label: "Dynamic Header",
-            content: `# Welcome to My GitHub Profile! 👋`,
-          },
-          // About section with more detail
-          {
-            id: generateId(),
-            type: "content",
-            label: "About Me",
-            content: `## 👨‍💻 About Me\n\n🔥 **Passionate Developer** | 💡 **Problem Solver** | 🌟 **Innovation Enthusiast**\n\nI'm a dedicated software developer who loves creating elegant solutions to complex problems. With a focus on clean code, user experience, and continuous learning, I strive to build applications that make a real difference.\n\n### What I Do:\n- 🚀 Full-stack web development\n- 📱 Mobile application development\n- 🤖 AI/ML integration\n- 🔧 DevOps and automation\n- 🎨 UI/UX design\n\n### Current Focus:\n- 🔭 Working on innovative open-source projects\n- 🌱 Learning cutting-edge technologies\n- 👯 Looking to collaborate on meaningful solutions\n- 💬 Ask me about web development, React, Node.js, and Python`,
-          },
-          // GitHub statistics
-          {
-            id: generateId(),
-            type: "widget",
-            label: "GitHub Statistics",
-            widgetId: "github-stats",
-          },
-          // Language breakdown
-          {
-            id: `widget-languages-${Date.now()}`,
-            type: "widget",
-            label: "Programming Languages",
-            widgetId: "top-languages",
-          },
-          // Projects showcase
-          {
-            id: `block-projects-${Date.now()}`,
-            type: "content",
-            label: "Featured Projects",
-            content: `## 🚀 Featured Projects\n\n### 🌟 Project Highlights\n\nHere are some of my recent projects that showcase my skills and interests:\n\n| Project | Description | Tech Stack | Links |\n|---------|-------------|------------|-------|\n| **Project Alpha** | Revolutionary web application for productivity | React, Node.js, MongoDB | [Demo](https://demo.link) • [Code](https://github.com/link) |\n| **Project Beta** | AI-powered data analysis tool | Python, TensorFlow, Flask | [Demo](https://demo.link) • [Code](https://github.com/link) |\n| **Project Gamma** | Mobile app for social networking | React Native, Firebase | [App Store](https://app.link) • [Code](https://github.com/link) |\n\n### 💡 What Makes These Special:\n- ✨ Clean, maintainable code architecture\n- 🎯 User-centered design principles\n- 🔧 Comprehensive testing coverage\n- 📚 Detailed documentation\n- 🚀 Optimized performance`,
-          },
-          // Repository showcase widget
-          {
-            id: `widget-repo-showcase-${Date.now()}`,
-            type: "widget",
-            label: "Repository Showcase",
-            widgetId: "repo-showcase",
-          },
-        ];
-        break;      case "minimal":
-        newBlocks = [
-          {
-            id: `template-minimal-${Date.now()}`,
-            type: "template",
-            label: "Minimal Template",
-            templateId: "minimal",
-          },
-          // Clean header
-          {
-            id: `block-intro-${Date.now()}`,
-            type: "content",
-            label: "Introduction",
-            content: `# ${username || "Developer"} 👋\n\n**Building the future, one commit at a time** ✨\n\n---\n\n## What I Do\n\nCurrently working on interesting projects and always eager to learn new technologies.\n\n**Focus Areas:**\n- 💻 Software Development\n- 🌐 Web Technologies  \n- 📱 Mobile Applications\n- 🔧 Developer Tools\n\n---\n\n## Quick Stats`,
-          },
-          // Essential language stats
-          {
-            id: `widget-languages-${Date.now()}`,
-            type: "widget",
-            label: "Top Languages",
-            widgetId: "top-languages",
-          },
-          // Basic GitHub stats
-          {
-            id: `widget-github-basic-${Date.now()}`,
-            type: "widget",
-            label: "GitHub Activity",
-            widgetId: "github-stats",
-          },
-          // Contact section
-          {
-            id: `block-contact-${Date.now()}`,
-            type: "content",
-            label: "Get In Touch",
-            content: `---\n\n## 📫 Let's Connect\n\n${username ? `- 💼 GitHub: [@${username}](https://github.com/${username})` : '- 💼 GitHub: @your-username'}\n- 📧 Email: your.email@example.com\n- 💭 Always open to interesting conversations and collaboration opportunities!\n\n---\n\n*"Code is poetry written in logic"* 💭`,
-          },
-        ];
-        break;      case "social":        newBlocks = [
-          // Welcome message
-          {
-            id: `block-greeting-${Date.now()}`,
-            type: "content",
-            label: "Dynamic Greeting",
-            content: `# Hello World! 👋 Welcome to My Profile`,
-          },
-          // Wave decoration
-          {
-            id: `widget-wave-${Date.now()}`,
-            type: "widget",
-            label: "Wave Animation",
-            widgetId: "wave-animation",
-          },
-          // Enhanced introduction
-          {
-            id: `block-intro-${Date.now()}`,
-            type: "content",
-            label: "Introduction",
-            content: `## 🌟 Welcome to My Digital Universe!\n\n**${username || "Digital Creator"}** | **Community Builder** | **Tech Enthusiast**\n\n> *"Connecting people through technology and building communities that matter"*\n\n### 🚀 What I'm About:\n\n- 🎯 **Mission**: Creating meaningful connections in the digital space\n- 💡 **Passion**: Building tools that bring people together\n- 🌍 **Community**: Active contributor to open-source projects\n- 📚 **Learning**: Always exploring new technologies and methodologies\n- 🤝 **Collaboration**: Open to partnerships and interesting projects\n\n### 🎭 Fun Facts:\n- ☕ Coffee enthusiast (powered by caffeine and curiosity)\n- 🎮 Gaming in my free time\n- 📸 Capturing moments through photography\n- 🎵 Music lover (coding playlist essential!)\n- 🌱 Always learning something new`,
-          },
-          // Social connections showcase
-          {
-            id: `widget-social-stats-${Date.now()}`,
-            type: "widget",
-            label: "Social Connections",
-            widgetId: "social-stats",
-          },
-          // Community engagement
-          {
-            id: `block-community-${Date.now()}`,
-            type: "content",
-            label: "Community & Engagement",
-            content: `## 🤝 Let's Connect & Collaborate!\n\n### 🌐 Find Me Around the Web:\n\n| Platform | What You'll Find | Link |\n|----------|------------------|------|\n| 💼 **LinkedIn** | Professional updates & career highlights | [Connect with me](https://linkedin.com/in/${username || 'your-profile'}) |\n| 🐦 **Twitter** | Tech thoughts, quick updates & community | [Follow @${username || 'your-handle'}](https://twitter.com/${username || 'your-handle'}) |\n| 📷 **Instagram** | Behind the scenes & personal moments | [@${username || 'your-handle'}](https://instagram.com/${username || 'your-handle'}) |\n| 🎥 **YouTube** | Tech tutorials & project showcases | [Subscribe](https://youtube.com/@${username || 'your-channel'}) |\n| 💬 **Discord** | Real-time chat & community discussions | ${username || 'YourHandle'}#1234 |\n\n### 🤝 Let's Build Something Amazing Together!\n\nI'm always excited to:\n- 🚀 **Collaborate** on interesting projects\n- 💬 **Discuss** new technologies and ideas\n- 🤝 **Connect** with fellow developers and creators\n- 🌟 **Contribute** to meaningful open-source projects\n- 📚 **Share** knowledge and learn from others\n\n**Reach out if you want to chat about tech, collaborate on a project, or just say hi!** 👋`,
-          },
-          // GitHub activity summary
-          {
-            id: `widget-github-social-${Date.now()}`,
-            type: "widget",
-            label: "GitHub Activity",
-            widgetId: "contribution-graph",
-          },
-        ];
-        break;
+  const loadTemplate = useCallback(
+    (templateType: string): void => {
+      // Use deterministic ID generation to prevent hydration mismatches
+      const baseId = `template-${templateType}`;
+      let counter = 0;
+      const generateId = () => `${baseId}-${++counter}`;
 
-      case "personal":        newBlocks = [
-          // Header content
-          {
-            id: `block-header-${Date.now()}`,
-            type: "content",
-            label: "Profile Header",
-            content: `# Hi there! 👋 I'm ${username || "a Developer"}`,
-          },
-          // Wave decoration
-          {
-            id: `widget-wave-${Date.now()}`,
-            type: "widget",
-            label: "Wave Animation",
-            widgetId: "wave-animation",
-          },
-          // About section
-          {
-            id: `block-about-${Date.now()}`,
-            type: "content",
-            label: "About Me",
-            content: `## 👨‍💻 About Me\n\n🔭 I'm currently working on exciting projects\n🌱 I'm currently learning new technologies\n👯 I'm looking to collaborate on open source projects\n💬 Ask me about anything tech-related\n📫 How to reach me: [Contact Info]\n⚡ Fun fact: I love coding and solving problems!`,
-          },
-          // Comprehensive GitHub stats
-          {
-            id: `widget-github-stats-${Date.now()}`,
-            type: "widget",
-            label: "GitHub Stats",
-            widgetId: "github-stats",
-          },
-          // Language breakdown
-          {
-            id: `widget-languages-${Date.now()}`,
-            type: "widget",
-            label: "Top Languages",
-            widgetId: "top-languages",
-          },
-          // Language chart visualization
-          {
-            id: `widget-language-chart-${Date.now()}`,
-            type: "widget",
-            label: "Language Chart",
-            widgetId: "language-chart",
-          },
-          // Skills progress bars
-          {
-            id: `widget-animated-progress-${Date.now()}`,
-            type: "widget",
-            label: "Skills & Technologies",
-            widgetId: "animated-progress",
-          },
-          // Contribution activity
-          {
-            id: `widget-contribution-graph-${Date.now()}`,
-            type: "widget",
-            label: "Contribution Graph",
-            widgetId: "contribution-graph",
-          },
-          // Connect section
-          {
-            id: `block-connect-${Date.now()}`,
-            type: "content",
-            label: "Let's Connect",
-            content: `## 🤝 Let's Connect\n\nI'm always interested in connecting with fellow developers and collaborating on exciting projects!`,
-          },
-          // Social connections
-          {
-            id: `widget-social-stats-${Date.now()}`,
-            type: "widget",
-            label: "Social Stats",
-            widgetId: "social-stats",
-          },
-        ];        break;
+      let newBlocks: Block[] = [];
 
-      case "showcase":        newBlocks = [
-          // Profile header
-          {
-            id: `block-header-showcase-${Date.now()}`,
-            type: "content",
-            label: "Dynamic Header",
-            content: `# 🚀 Complete Developer Profile Showcase`,
-          },
-          // Wave decoration
-          {
-            id: `widget-wave-decoration-${Date.now()}`,
-            type: "widget",
-            label: "Wave Animation",
-            widgetId: "wave-animation",
-          },
-          // Introduction
-          {
-            id: `block-showcase-intro-${Date.now()}`,
-            type: "content",
-            label: "Introduction",
-            content: `## 🎯 Complete Developer Showcase\n\n**Welcome to my comprehensive GitHub profile!** This template demonstrates all available widgets and features of the GitHub README Generator.\n\n> *"Showcasing the full power of modern GitHub profile customization"*\n\n### 🚀 What You'll Find Here:\n- 📊 **Comprehensive GitHub Statistics**\n- 🎨 **Language & Technology Breakdowns**  \n- 📈 **Activity & Contribution Patterns**\n- 🛠️ **Skills & Technologies Visualization**\n- 🌐 **Social Media Integration**\n- 🏆 **Repository Highlights**\n- ✨ **Dynamic Visual Elements**`,
-          },
-          // GitHub statistics
-          {
-            id: `widget-showcase-github-stats-${Date.now()}`,
-            type: "widget",
-            label: "GitHub Statistics",
-            widgetId: "github-stats",
-          },
-          // Language statistics
-          {
-            id: `widget-showcase-languages-${Date.now()}`,
-            type: "widget",
-            label: "Top Languages",
-            widgetId: "top-languages",
-          },
-          // Language chart visualization
-          {
-            id: `widget-showcase-language-chart-${Date.now()}`,
-            type: "widget",
-            label: "Language Distribution Chart",
-            widgetId: "language-chart",
-          },
-          // Skills and technologies
-          {
-            id: `block-showcase-skills-${Date.now()}`,
-            type: "content",
-            label: "Skills & Technologies",
-            content: `## 🛠️ Technical Skills & Expertise\n\n### Programming Languages & Frameworks\n\nHere's a comprehensive view of my technical skills and the technologies I work with regularly:`,
-          },
-          // Animated progress bars for skills
-          {
-            id: `widget-showcase-skills-progress-${Date.now()}`,
-            type: "widget",
-            label: "Skills Progress",
-            widgetId: "animated-progress",
-          },
-          // Contribution activity
-          {
-            id: `widget-showcase-contributions-${Date.now()}`,
-            type: "widget",
-            label: "Contribution Activity",
-            widgetId: "contribution-graph",
-          },
-          // Repository showcase
-          {
-            id: `widget-showcase-repositories-${Date.now()}`,
-            type: "widget",
-            label: "Featured Repositories",
-            widgetId: "repo-showcase",
-          },
-          // Social connections
-          {
-            id: `block-showcase-social-intro-${Date.now()}`,
-            type: "content",
-            label: "Connect With Me",
-            content: `## 🌐 Let's Connect!\n\nI'm always excited to connect with fellow developers, collaborate on projects, and share knowledge within the tech community.`,
-          },
-          // Social stats widget
-          {
-            id: `widget-showcase-social-stats-${Date.now()}`,
-            type: "widget",
-            label: "Social Media Presence",
-            widgetId: "social-stats",
-          },
-          // Comprehensive footer
-          {
-            id: `block-showcase-footer-${Date.now()}`,
-            type: "content",
-            label: "Profile Footer",
-            content: `---\n\n## 📈 Profile Analytics\n\n${username ? `![Profile Views](https://komarev.com/ghpvc/?username=${username}&label=Profile%20views&color=0e75b6&style=flat)` : '![Profile Views](https://komarev.com/ghpvc/?username=your-username&label=Profile%20views&color=0e75b6&style=flat)'}\n${username ? `![GitHub followers](https://img.shields.io/github/followers/${username}?label=Followers&style=social)` : '![GitHub followers](https://img.shields.io/github/followers/your-username?label=Followers&style=social)'}\n\n### 🎯 Quick Facts:\n- 💻 **Currently Working On**: Revolutionary open-source projects\n- 🌱 **Learning**: Latest web technologies and AI/ML concepts\n- 👯 **Open to Collaborate**: Innovative projects and meaningful contributions\n- 💬 **Ask Me About**: Web development, React, Node.js, Python, DevOps\n- 📫 **Reach Me**: Available through any of the social platforms above\n- ⚡ **Fun Fact**: I debug code better with coffee ☕\n\n---\n\n<div align="center">\n\n**💝 Thank you for visiting my profile!**\n\n*If you found this interesting, consider giving it a ⭐*\n\n**Happy Coding!** 🚀\n\n</div>`,
-          },
-        ];
-        break;
+      switch (templateType) {
+        case "classic":
+          newBlocks = [
+            {
+              id: generateId(),
+              type: "template",
+              label: "Classic Template",
+              templateId: "classic",
+            },
+            // Enhanced header
+            {
+              id: generateId(),
+              type: "content",
+              label: "Dynamic Header",
+              content: `# Welcome to My GitHub Profile! 👋`,
+            },
+            // About section with more detail
+            {
+              id: generateId(),
+              type: "content",
+              label: "About Me",
+              content: `## 👨‍💻 About Me\n\n🔥 **Passionate Developer** | 💡 **Problem Solver** | 🌟 **Innovation Enthusiast**\n\nI'm a dedicated software developer who loves creating elegant solutions to complex problems. With a focus on clean code, user experience, and continuous learning, I strive to build applications that make a real difference.\n\n### What I Do:\n- 🚀 Full-stack web development\n- 📱 Mobile application development\n- 🤖 AI/ML integration\n- 🔧 DevOps and automation\n- 🎨 UI/UX design\n\n### Current Focus:\n- 🔭 Working on innovative open-source projects\n- 🌱 Learning cutting-edge technologies\n- 👯 Looking to collaborate on meaningful solutions\n- 💬 Ask me about web development, React, Node.js, and Python`,
+            },
+            // GitHub statistics
+            {
+              id: generateId(),
+              type: "widget",
+              label: "GitHub Statistics",
+              widgetId: "github-stats",
+            },
+            // Language breakdown
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Programming Languages",
+              widgetId: "top-languages",
+            },
+            // Projects showcase
+            {
+              id: generateId(),
+              type: "content",
+              label: "Featured Projects",
+              content: `## 🚀 Featured Projects\n\n### 🌟 Project Highlights\n\nHere are some of my recent projects that showcase my skills and interests:\n\n| Project | Description | Tech Stack | Links |\n|---------|-------------|------------|-------|\n| **Project Alpha** | Revolutionary web application for productivity | React, Node.js, MongoDB | [Demo](https://demo.link) • [Code](https://github.com/link) |\n| **Project Beta** | AI-powered data analysis tool | Python, TensorFlow, Flask | [Demo](https://demo.link) • [Code](https://github.com/link) |\n| **Project Gamma** | Mobile app for social networking | React Native, Firebase | [App Store](https://app.link) • [Code](https://github.com/link) |\n\n### 💡 What Makes These Special:\n- ✨ Clean, maintainable code architecture\n- 🎯 User-centered design principles\n- 🔧 Comprehensive testing coverage\n- 📚 Detailed documentation\n- 🚀 Optimized performance`,
+            },
+            // Repository showcase widget
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Repository Showcase",
+              widgetId: "repo-showcase",
+            },
+          ];
+          break;
 
-      case "project":
-        newBlocks = [
-          // Project header
-          {
-            id: `block-header-${Date.now()}`,
-            type: "content",
-            label: "Project Header",
-            content: `# 🚀 ${username ? `${username}'s Project` : "Project Name"}\n\n> A comprehensive and feature-rich project built with modern technologies\n\n[![GitHub stars](https://img.shields.io/github/stars/${username || "username"}/project-name?style=social)](https://github.com/${username || "username"}/project-name/stargazers)\n[![GitHub forks](https://img.shields.io/github/forks/${username || "username"}/project-name?style=social)](https://github.com/${username || "username"}/project-name/network)\n[![GitHub issues](https://img.shields.io/github/issues/${username || "username"}/project-name)](https://github.com/${username || "username"}/project-name/issues)\n[![GitHub license](https://img.shields.io/github/license/${username || "username"}/project-name)](https://github.com/${username || "username"}/project-name/blob/main/LICENSE)`,
-          },
-          // Description and features
-          {
-            id: `block-description-${Date.now()}`,
-            type: "content",
-            label: "Description & Features",
-            content: `## 📋 Description\n\nProvide a detailed description of your project here. Explain what it does, why it's useful, and what problems it solves.\n\n## ✨ Features\n\n- 🎯 **Feature 1**: Description of the first key feature\n- 🔧 **Feature 2**: Description of the second key feature  \n- 🚀 **Feature 3**: Description of the third key feature\n- 💡 **Feature 4**: Description of the fourth key feature\n- 🔒 **Feature 5**: Description of the fifth key feature`,
-          },
-          // Tech stack visualization
-          {
-            id: `widget-tech-stack-${Date.now()}`,
-            type: "widget",
-            label: "Technology Stack",
-            widgetId: "animated-progress",
-          },
-          // Language distribution
-          {
-            id: `widget-project-languages-${Date.now()}`,
-            type: "widget",
-            label: "Language Distribution",
-            widgetId: "language-chart",
-          },
-          // Installation and usage
-          {
-            id: `block-installation-${Date.now()}`,
-            type: "content",
-            label: "Installation & Usage",
-            content: `## 🛠️ Installation\n\n### Prerequisites\n\n- Node.js (v16.0.0 or higher)\n- npm or yarn\n- Git\n\n### Quick Start\n\n\`\`\`bash\n# Clone the repository\ngit clone https://github.com/${username || "username"}/project-name.git\n\n# Navigate to project directory\ncd project-name\n\n# Install dependencies\nnpm install\n\n# Start development server\nnpm run dev\n\`\`\`\n\n## 📖 Usage\n\nProvide clear examples of how to use your project:\n\n\`\`\`javascript\n// Example usage code\nimport { ProjectName } from './project-name';\n\nconst example = new ProjectName({\n  option1: 'value1',\n  option2: 'value2'\n});\n\nexample.run();\n\`\`\``,
-          },
-          // Repository showcase
-          {
-            id: `widget-repo-showcase-${Date.now()}`,
-            type: "widget",
-            label: "Related Projects",
-            widgetId: "repo-showcase",
-          },
-          // Contributing and support
-          {
-            id: `block-contributing-${Date.now()}`,
-            type: "content",
-            label: "Contributing & Support",
-            content: `## 🤝 Contributing\n\nContributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.\n\n1. Fork the Project\n2. Create your Feature Branch (\`git checkout -b feature/AmazingFeature\`)\n3. Commit your Changes (\`git commit -m 'Add some AmazingFeature'\`)\n4. Push to the Branch (\`git push origin feature/AmazingFeature\`)\n5. Open a Pull Request\n\n## 📝 License\n\nDistributed under the MIT License. See \`LICENSE\` for more information.\n\n## 💬 Support\n\nIf you have any questions or need help, feel free to reach out:\n\n- 📧 Email: [your-email@example.com]\n- 💬 Issues: [GitHub Issues](https://github.com/${username || "username"}/project-name/issues)\n- 🐦 Twitter: [@${username || "username"}](https://twitter.com/${username || "username"})`,
-          },
-          // Maintainer info
-          {
-            id: `widget-maintainer-stats-${Date.now()}`,
-            type: "widget",
-            label: "Maintainer Stats",
-            widgetId: "github-stats",
-          },
-        ];
-        break;
+        case "minimal":
+          newBlocks = [
+            {
+              id: generateId(),
+              type: "template",
+              label: "Minimal Template",
+              templateId: "minimal",
+            },
+            // Clean header
+            {
+              id: generateId(),
+              type: "content",
+              label: "Introduction",
+              content: `# ${
+                username || "Developer"
+              } 👋\n\n**Building the future, one commit at a time** ✨\n\n---\n\n## What I Do\n\nCurrently working on interesting projects and always eager to learn new technologies.\n\n**Focus Areas:**\n- 💻 Software Development\n- 🌐 Web Technologies  \n- 📱 Mobile Applications\n- 🔧 Developer Tools\n\n---\n\n## Quick Stats`,
+            },
+            // Essential language stats
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Top Languages",
+              widgetId: "top-languages",
+            },
+            // Basic GitHub stats
+            {
+              id: generateId(),
+              type: "widget",
+              label: "GitHub Activity",
+              widgetId: "github-stats",
+            },
+            // Contact section
+            {
+              id: generateId(),
+              type: "content",
+              label: "Get In Touch",
+              content: `---\n\n## 📫 Let's Connect\n\n${
+                username
+                  ? `- 💼 GitHub: [@${username}](https://github.com/${username})`
+                  : "- 💼 GitHub: @your-username"
+              }\n- 📧 Email: your.email@example.com\n- 💭 Always open to interesting conversations and collaboration opportunities!\n\n---\n\n*"Code is poetry written in logic"* 💭`,
+            },
+          ];
+          break;
 
-      default:
-        setToastMessage(`Unknown template type: ${templateType}`);
-        setShowToast(true);
-        return;
-    }
+        case "social":
+          newBlocks = [
+            {
+              id: generateId(),
+              type: "template",
+              label: "Social Template",
+              templateId: "social",
+            },
+            // Welcome message
+            {
+              id: generateId(),
+              type: "content",
+              label: "Dynamic Greeting",
+              content: `# Hello World! 👋 Welcome to My Profile`,
+            },
+            // Wave decoration
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Wave Animation",
+              widgetId: "wave-animation",
+            },
+            // Enhanced introduction
+            {
+              id: generateId(),
+              type: "content",
+              label: "Introduction",
+              content: `## 🌟 Welcome to My Digital Universe!\n\n**${
+                username || "Digital Creator"
+              }** | **Community Builder** | **Tech Enthusiast**\n\n> *"Connecting people through technology and building communities that matter"*\n\n### 🚀 What I'm About:\n\n- 🎯 **Mission**: Creating meaningful connections in the digital space\n- 💡 **Passion**: Building tools that bring people together\n- 🌍 **Community**: Active contributor to open-source projects\n- 📚 **Learning**: Always exploring new technologies and methodologies\n- 🤝 **Collaboration**: Open to partnerships and interesting projects\n\n### 🎭 Fun Facts:\n- ☕ Coffee enthusiast (powered by caffeine and curiosity)\n- 🎮 Gaming in my free time\n- 📸 Capturing moments through photography\n- 🎵 Music lover (coding playlist essential!)\n- 🌱 Always learning something new`,
+            },
+            // Social connections showcase
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Social Connections",
+              widgetId: "social-stats",
+            },
+            // Community engagement
+            {
+              id: generateId(),
+              type: "content",
+              label: "Community & Engagement",
+              content: `## 🤝 Let's Connect & Collaborate!\n\n### 🌐 Find Me Around the Web:\n\n| Platform | What You'll Find | Link |\n|----------|------------------|------|\n| 💼 **LinkedIn** | Professional updates & career highlights | [Connect with me](https://linkedin.com/in/${
+                username || "your-profile"
+              }) |\n| 🐦 **Twitter** | Tech thoughts, quick updates & community | [Follow @${
+                username || "your-handle"
+              }](https://twitter.com/${
+                username || "your-handle"
+              }) |\n| 📷 **Instagram** | Behind the scenes & personal moments | [@${
+                username || "your-handle"
+              }](https://instagram.com/${
+                username || "your-handle"
+              }) |\n| 🎥 **YouTube** | Tech tutorials & project showcases | [Subscribe](https://youtube.com/@${
+                username || "your-channel"
+              }) |\n| 💬 **Discord** | Real-time chat & community discussions | ${
+                username || "YourHandle"
+              }#1234 |\n\n### 🤝 Let's Build Something Amazing Together!\n\nI'm always excited to:\n- 🚀 **Collaborate** on interesting projects\n- 💬 **Discuss** new technologies and ideas\n- 🤝 **Connect** with fellow developers and creators\n- 🌟 **Contribute** to meaningful open-source projects\n- 📚 **Share** knowledge and learn from others\n\n**Reach out if you want to chat about tech, collaborate on a project, or just say hi!** 👋`,
+            },
+            // GitHub activity summary
+            {
+              id: generateId(),
+              type: "widget",
+              label: "GitHub Activity",
+              widgetId: "contribution-graph",
+            },
+          ];
+          break;
 
-    updateBuilderBlocksWithHistory(newBlocks);
+        case "personal":
+          newBlocks = [
+            {
+              id: generateId(),
+              type: "template",
+              label: "Personal Template",
+              templateId: "personal",
+            },
+            // Header content
+            {
+              id: generateId(),
+              type: "content",
+              label: "Profile Header",
+              content: `# Hi there! 👋 I'm ${username || "a Developer"}`,
+            },
+            // Wave decoration
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Wave Animation",
+              widgetId: "wave-animation",
+            },
+            // About section
+            {
+              id: generateId(),
+              type: "content",
+              label: "About Me",
+              content: `## 👨‍💻 About Me\n\n🔭 I'm currently working on exciting projects\n🌱 I'm currently learning new technologies\n👯 I'm looking to collaborate on open source projects\n💬 Ask me about anything tech-related\n📫 How to reach me: [Contact Info]\n⚡ Fun fact: I love coding and solving problems!`,
+            },
+            // Comprehensive GitHub stats
+            {
+              id: generateId(),
+              type: "widget",
+              label: "GitHub Stats",
+              widgetId: "github-stats",
+            },
+            // Language breakdown
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Top Languages",
+              widgetId: "top-languages",
+            },
+            // Language chart visualization
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Language Chart",
+              widgetId: "language-chart",
+            },
+            // Skills progress bars
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Skills & Technologies",
+              widgetId: "animated-progress",
+            },
+            // Contribution activity
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Contribution Graph",
+              widgetId: "contribution-graph",
+            },
+            // Connect section
+            {
+              id: generateId(),
+              type: "content",
+              label: "Let's Connect",
+              content: `## 🤝 Let's Connect\n\nI'm always interested in connecting with fellow developers and collaborating on exciting projects!`,
+            },
+            // Social connections
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Social Stats",
+              widgetId: "social-stats",
+            },
+          ];
+          break;
 
-    setToastMessage(
-      `${
-        templateType.charAt(0).toUpperCase() + templateType.slice(1)
-      } template loaded successfully!`
-    );
-    setShowToast(true);
+        case "showcase":
+          newBlocks = [
+            {
+              id: generateId(),
+              type: "template",
+              label: "Showcase Template",
+              templateId: "showcase",
+            },
+            // Profile header
+            {
+              id: generateId(),
+              type: "content",
+              label: "Dynamic Header",
+              content: `# 🚀 Complete Developer Profile Showcase`,
+            },
+            // Wave decoration
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Wave Animation",
+              widgetId: "wave-animation",
+            },
+            // Introduction
+            {
+              id: generateId(),
+              type: "content",
+              label: "Introduction",
+              content: `## 🎯 Complete Developer Showcase\n\n**Welcome to my comprehensive GitHub profile!** This template demonstrates all available widgets and features of the GitHub README Generator.\n\n> *"Showcasing the full power of modern GitHub profile customization"*\n\n### 🚀 What You'll Find Here:\n- 📊 **Comprehensive GitHub Statistics**\n- 🎨 **Language & Technology Breakdowns**  \n- 📈 **Activity & Contribution Patterns**\n- 🛠️ **Skills & Technologies Visualization**\n- 🌐 **Social Media Integration**\n- 🏆 **Repository Highlights**\n- ✨ **Dynamic Visual Elements**`,
+            },
+            // GitHub statistics
+            {
+              id: generateId(),
+              type: "widget",
+              label: "GitHub Statistics",
+              widgetId: "github-stats",
+            },
+            // Language statistics
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Top Languages",
+              widgetId: "top-languages",
+            },
+            // Language chart visualization
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Language Distribution Chart",
+              widgetId: "language-chart",
+            },
+            // Skills and technologies
+            {
+              id: generateId(),
+              type: "content",
+              label: "Skills & Technologies",
+              content: `## 🛠️ Technical Skills & Expertise\n\n### Programming Languages & Frameworks\n\nHere's a comprehensive view of my technical skills and the technologies I work with regularly:`,
+            },
+            // Animated progress bars for skills
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Skills Progress",
+              widgetId: "animated-progress",
+            },
+            // Contribution activity
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Contribution Activity",
+              widgetId: "contribution-graph",
+            },
+            // Repository showcase
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Featured Repositories",
+              widgetId: "repo-showcase",
+            },
+            // Social connections
+            {
+              id: generateId(),
+              type: "content",
+              label: "Connect With Me",
+              content: `## 🌐 Let's Connect!\n\nI'm always excited to connect with fellow developers, collaborate on projects, and share knowledge within the tech community.`,
+            },
+            // Social stats widget
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Social Media Presence",
+              widgetId: "social-stats",
+            },
+            // Comprehensive footer
+            {
+              id: generateId(),
+              type: "content",
+              label: "Profile Footer",
+              content: `---\n\n## 📈 Profile Analytics\n\n${
+                username
+                  ? `![Profile Views](https://komarev.com/ghpvc/?username=${username}&label=Profile%20views&color=0e75b6&style=flat)`
+                  : "![Profile Views](https://komarev.com/ghpvc/?username=your-username&label=Profile%20views&color=0e75b6&style=flat)"
+              }\n${
+                username
+                  ? `![GitHub followers](https://img.shields.io/github/followers/${username}?label=Followers&style=social)`
+                  : "![GitHub followers](https://img.shields.io/github/followers/your-username?label=Followers&style=social)"
+              }\n\n### 🎯 Quick Facts:\n- 💻 **Currently Working On**: Revolutionary open-source projects\n- 🌱 **Learning**: Latest web technologies and AI/ML concepts\n- 👯 **Open to Collaborate**: Innovative projects and meaningful contributions\n- 💬 **Ask Me About**: Web development, React, Node.js, Python, DevOps\n- 📫 **Reach Me**: Available through any of the social platforms above\n- ⚡ **Fun Fact**: I debug code better with coffee ☕\n\n---\n\n<div align="center">\n\n**💝 Thank you for visiting my profile!**\n\n*If you found this interesting, consider giving it a ⭐*\n\n**Happy Coding!** 🚀\n\n</div>`,
+            },
+          ];
+          break;
 
-    setTimeout(() => {
-      setShowToast(false);
-    }, 3000);
-  }  function updateBlockContent(id: string, content: string): void {
+        case "project":
+          newBlocks = [
+            {
+              id: generateId(),
+              type: "template",
+              label: "Project Template",
+              templateId: "project",
+            },
+            // Project header
+            {
+              id: generateId(),
+              type: "content",
+              label: "Project Header",
+              content: `# 🚀 ${
+                username ? `${username}'s Project` : "Project Name"
+              }\n\n> A comprehensive and feature-rich project built with modern technologies\n\n[![GitHub stars](https://img.shields.io/github/stars/${
+                username || "username"
+              }/project-name?style=social)](https://github.com/${
+                username || "username"
+              }/project-name/stargazers)\n[![GitHub forks](https://img.shields.io/github/forks/${
+                username || "username"
+              }/project-name?style=social)](https://github.com/${
+                username || "username"
+              }/project-name/network)\n[![GitHub issues](https://img.shields.io/github/issues/${
+                username || "username"
+              }/project-name)](https://github.com/${
+                username || "username"
+              }/project-name/issues)\n[![GitHub license](https://img.shields.io/github/license/${
+                username || "username"
+              }/project-name)](https://github.com/${
+                username || "username"
+              }/project-name/blob/main/LICENSE)`,
+            },
+            // Description and features
+            {
+              id: generateId(),
+              type: "content",
+              label: "Description & Features",
+              content: `## 📋 Description\n\nProvide a detailed description of your project here. Explain what it does, why it's useful, and what problems it solves.\n\n## ✨ Features\n\n- 🎯 **Feature 1**: Description of the first key feature\n- 🔧 **Feature 2**: Description of the second key feature  \n- 🚀 **Feature 3**: Description of the third key feature\n- 💡 **Feature 4**: Description of the fourth key feature\n- 🔒 **Feature 5**: Description of the fifth key feature`,
+            },
+            // Tech stack visualization
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Technology Stack",
+              widgetId: "animated-progress",
+            },
+            // Language distribution
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Language Distribution",
+              widgetId: "language-chart",
+            },
+            // Installation and usage
+            {
+              id: generateId(),
+              type: "content",
+              label: "Installation & Usage",
+              content: `## 🛠️ Installation\n\n### Prerequisites\n\n- Node.js (v16.0.0 or higher)\n- npm or yarn\n- Git\n\n### Quick Start\n\n\`\`\`bash\n# Clone the repository\ngit clone https://github.com/${
+                username || "username"
+              }/project-name.git\n\n# Navigate to project directory\ncd project-name\n\n# Install dependencies\nnpm install\n\n# Start development server\nnpm run dev\n\`\`\`\n\n## 📖 Usage\n\nProvide clear examples of how to use your project:\n\n\`\`\`javascript\n// Example usage code\nimport { ProjectName } from './project-name';\n\nconst example = new ProjectName({\n  option1: 'value1',\n  option2: 'value2'\n});\n\nexample.run();\n\`\`\``,
+            },
+            // Repository showcase
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Related Projects",
+              widgetId: "repo-showcase",
+            },
+            // Contributing and support
+            {
+              id: generateId(),
+              type: "content",
+              label: "Contributing & Support",
+              content: `## 🤝 Contributing\n\nContributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.\n\n1. Fork the Project\n2. Create your Feature Branch (\`git checkout -b feature/AmazingFeature\`)\n3. Commit your Changes (\`git commit -m 'Add some AmazingFeature'\`)\n4. Push to the Branch (\`git push origin feature/AmazingFeature\`)\n5. Open a Pull Request\n\n## 📝 License\n\nDistributed under the MIT License. See \`LICENSE\` for more information.\n\n## 💬 Support\n\nIf you have any questions or need help, feel free to reach out:\n\n- 📧 Email: [your-email@example.com]\n- 💬 Issues: [GitHub Issues](https://github.com/${
+                username || "username"
+              }/project-name/issues)\n- 🐦 Twitter: [@${
+                username || "username"
+              }](https://twitter.com/${username || "username"})`,
+            },
+            // Maintainer info
+            {
+              id: generateId(),
+              type: "widget",
+              label: "Maintainer Stats",
+              widgetId: "github-stats",
+            },
+          ];
+          break;
+
+        default:
+          setToastMessage(`Unknown template type: ${templateType}`);
+          setShowToast(true);
+          return;
+      }
+
+      updateBuilderBlocksWithHistory(newBlocks);
+
+      setToastMessage(
+        `${
+          templateType.charAt(0).toUpperCase() + templateType.slice(1)
+        } template loaded successfully!`
+      );
+      setShowToast(true);
+      setTimeout(() => {
+        setShowToast(false);
+      }, 3000);
+    },
+    [username, updateBuilderBlocksWithHistory, setToastMessage, setShowToast]
+  );
+
+  function updateBlockContent(id: string, content: string): void {
     const newBlocks = builderBlocks.map((block) =>
       block.id === id && block.type === "content"
         ? { ...block, content }
         : block
     );
     setBuilderBlocks(newBlocks);
-    
+
     // Debounce history updates for content to avoid too many history entries
     if (contentUpdateTimeout.current) {
       clearTimeout(contentUpdateTimeout.current);
@@ -1083,7 +1196,8 @@ export default function CreatePage() {
         : block
     );
     updateBuilderBlocksWithHistory(newBlocks);
-  }  function updateBlockLayout(
+  }
+  function updateBlockLayout(
     id: string,
     layout: "grid" | "flow" | "inline"
   ): void {
@@ -1103,40 +1217,6 @@ export default function CreatePage() {
     updateBuilderBlocksWithHistory(newBlocks);
   }
 
-  const AUTOSAVE_KEY = "readme-generator-autosave";
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const savedData = LocalStorageService.load<AutoSaveData | null>(
-        AUTOSAVE_KEY,
-        null
-      );
-
-      if (savedData) {
-        setBuilderBlocks(savedData.blocks || []);
-        setProjectName(savedData.projectName || "My README");
-        setUsername(savedData.githubUsername || "");
-        setSocials(
-          savedData.socials || {
-            github: "",
-            instagram: "",
-            twitter: "",
-            linkedin: "",
-          }
-        );
-        setWidgetConfig(
-          savedData.widgetConfig || {
-            theme: "light",
-            showIcons: true,
-            includePrivate: false,
-            layout: "compact",
-            includeAllCommits: true,
-          }
-        );
-      }
-    }
-  }, []);
-
   // Setup autosave
   const getCurrentData = useCallback(() => {
     const data: AutoSaveData = {
@@ -1149,7 +1229,6 @@ export default function CreatePage() {
     };
     return data;
   }, [builderBlocks, projectName, username, socials, widgetConfig]);
-
   useEffect(() => {
     if (typeof window !== "undefined") {
       const cleanup = LocalStorageService.setupAutoSave<AutoSaveData>(
@@ -1160,17 +1239,11 @@ export default function CreatePage() {
 
       return cleanup;
     }
-  }, [
-    builderBlocks,
-    projectName,
-    username,
-    socials,
-    widgetConfig,
-    getCurrentData,
-  ]);
+  }, [getCurrentData]);
 
   // Keyboard shortcuts
-  useEffect(() => {    const handleKeyDown = (event: KeyboardEvent) => {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       // Preview: Ctrl+P (or Cmd+P on Mac)
       if ((event.ctrlKey || event.metaKey) && event.key === "p") {
         event.preventDefault();
@@ -1184,14 +1257,22 @@ export default function CreatePage() {
       }
 
       // Undo: Ctrl+Z (or Cmd+Z on Mac)
-      if ((event.ctrlKey || event.metaKey) && event.key === "z" && !event.shiftKey) {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        event.key === "z" &&
+        !event.shiftKey
+      ) {
         event.preventDefault();
         handleUndo();
       }
 
       // Redo: Ctrl+Y or Ctrl+Shift+Z (or Cmd+Y or Cmd+Shift+Z on Mac)
-      if (((event.ctrlKey || event.metaKey) && event.key === "y") || 
-          ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "Z")) {
+      if (
+        ((event.ctrlKey || event.metaKey) && event.key === "y") ||
+        ((event.ctrlKey || event.metaKey) &&
+          event.shiftKey &&
+          event.key === "Z")
+      ) {
         event.preventDefault();
         handleRedo();
       }
@@ -1200,7 +1281,8 @@ export default function CreatePage() {
       if (event.key === "Escape" && showPreview) {
         setShowPreview(false);
       }
-    };    document.addEventListener("keydown", handleKeyDown);
+    };
+    document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [showPreview, saveProject, handleUndo, handleRedo]);
   return (
@@ -1208,8 +1290,14 @@ export default function CreatePage() {
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '4s'}}></div>
+        <div
+          className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-indigo-400/20 to-pink-400/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-cyan-400/10 to-blue-400/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "4s" }}
+        ></div>
       </div>
 
       {/* Mobile warning popup */}
@@ -1243,7 +1331,8 @@ export default function CreatePage() {
             Create Your README
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed font-light">
-            Design stunning GitHub profile READMEs with our intuitive drag-and-drop builder
+            Design stunning GitHub profile READMEs with my intuitive
+            drag-and-drop builder
           </p>
           <div className="mt-6 flex justify-center">
             <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
@@ -1251,13 +1340,14 @@ export default function CreatePage() {
               <span>Real-time preview • Auto-save enabled</span>
             </div>
           </div>
-        </div>        {/* README Generator Builder Interface */}
+        </div>{" "}
+        {/* README Generator Builder Interface */}
         <div className="relative">
           {/* Glass container with enhanced styling */}
           <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 dark:border-gray-700/50 overflow-hidden transition-all duration-500 hover:shadow-3xl">
             {/* Subtle gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none"></div>
-            
+
             <div className="relative z-10">
               {/* Top Header Bar with Project Name and GitHub Username */}
               <HeaderBar
@@ -1281,20 +1371,7 @@ export default function CreatePage() {
                   setWidgetConfig={setWidgetConfig}
                   loadTemplate={loadTemplate}
                 />
-                {/* No idea why there were two prope panels here fixed it  */}
-                {/* <PropertiesPanel 
-                  selectedBlock={builderBlocks.find(block => block.id === selectedBlockId) || null}
-                  selectedBlockId={selectedBlockId}
-                  setSelectedBlockId={setSelectedBlockId}
-                  updateBlockContent={updateBlockContent}
-                  updateBlockLayout={updateBlockLayout}
-                  updateTemplateProperty={updateTemplateProperty}
-                  updateWidgetProperty={updateWidgetProperty}
-                  widgetConfig={widgetConfig}
-                  setWidgetConfig={setWidgetConfig}
-                  username={username}
-                /> */}
-                {/* Main Builder Area */}{" "}            <BuilderArea
+                <BuilderArea
                   builderBlocks={builderBlocks}
                   dragOver={dragOver}
                   handleDragOver={handleDragOver}
@@ -1333,7 +1410,8 @@ export default function CreatePage() {
                 />
               </div>
             </div>
-          </div>          {/* Footer Actions */}
+          </div>{" "}
+          {/* Footer Actions */}
           <FooterBar
             setShowPreview={setShowPreview}
             setShowImportModal={setShowImportModal}
@@ -1491,8 +1569,8 @@ export default function CreatePage() {
                 </div>
               </div>
             </div>
-          </div>        )}
-        
+          </div>
+        )}
         {/* AI Enhancement Modal */}
         {showAIEnhanceModal && (
           <AIEnhancementModal
@@ -1504,7 +1582,6 @@ export default function CreatePage() {
             socials={socials}
           />
         )}
-        
         {/* Toast notifications would go here */}
       </div>
     </div>

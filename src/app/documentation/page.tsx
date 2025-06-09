@@ -109,7 +109,7 @@ const DocumentationPage: React.FC = () => {
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { step: 1, title: 'Choose Template', desc: 'Browse our collection of professional templates', icon: '📋' },
+                  { step: 1, title: 'Choose Template', desc: 'Browse my collection of professional templates', icon: '📋' },
                   { step: 2, title: 'Customize Content', desc: 'Add your project details and personal information', icon: '✏️' },
                   { step: 3, title: 'Preview & Export', desc: 'Review your README and copy the generated markdown', icon: '📤' }
                 ].map((item, idx) => (
@@ -161,9 +161,8 @@ import { YourProject } from 'your-project';
           id: 'templates',
           title: 'Template System',
           content: (
-            <div className="space-y-6">
-              <p className="text-lg leading-relaxed">
-                Our template system provides a solid foundation for your README files, with professionally designed 
+            <div className="space-y-6">              <p className="text-lg leading-relaxed">
+                I&apos;ve designed a comprehensive template system that provides a solid foundation for your README files, with professionally crafted 
                 layouts for different types of projects.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -235,7 +234,7 @@ import { YourProject } from 'your-project';
           content: (
             <div className="space-y-6">
               <p className="text-lg leading-relaxed">
-                Transform your README content with our cutting-edge AI enhancement feature, powered by Google&apos;s Gemini Flash 2.5 model.
+                Transform your README content with my cutting-edge AI enhancement feature, powered by Google&apos;s Gemini Flash 2.5 model.
               </p>
               <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
                 <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-4 flex items-center gap-2">
@@ -338,7 +337,7 @@ import { YourProject } from 'your-project';
           content: (
             <div className="space-y-6">
               <p className="text-lg leading-relaxed">
-                Customize the look and feel of your README with our extensive styling options.
+                Customize the look and feel of your README with my extensive styling options.
               </p>
               <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-6">
                 <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-3">Available Customizations</h4>
@@ -385,7 +384,7 @@ import { YourProject } from 'your-project';
             <div className="space-y-8">
               <div>
                 <p className="text-lg leading-relaxed mb-6">
-                  Our public API provides programmatic access to generate dynamic SVG widgets and retrieve GitHub statistics. 
+                  My public API provides programmatic access to generate dynamic SVG widgets and retrieve GitHub statistics. 
                   All endpoints return SVG content that can be embedded directly in markdown files or web applications.
                 </p>
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6">

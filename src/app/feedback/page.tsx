@@ -99,7 +99,7 @@ const FeedbackPage: React.FC = () => {
       }
 
       setIsSubmitted(true);
-      toast.success('Thank you for your feedback! We appreciate your input.');
+      toast.success('Thank you for your feedback! I appreciate your input.');
       
       setTimeout(() => {
         setFormData({
@@ -178,9 +178,8 @@ const FeedbackPage: React.FC = () => {
           </motion.div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
             Thank You!
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Your feedback has been submitted successfully. We appreciate your input and will use it to improve our service.
+          </h2>          <p className="text-gray-600 dark:text-gray-400">
+            Your feedback has been submitted successfully. I appreciate your input and will use it to improve the service.
           </p>
         </motion.div>
       </div>
@@ -237,15 +236,14 @@ const FeedbackPage: React.FC = () => {
             >
               💫
             </motion.span>
-            We Value Your Feedback
+            I Value Your Feedback
           </motion.div>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
-            Help Us Improve
+            Help Me Improve
           </h1>
-          
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Your feedback helps us build better tools for developers. Share your thoughts, report bugs, or suggest new features.
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Your feedback helps me build better tools for developers. Share your thoughts, report bugs, or suggest new features.
           </p>
         </motion.div>
 
@@ -391,7 +389,7 @@ const FeedbackPage: React.FC = () => {
                     ? 'border-red-300 dark:border-red-600 focus:border-red-500 dark:focus:border-red-400'
                     : 'border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400'
                 } focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800`}
-                placeholder="Tell us about your experience, report a bug, or suggest a feature..."
+                placeholder="Tell me about your experience, report a bug, or suggest a feature..."
               />
               <div className="flex justify-between items-center mt-2">
                 {errors.message ? (
@@ -461,7 +459,7 @@ const FeedbackPage: React.FC = () => {
           className="mt-12 text-center"
         >
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Your feedback is important to us and helps make our tools better for everyone.
+            Your feedback is important to me and helps make my tools better for everyone.
           </p>
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 dark:text-gray-500">
             <span className="flex items-center">

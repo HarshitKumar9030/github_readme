@@ -255,22 +255,22 @@ const Hero = () => {
               animate={{ width: `${Math.min(displayedText.length * 8, 400)}px` }}
               transition={{ duration: 0.3, ease: "easeOut" }}
             />
-          </motion.div>            {/* Enhanced tagline with better visual hierarchy */}
+          </motion.div>          {/* Enhanced tagline with better visual hierarchy */}
           <motion.p 
             className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2 }}
           >
-            <span className="text-gray-700 dark:text-gray-300">Create </span>
+            <span className="text-gray-700 dark:text-gray-300">I created this tool to help fellow developers build </span>
             <motion.span 
               className="font-bold bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent"
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              stunning GitHub profile READMEs
+              outstanding GitHub profile READMEs
             </motion.span>
-            <span className="text-gray-700 dark:text-gray-300"> with our intuitive drag-and-drop builder, pre-built templates, and integrated GitHub widgets. Now with </span>
+            <span className="text-gray-700 dark:text-gray-300"> with an intuitive drag-and-drop builder, beautiful templates, and integrated GitHub widgets. Features </span>
             <motion.span 
               className="font-bold bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400 bg-clip-text text-transparent"
               whileHover={{ scale: 1.05 }}
@@ -342,13 +342,12 @@ const Hero = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-          >
-            {[
-              { value: '100+', label: 'Templates' },
-              { value: '5k+', label: 'Developers' },
-              { value: '12k+', label: 'READMEs Created' },
-              { value: '4.9', label: 'Average Rating' },
-              { value: '25+', label: 'GitHub Integrations' }
+          >            {[
+              { value: '20+', label: 'Widgets Available' },
+              { value: '3k+', label: 'Developers Helped' },
+              { value: '8k+', label: 'READMEs Created' },
+              { value: '4.8', label: 'Community Rating' },
+              { value: '15+', label: 'GitHub Features' }
             ].map((stat, idx) => (
               <motion.div
                 key={idx}
@@ -514,7 +513,7 @@ const Hero = () => {
               { 
                 icon: '/file.svg', 
                 title: 'Drag & Drop Builder', 
-                description: 'Easily build your README with our intuitive drag-drop interface',
+                description: 'Easily build your README with my intuitive drag-drop interface',
                 color: 'from-blue-500/10 to-blue-600/5'
               },
               { 

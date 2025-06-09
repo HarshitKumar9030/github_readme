@@ -64,7 +64,7 @@ const FeaturesPage: React.FC = () => {
     {
       id: 'drag-drop',
       title: 'Drag & Drop Builder',
-      description: 'Build your perfect README effortlessly with our intuitive drag-and-drop interface. No coding skills required.',
+      description: 'Build your perfect README effortlessly with my intuitive drag-and-drop interface. No coding skills required.',
       icon: (
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -191,9 +191,8 @@ const FeaturesPage: React.FC = () => {
             className="inline-block mb-6"
             variants={floatingVariants}
             animate="floating"
-          >
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
-              ✨ Trusted by 100+ developers
+          >            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold shadow-lg">
+              ✨ Trusted by 3,000+ developers
             </div>
           </motion.div>
           
@@ -203,10 +202,8 @@ const FeaturesPage: React.FC = () => {
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               README Magic
             </span>
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
-            Transform your GitHub profile with powerful tools designed for modern developers. 
+          </h1>          <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-4xl mx-auto leading-relaxed">
+            I&apos;ve crafted powerful tools designed for modern developers to transform your GitHub profile. 
             Create stunning READMEs that tell your story and showcase your skills.
           </p>
         </motion.div>
@@ -336,7 +333,7 @@ const FeaturesPage: React.FC = () => {
                   Pick the Perfect Template
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Browse our curated collection of stunning templates designed by professional developers. 
+                  Browse my curated collection of stunning templates designed by professional developers. 
                   Each template is crafted to showcase different aspects of your coding journey.
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -373,7 +370,7 @@ const FeaturesPage: React.FC = () => {
                   Make It Uniquely Yours
                 </h3>
                 <p className="text-lg text-gray-600 dark:text-gray-300 leading-relaxed">
-                  Use our intuitive drag-and-drop editor to personalize every detail. Add your GitHub stats, 
+                  Use my intuitive drag-and-drop editor to personalize every detail. Add your GitHub stats, 
                   showcase projects, and tell your story with interactive elements.
                 </p>
                 <div className="flex flex-wrap gap-2">
