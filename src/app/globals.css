@@ -70,16 +70,6 @@ body {
   animation: float 5s ease-in-out infinite;
 }
 
-/* Typing cursor animation */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.typing-cursor {
-  animation: blink 1s step-end infinite;
-}
-
 /* Gradient background for text */
 .gradient-text {
   background-clip: text;

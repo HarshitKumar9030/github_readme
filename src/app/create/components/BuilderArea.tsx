@@ -8,7 +8,7 @@ import WaveAnimationWidget from '@/widgets/WaveAnimationWidget';
 import LanguageChartWidget from '@/widgets/LanguageChartWidget';
 import RepositoryShowcaseWidget from '@/widgets/RepositoryShowcaseWidget';
 import AnimatedProgressWidget from '@/widgets/AnimatedProgressWidget';
-import TypingAnimationWidget from '@/widgets/TypingAnimationWidget';
+
 
 interface BuilderAreaProps {
   builderBlocks: Block[];
@@ -170,34 +170,6 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig?.hideTitle,
     widgetConfig?.customTitle
   ]);
-  const typingAnimationConfig = useMemo(() => ({
-    theme: widgetConfig?.theme || 'default',
-    text: widgetConfig?.text || 'Hello, I am a developer!',
-    font: widgetConfig?.font || 'monospace',
-    size: widgetConfig?.size || 20,
-    color: widgetConfig?.color || '#0066cc',
-    duration: widgetConfig?.duration || 3000,
-    loop: widgetConfig?.loop !== false,
-    cursor: widgetConfig?.cursor !== false,
-    width: widgetConfig?.width || 600,
-    height: 100,
-    hideBorder: widgetConfig?.hideBorder || false,
-    hideTitle: widgetConfig?.hideTitle || false,
-    customTitle: widgetConfig?.customTitle || ''
-  }), [
-    widgetConfig?.theme,
-    widgetConfig?.text,
-    widgetConfig?.font,
-    widgetConfig?.size,
-    widgetConfig?.color,
-    widgetConfig?.duration,
-    widgetConfig?.loop,
-    widgetConfig?.cursor,
-    widgetConfig?.width,
-    widgetConfig?.hideBorder,
-    widgetConfig?.hideTitle,
-    widgetConfig?.customTitle
-  ]);
   const languageChartConfig = useMemo(() => ({
     username: username,
     theme: widgetConfig?.theme || 'light',
@@ -285,13 +257,11 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     widgetConfig?.hideTitle,
     widgetConfig?.customTitle
   ]);
-
   const memoizedConfigs = useMemo(() => ({
     githubStats: githubStatsConfig,
     topLanguages: topLanguagesConfig,
     contributionGraph: contributionGraphConfig,
     animatedProgress: animatedProgressConfig,
-    typingAnimation: typingAnimationConfig,
     languageChart: languageChartConfig,
     waveAnimation: waveAnimationConfig,
     repoShowcase: repoShowcaseConfig
@@ -300,7 +270,6 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
     topLanguagesConfig,
     contributionGraphConfig,
     animatedProgressConfig,
-    typingAnimationConfig,
     languageChartConfig,
     waveAnimationConfig,
     repoShowcaseConfig
@@ -388,14 +357,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
           <AnimatedProgressWidget
             config={memoizedConfigs.animatedProgress}
             onMarkdownGenerated={stableCallbacks[block.id]}
-          />
-        )}
-        {widgetBlock.widgetId === 'typing-animation' && (
-          <TypingAnimationWidget
-            config={memoizedConfigs.typingAnimation}
-            onMarkdownGenerated={stableCallbacks[block.id]}
-          />
-        )}
+          />        )}
       </WidgetErrorBoundary>
     );
   }, [isMounted, memoizedConfigs, stableCallbacks, socials, widgetConfig?.layout, widgetConfig?.customTitle, widgetConfig?.hideBorder]);
@@ -558,9 +520,7 @@ const BuilderArea: React.FC<BuilderAreaProps> = ({
                                 case 'contribution-graph': return 'Contribution Graph Widget';
                                 case 'wave-animation': return 'Wave Animation Widget';
                                 case 'language-chart': return 'Language Chart Widget';
-                                case 'repo-showcase': return 'Repository Showcase Widget';
-                                case 'animated-progress': return 'Animated Progress Widget';
-                                case 'typing-animation': return 'Typing Animation Widget';
+                                case 'repo-showcase': return 'Repository Showcase Widget';                                case 'animated-progress': return 'Animated Progress Widget';
                                 case 'social-stats': return 'Social Stats Widget';
                                 default: return 'Unknown Widget';
                               }

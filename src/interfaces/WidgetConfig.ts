@@ -52,19 +52,8 @@ export interface WidgetConfig {
   repoCardWidth?: number;
   repoCardHeight?: number;
 
-     // Animated Progress SVG specific properties
-  skills?: { name: string; level: number; color?: string }[];
+     // Animated Progress SVG specific properties  skills?: { name: string; level: number; color?: string }[];
   animationDuration?: number;
   showProgressText?: boolean;
   progressBarHeight?: number;
-
-  // Typing Animation SVG specific properties
-  text?: string;
-  font?: string;
-  size?: number;
-  color?: string;
-  duration?: number;
-  loop?: boolean;
-  cursor?: boolean;
-  width?: number;
 }

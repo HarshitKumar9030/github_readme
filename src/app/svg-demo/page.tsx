@@ -22,47 +22,7 @@ export default function SVGDemoPage() {
             Each API generates customizable, animated SVG graphics perfect for showcasing 
             your projects and skills.
           </p>
-        </div>
-
-        <div className="space-y-16">
-          {/* Typing Animation */}
-          <section className="bg-white rounded-lg p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Typing Animation SVG
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Create animated typing effects perfect for displaying skills, titles, or welcome messages.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">              <div>
-                <h3 className="font-semibold text-gray-800 mb-2">Default Theme</h3>
-                <Image 
-                  src={`${baseUrl}/api/typing-animation?text=Welcome to my GitHub Profile&theme=default`}
-                  alt="Typing Animation Default"
-                  width={600}
-                  height={100}
-                  className="border rounded"
-                />
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-2">Neon Theme</h3>
-                <Image 
-                  src={`${baseUrl}/api/typing-animation?text=Full Stack Developer&theme=neon&speed=1.2`}
-                  alt="Typing Animation Neon"
-                  width={600}
-                  height={100}
-                  className="border rounded"
-                />
-              </div>
-            </div>
-            
-            <div className="bg-gray-100 p-4 rounded">
-              <code className="text-sm">
-                {`![Typing SVG](${baseUrl}/api/typing-animation?text=Your+Text+Here&theme=neon)`}
-              </code>
-            </div>
-          </section>
-
+        </div>        <div className="space-y-16">
           {/* Wave Animation */}
           <section className="bg-white rounded-lg p-8 shadow-lg">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
@@ -198,9 +158,7 @@ export default function SVGDemoPage() {
               </div>
               
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Specific Parameters</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  <li><code className="bg-gray-100 px-2 py-1 rounded">text</code> - Text content (typing animation)</li>
+                <h3 className="font-semibold text-gray-800 mb-3">Specific Parameters</h3>                <ul className="space-y-2 text-sm text-gray-600">
                   <li><code className="bg-gray-100 px-2 py-1 rounded">speed</code> - Animation speed multiplier</li>
                   <li><code className="bg-gray-100 px-2 py-1 rounded">username</code> - GitHub username (charts & showcase)</li>
                   <li><code className="bg-gray-100 px-2 py-1 rounded">waves</code> - Number of wave layers</li>

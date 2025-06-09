@@ -17,9 +17,8 @@ interface ConfigOption {
 
 interface ConfigPanelProps {
   config: Partial<WidgetConfig>;
-  onChange: (config: Partial<WidgetConfig>) => void;
-  title?: string;
-  widgetType?: 'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph' | 'typing-animation' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress';
+  onChange: (config: Partial<WidgetConfig>) => void;  title?: string;
+  widgetType?: 'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress';
 }
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ 
@@ -489,86 +488,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
       min: 150,
       max: 300,
       step: 25
-    }
-  ];
-
-  // Typing Animation specific options
-  const typingAnimationOptions: ConfigOption[] = [
-    {
-      id: 'text',
-      label: 'Text to Display',
-      type: 'text',
-      defaultValue: 'Hello, I am a developer!',
-      placeholder: 'Enter text to animate'
-    },
-    {
-      id: 'font',
-      label: 'Font Family',
-      type: 'select',
-      defaultValue: 'monospace',
-      options: [
-        { value: 'monospace', label: 'Monospace' },
-        { value: 'serif', label: 'Serif' },
-        { value: 'sans-serif', label: 'Sans-serif' },
-        { value: 'cursive', label: 'Cursive' },
-        { value: 'fantasy', label: 'Fantasy' }
-      ]
-    },
-    {
-      id: 'size',
-      label: 'Font Size',
-      type: 'range',
-      defaultValue: 20,
-      min: 12,
-      max: 48,
-      step: 2
-    },
-    {
-      id: 'color',
-      label: 'Text Color',
-      type: 'color',
-      defaultValue: '#0066cc'
-    },
-    {
-      id: 'duration',
-      label: 'Animation Duration (ms)',
-      type: 'range',
-      defaultValue: 3000,
-      min: 1000,
-      max: 10000,
-      step: 500
-    },
-    {
-      id: 'loop',
-      label: 'Loop Animation',
-      type: 'toggle',
-      defaultValue: true
-    },
-    {
-      id: 'cursor',
-      label: 'Show Cursor',
-      type: 'toggle',
-      defaultValue: true
-    },
-    {
-      id: 'width',
-      label: 'Animation Width',
-      type: 'range',
-      defaultValue: 600,
-      min: 300,
-      max: 800,
-      step: 50
-    },
-    {
-      id: 'height',
-      label: 'Animation Height',
-      type: 'range',
-      defaultValue: 100,
-      min: 50,
-      max: 200,
-      step: 25
-    }
-  ];
+    }  ];
 
   // Wave Animation specific options
   const waveAnimationOptions: ConfigOption[] = [
@@ -690,9 +610,7 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({
         return [...commonOptions, ...topLanguagesOptions];
       case 'contribution-graph':
         return [...commonOptions, ...contributionGraphOptions];
-      case 'social-stats':
-        return [...commonOptions, ...socialStatsOptions];      case 'typing-animation':
-        return [...commonOptions, ...typingAnimationOptions];
+      case 'social-stats':        return [...commonOptions, ...socialStatsOptions];
       case 'wave-animation':
         return [...commonOptions, ...waveAnimationOptions];
       case 'animated-progress':

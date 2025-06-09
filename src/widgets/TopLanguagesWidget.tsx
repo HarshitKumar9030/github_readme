@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import StableImage from '@/components/StableImage';
 
@@ -26,6 +26,14 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
   onMarkdownGenerated
 }) => {
   const [viewMode, setViewMode] = useState<'preview' | 'markdown'>('preview');
+  
+  // Create stable reference for the callback
+  const onMarkdownGeneratedRef = useRef(onMarkdownGenerated);
+  
+  // Update ref when callback changes
+  useEffect(() => {
+    onMarkdownGeneratedRef.current = onMarkdownGenerated;
+  }, [onMarkdownGenerated]);
     // Memoized URL generation for stability
   const imageUrl = useMemo(() => {
     if (!config.username) return '';
@@ -72,12 +80,24 @@ const TopLanguagesWidget: React.FC<TopLanguagesWidgetProps> & MarkdownExportable
     
     return md;
   };
-
-  // Notify parent on markdown change
+  // Notify parent on markdown change with stable ref
   useEffect(() => {
-    if (onMarkdownGenerated) onMarkdownGenerated(generateMarkdown());
-    // eslint-disable-next-line
-  }, [config]);  return (
+    if (onMarkdownGeneratedRef.current) {
+      onMarkdownGeneratedRef.current(generateMarkdown());
+    }
+  }, [
+    config.username,
+    config.theme,
+    config.layout,
+    config.layoutStyle,
+    config.hideTitle,
+    config.customTitle,
+    config.cardWidth,
+    config.hideBorder,
+    config.excludeRepos,
+    config.excludeLangs,
+    imageUrl
+  ]);return (
     <div className="rounded-lg border p-4">
       {viewMode === 'preview' ? (
         <>

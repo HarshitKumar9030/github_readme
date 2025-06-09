@@ -38,9 +38,6 @@ const generateAPIExamples = (): string => {
 // Animated Progress Example
 <img src="${baseUrl}/api/animated-progress?skills=JavaScript,Python,React&values=90,85,80&theme=gradient" />
 
-// Typing Animation Example
-<img src="${baseUrl}/api/typing-animation?text=Welcome to my profile!&fontSize=28&color=0066cc" />
-
 // Wave Animation Example
 <img src="${baseUrl}/api/wave-animation?height=120&color=667eea&waves=4" />
 
@@ -444,20 +441,7 @@ import { YourProject } from 'your-project';
                       { name: 'values', type: 'number[]', required: true, desc: 'Comma-separated progress values (0-100)' },
                       { name: 'theme', type: 'string', required: false, desc: 'Visual theme (default, gradient, neon, minimal)' },
                       { name: 'animated', type: 'boolean', required: false, desc: 'Enable animations' },
-                      { name: 'title', type: 'string', required: false, desc: 'Widget title' }
-                    ]
-                  },
-                  { 
-                    method: 'GET', 
-                    endpoint: '/api/typing-animation', 
-                    desc: 'Generate typing animation effects for dynamic text display in READMEs',
-                    params: [
-                      { name: 'text', type: 'string', required: true, desc: 'Text to animate' },
-                      { name: 'fontSize', type: 'number', required: false, desc: 'Font size in pixels' },
-                      { name: 'color', type: 'string', required: false, desc: 'Text color (hex code)' },
-                      { name: 'speed', type: 'number', required: false, desc: 'Typing speed in milliseconds' },
-                      { name: 'cursor', type: 'boolean', required: false, desc: 'Show typing cursor' }
-                    ]
+                      { name: 'title', type: 'string', required: false, desc: 'Widget title' }                    ]
                   },
                   { 
                     method: 'GET', 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -99,12 +99,16 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
   const [enhancedContent, setEnhancedContent] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [showPreview, setShowPreview] = useState(false);
-  const [stats, setStats] = useState<{ originalLength: number; enhancedLength: number } | null>(null);
   const [previewMode, setPreviewMode] = useState<'markdown' | 'rendered'>('rendered');
-  const [enhancementComplete, setEnhancementComplete] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState<string>('Initializing...');
-  const [processingStep, setProcessingStep] = useState<number>(0);
   const [processingProgress, setProcessingProgress] = useState<number>(0);
+  const [processingStep, setProcessingStep] = useState<number>(0);
+  const [processingStatus, setProcessingStatus] = useState<string>('Initializing...');
+  const [enhancementComplete, setEnhancementComplete] = useState(false);
+  const [stats, setStats] = useState<{ originalLength: number; enhancedLength: number } | null>(null);
+
+  // Add state for handling copy functionality
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'copied'>('idle');
+  const [downloadStatus, setDownloadStatus] = useState<'idle' | 'downloading' | 'downloaded'>('downloaded');
   const [processingSteps] = useState<string[]>([
     'Analyzing content structure...',
     'Identifying improvement areas...',
@@ -112,9 +116,20 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
     'Optimizing formatting...',
     'Finalizing content...'
   ]);
-  
-  // Refs for scroll management
+    // Refs for scroll management
   const previewContainerRef = useRef<HTMLDivElement>(null);
+
+  // Create deterministic particle positions for hydration consistency
+  const particlePositions = useMemo(() => 
+    Array.from({ length: 30 }, (_, i) => ({
+      initialX: (i * 37) % 300,
+      initialY: (i * 43) % 200,
+      animateX: ((i * 37) % 300) + ((i % 3) - 1) * 50,
+      animateY: ((i * 43) % 200) + ((i % 4) - 1.5) * 30,
+      duration: 3 + (i % 3),
+      delay: (i * 0.2) % 2
+    }))
+  , []);
   const modalContentRef = useRef<HTMLDivElement>(null);
   
   // Reset scroll position when switching between views
@@ -391,43 +406,7 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
             'langs_count': 'Number of languages to include',
             'hide': 'Languages to exclude from chart',
             'theme': 'Visual theme selection'
-          }
-        },
-        'Typing Animation Widget': {
-          description: 'Dynamic typing effect animations for headers, descriptions, and text content with customizable fonts, speed, and cursor styling.',
-          features: [
-            'Realistic typing animation effects',
-            'Custom text content support',
-            'Font family and size options',
-            'Typing speed control',
-            'Cursor blink customization',
-            'Multi-line text support',
-            'Loop and repeat options',
-            'Color and styling customization'
-          ],
-          customizable: [
-            'Text content and messages',
-            'Font family and weight',
-            'Animation speed and timing',
-            'Cursor style and color',
-            'Container dimensions',
-            'Background and text colors'
-          ],
-          useCases: [
-            'Dynamic profile headers',
-            'Animated introductions',
-            'Engaging text presentations',
-            'Interactive welcome messages'
-          ],
-          markdownExample: `<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=F75C7E&width=435&lines=Hello+World!;I'm+a+Developer;Welcome+to+my+profile!" />`,
-          animationSettings: {
-            'font': 'Typography selection',
-            'size': 'Text size in pixels',
-            'color': 'Text color customization',
-            'pause': 'Pause duration between lines',
-            'multiline': 'Multi-line text support'
-          }
-        }
+          }        }
       };
 
       const requestBody = {
@@ -560,6 +539,43 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
       setIsEnhancing(false);
     }
   };
+  // Add copy and download functions
+  const handleCopyContent = async () => {
+    if (!enhancedContent) return;
+    
+    setCopyStatus('copying');
+    try {
+      await navigator.clipboard.writeText(enhancedContent);
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus('idle'), 3000);
+    } catch (err) {
+      console.error('Failed to copy content:', err);
+      setCopyStatus('idle');
+    }
+  };
+
+  const handleDownloadContent = () => {
+    if (!enhancedContent) return;
+    
+    setDownloadStatus('downloading');
+    try {
+      const blob = new Blob([enhancedContent], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'enhanced-README.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      setDownloadStatus('downloaded');
+      setTimeout(() => setDownloadStatus('idle'), 3000);
+    } catch (err) {
+      console.error('Failed to download content:', err);
+      setDownloadStatus('idle');
+    }
+  };
 
   const handleApply = () => {
     if (enhancedContent) {
@@ -573,6 +589,27 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
     setEnhancedContent('');
     setStats(null);
     setError('');
+    setEnhancementComplete(false);
+    setProcessingProgress(0);
+    setProcessingStep(0);
+    setProcessingStatus('');
+    setCopyStatus('idle');
+    setDownloadStatus('idle');
+  };
+
+  const handleCloseModal = () => {
+    // Reset all states when closing
+    setShowPreview(false);
+    setEnhancedContent('');
+    setStats(null);
+    setError('');
+    setEnhancementComplete(false);
+    setProcessingProgress(0);
+    setProcessingStep(0);
+    setProcessingStatus('');
+    setCopyStatus('idle');
+    setDownloadStatus('idle');
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -665,27 +702,26 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
             {/* Gradient orbs */}
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-xl"></div>
             <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-gradient-to-tl from-pink-300/20 to-transparent rounded-full blur-2xl"></div>
-            
-            {/* Floating particles */}
-            {[...Array(30)].map((_, i) => (
+              {/* Floating particles */}
+            {particlePositions.map((particle, i) => (
               <motion.div
                 key={i}
                 className="absolute w-1 h-1 bg-white/30 rounded-full"
                 initial={{
-                  x: Math.random() * 500,
-                  y: Math.random() * 120,
+                  x: particle.initialX,
+                  y: particle.initialY,
                   opacity: 0
                 }}
                 animate={{
-                  x: Math.random() * 500,
-                  y: Math.random() * 120,
+                  x: particle.animateX,
+                  y: particle.animateY,
                   opacity: [0, 0.8, 0],
                   scale: [0.5, 1, 0.5]
                 }}
                 transition={{
-                  duration: 4 + Math.random() * 3,
+                  duration: particle.duration,
                   repeat: Infinity,
-                  delay: Math.random() * 3,
+                  delay: particle.delay,
                   ease: "easeInOut"
                 }}
               />
@@ -755,9 +791,8 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
                   <span className="text-white/70 text-xs">Advanced AI Writing Assistant</span>
                 </div>
               </div>
-            </div>
-            <motion.button
-              onClick={onClose}
+            </div>            <motion.button
+              onClick={handleCloseModal}
               className="p-3 hover:bg-white/20 rounded-xl transition-all duration-200 group backdrop-blur-sm border border-white/20"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -971,28 +1006,81 @@ const AIEnhancementModal: React.FC<AIEnhancementModalProps> = ({
                       >
                         <span>📝</span>
                         Markdown
+                      </motion.button>                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <motion.button
+                        onClick={handleStartOver}
+                        className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <span>←</span>
+                        Back
+                      </motion.button>
+                      
+                      <motion.button
+                        onClick={handleApply}
+                        className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <span>✅</span>
+                        Apply Enhancement
+                      </motion.button>
+
+                      {/* Copy Button */}
+                      <motion.button
+                        onClick={handleCopyContent}
+                        disabled={copyStatus === 'copying'}
+                        className="px-6 py-2 bg-gradient-to-r from-blue-500 to-cyan-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-cyan-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        whileHover={{ scale: copyStatus === 'copying' ? 1 : 1.05 }}
+                        whileTap={{ scale: copyStatus === 'copying' ? 1 : 0.95 }}
+                      >
+                        {copyStatus === 'copying' ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            Copying...
+                          </>
+                        ) : copyStatus === 'copied' ? (
+                          <>
+                            <span>✅</span>
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <span>📋</span>
+                            Copy
+                          </>
+                        )}
+                      </motion.button>
+
+                      {/* Download Button */}
+                      <motion.button
+                        onClick={handleDownloadContent}
+                        disabled={downloadStatus === 'downloading'}
+                        className="px-6 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-indigo-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        whileHover={{ scale: downloadStatus === 'downloading' ? 1 : 1.05 }}
+                        whileTap={{ scale: downloadStatus === 'downloading' ? 1 : 0.95 }}
+                      >
+                        {downloadStatus === 'downloading' ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            Downloading...
+                          </>
+                        ) : downloadStatus === 'downloaded' ? (
+                          <>
+                            <span>✅</span>
+                            Downloaded!
+                          </>
+                        ) : (
+                          <>
+                            <span>📥</span>
+                            Download
+                          </>
+                        )}
                       </motion.button>
                     </div>
-                    
-                    <motion.button
-                      onClick={handleStartOver}
-                      className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center gap-2"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <span>←</span>
-                      Back
-                    </motion.button>
-                    
-                    <motion.button
-                      onClick={handleApply}
-                      className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <span>✅</span>
-                      Apply Enhancement
-                    </motion.button>
                   </div>
                 </div>
               </div>

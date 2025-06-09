@@ -25,7 +25,6 @@ interface WidgetValidationStatus {
 const WIDGET_TYPE_ICONS: Record<string, string> = {
   'github-stats': '📊',
   'repository-showcase': '📦',
-  'typing-animation': '⌨️',
   'wave-animation': '👋',
   'language-chart': '📈',
   'animated-progress': '📊',
@@ -35,7 +34,6 @@ const WIDGET_TYPE_ICONS: Record<string, string> = {
 const WIDGET_TYPE_COLORS: Record<string, string> = {
   'github-stats': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
   'repository-showcase': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-  'typing-animation': 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
   'wave-animation': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
   'language-chart': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300',
   'animated-progress': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',

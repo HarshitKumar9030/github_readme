@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Block } from '@/interfaces/BlockTypes';
 import IntegrationMenu from '../IntegrationMenu';
 import ConfigPanel from '@/components/ConfigPanel';
 import { Socials } from '@/interfaces/Socials';
 import { WidgetConfig } from '@/interfaces/WidgetConfig';
+import HydrationSafeWrapper from '@/components/HydrationSafeWrapper';
 
 interface BuilderSidebarProps {
   activeTab: 'blocks' | 'templates' | 'social' | 'settings';
@@ -32,7 +33,7 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
   setWidgetConfig,
   loadTemplate
 }) => {
-  const [selectedWidgetType, setSelectedWidgetType] = useState<'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph' | 'typing-animation' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress'>('github-stats');return (
+  const [selectedWidgetType, setSelectedWidgetType] = useState<'github-stats' | 'social-stats' | 'top-languages' | 'contribution-graph' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress'>('github-stats');return (
     <div className="lg:col-span-3 flex flex-col border-r border-gray-200/60 dark:border-gray-700/60 h-full bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
       {/* Minimal Modern Tabs */}
       <div className="flex flex-col sm:flex-row lg:flex-col border-b border-gray-200/50 dark:border-gray-700/50 p-2 bg-gray-50/30 dark:bg-gray-800/30">
@@ -174,11 +175,11 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
               <span className="truncate">SVG Animations</span>
             </h4>
             <span className="text-xs font-medium px-2 py-1 bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-full flex-shrink-0 self-start sm:self-auto">
-              {availableBlocks.filter(b => b.type === "widget" && (b.widgetId?.includes('wave') || b.widgetId?.includes('language-chart') || b.widgetId?.includes('repo-showcase') || b.widgetId?.includes('animated-progress') || b.widgetId?.includes('typing-animation'))).length}
+              {availableBlocks.filter(b => b.type === "widget" && (b.widgetId?.includes('wave') || b.widgetId?.includes('language-chart') || b.widgetId?.includes('repo-showcase') || b.widgetId?.includes('animated-progress'))).length}
             </span>
           </div>
           <div className="space-y-3">
-            {availableBlocks.filter(b => b.type === "widget" && (b.widgetId?.includes('wave') || b.widgetId?.includes('language-chart') || b.widgetId?.includes('repo-showcase') || b.widgetId?.includes('animated-progress') || b.widgetId?.includes('typing-animation'))).map(block => (
+            {availableBlocks.filter(b => b.type === "widget" && (b.widgetId?.includes('wave') || b.widgetId?.includes('language-chart') || b.widgetId?.includes('repo-showcase') || b.widgetId?.includes('animated-progress'))).map(block => (
               <div
                 key={block.id}
                 className="group flex items-center cursor-move bg-white dark:bg-gray-800 rounded-xl p-4 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all duration-200 border border-gray-200/60 dark:border-gray-700/60 shadow-sm hover:shadow-md hover:scale-[1.01]"
@@ -242,22 +243,20 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Templates Tab Content */}
+      </div>      {/* Templates Tab Content */}
       <div className={`p-5 overflow-y-auto flex-1 ${activeTab === 'templates' ? 'block' : 'hidden'}`}>
-        <div className="mb-4">
-          <h4 className="flex items-center text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center mr-3">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            Ready-Made Templates
-          </h4>
-          <p className="text-xs text-gray-500 dark:text-gray-400 ml-10">Choose a template to get started quickly</p>
-        </div>
-        <div className="space-y-4">
+        <HydrationSafeWrapper>
+          <div className="mb-4">
+            <h4 className="flex items-center text-sm font-bold text-gray-800 dark:text-gray-200 mb-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              Ready-Made Templates
+            </h4>
+            <p className="text-xs text-gray-500 dark:text-gray-400 ml-10">Choose a template to get started quickly</p>
+          </div><div className="space-y-4">
           {/* Personal Profile */}
           <div 
             className="group bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200/60 dark:border-gray-700/60 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01]"
@@ -271,7 +270,7 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
               </div>
               <div className="flex-1">
                 <h5 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Personal Profile</h5>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Showcase your skills, experience and projects with a professional layout</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Complete developer portfolio with stats, skills, and all interactive widgets</p>
               </div>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                 <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -294,7 +293,7 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
               </div>
               <div className="flex-1">
                 <h5 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Project Overview</h5>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Complete documentation template for software projects and repositories</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Professional project documentation with installation, usage, and contribution guides</p>
               </div>
               <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                 <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -304,7 +303,52 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
             </div>
           </div>
           
-          {/* Minimal Template */}
+          {/* Classic Template */}
+          <div 
+            className="group bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200/60 dark:border-gray-700/60 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01]"
+            onClick={() => loadTemplate('classic')}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h5 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Classic</h5>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Traditional layout with about section, projects, and GitHub stats</p>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Social Template */}
+          <div 
+            className="group bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200/60 dark:border-gray-700/60 hover:bg-pink-50/50 dark:hover:bg-pink-900/20 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01]"
+            onClick={() => loadTemplate('social')}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-pink-100 dark:bg-pink-900/40 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h5 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Social Focus</h5>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Emphasizes social connections and community engagement</p>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </div>
+            </div>
+          </div>
+            {/* Minimal Template */}
           <div 
             className="group bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200/60 dark:border-gray-700/60 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01]"
             onClick={() => loadTemplate('minimal')}
@@ -326,7 +370,33 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Complete Showcase Template */}
+          <div 
+            className="group bg-white dark:bg-gray-800 rounded-xl p-5 border border-gray-200/60 dark:border-gray-700/60 hover:bg-gradient-to-br hover:from-yellow-50 hover:to-orange-50 dark:hover:from-yellow-900/20 dark:hover:to-orange-900/20 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md hover:scale-[1.01]"
+            onClick={() => loadTemplate('showcase')}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-100 dark:from-yellow-900/40 dark:to-orange-900/40 flex items-center justify-center flex-shrink-0">
+                <svg className="w-6 h-6 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h5 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">Complete Showcase</h5>
+                <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Comprehensive template featuring all available widgets and components</p>
+                <div className="flex items-center gap-1 mt-2">
+                  <span className="text-xs bg-gradient-to-r from-yellow-200 to-orange-200 dark:from-yellow-900/50 dark:to-orange-900/50 text-yellow-800 dark:text-yellow-300 px-2 py-0.5 rounded-full font-medium">✨ All Widgets</span>
+                </div>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>              </div>
+            </div>
+          </div>
         </div>
+        </HydrationSafeWrapper>
       </div>
       
       {/* Enhanced Social Integration Tab Content */}
@@ -370,13 +440,11 @@ const BuilderSidebar: React.FC<BuilderSidebarProps> = ({
             value={selectedWidgetType}
             onChange={(e) => setSelectedWidgetType(e.target.value as typeof selectedWidgetType)}
             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="github-stats">GitHub Stats</option>
+          >            <option value="github-stats">GitHub Stats</option>
             <option value="repo-showcase">Repository Showcase</option>
             <option value="top-languages">Top Languages</option>
             <option value="contribution-graph">Contribution Graph</option>
             <option value="social-stats">Social Stats</option>
-            <option value="typing-animation">Typing Animation</option>
             <option value="wave-animation">Wave Animation</option>
             <option value="language-chart">Language Chart</option>
             <option value="animated-progress">Animated Progress</option>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import { BaseWidgetConfig, BaseWidgetProps, MarkdownExportable } from '@/interfaces/MarkdownExportable';
 import { useWaveAnimationStore } from '@/stores/waveAnimationStore';
@@ -39,6 +39,14 @@ const WaveAnimationWidgetComponent: React.FC<WaveAnimationWidgetProps> = React.m
     resetState 
   } = useWaveAnimationStore();
 
+  // Create stable references
+  const onMarkdownGeneratedRef = useRef(onMarkdownGenerated);
+
+  // Update ref when callback changes
+  useEffect(() => {
+    onMarkdownGeneratedRef.current = onMarkdownGenerated;
+  }, [onMarkdownGenerated]);
+
   // Memoize effective config to prevent unnecessary recalculations
   const effectiveConfig = useMemo(() => ({
     waveColor: config.waveColor || '#0099ff',
@@ -52,6 +60,7 @@ const WaveAnimationWidgetComponent: React.FC<WaveAnimationWidgetProps> = React.m
     customTitle: config.customTitle || '',
     ...config
   }), [config]);
+
   // Memoize markdown generation function
   const generateMarkdown = useCallback((): string => {
     if (!svgUrl) return '';
@@ -95,16 +104,16 @@ const WaveAnimationWidgetComponent: React.FC<WaveAnimationWidgetProps> = React.m
     effectiveConfig.theme
   ]);
 
-  // Markdown generation effect
+  // Markdown generation effect with stable ref
   useEffect(() => {
-    if (svgUrl && onMarkdownGenerated) {
+    if (svgUrl && onMarkdownGeneratedRef.current) {
       const timeoutId = setTimeout(() => {
-        onMarkdownGenerated(generateMarkdown());
+        onMarkdownGeneratedRef.current!(generateMarkdown());
       }, 100);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [svgUrl, onMarkdownGenerated, generateMarkdown]);
+  }, [svgUrl, generateMarkdown]);
 
   if (loading) {
     return (

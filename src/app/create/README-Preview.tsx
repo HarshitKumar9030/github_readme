@@ -258,8 +258,7 @@ export default function ReadmePreview({
         <div 
           className="flex-1 overflow-hidden"
           style={{ minHeight: 0 }}
-        >
-          {viewMode === "preview" ? (
+        >          {viewMode === "preview" ? (
             <div className="h-full overflow-auto bg-white dark:bg-gray-900">
               <div className="max-w-4xl mx-auto p-8">
                 <MarkdownRenderer 
@@ -269,6 +268,9 @@ export default function ReadmePreview({
                   onWidgetDetected={handleWidgetDetected}
                   livePreview={liveMode}
                   showAnchorLinks={true}
+                  containerStyle="embedded"
+                  enableTableOfContents={false}
+                  maxWidth="4xl"
                   className="prose-lg"
                 />
                   {/* Widget Overlay Highlights */}

@@ -56,6 +56,9 @@ interface MarkdownRendererProps {
   enhancedWidgetRendering?: boolean;
   onWidgetDetected?: (widgetType: string, widgetData: any) => void;
   livePreview?: boolean;
+  containerStyle?: 'fixed' | 'responsive' | 'embedded';
+  enableTableOfContents?: boolean;
+  maxWidth?: string;
 }
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ 
@@ -67,7 +70,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   showAnchorLinks = true,
   enhancedWidgetRendering = false,
   onWidgetDetected,
-  livePreview = false
+  livePreview = false,
+  containerStyle = 'responsive',
+  enableTableOfContents = false,
+  maxWidth = '5xl'
 }) => {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -224,11 +230,65 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         </div>
       </div>
     );
-  }  return (
-    <div className={`markdown-renderer fixed inset-0 w-screen h-screen overflow-auto bg-gray-50 dark:bg-gray-900 ${className}`}>
-      <div className="max-w-5xl mx-auto my-8 px-4">
-        <div className="bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-700 rounded-md shadow-sm">
-          <div className="p-8 prose dark:prose-invert max-w-none prose-lg prose-gray dark:prose-slate">
+  }  // Generate container classes based on containerStyle
+  const getContainerClasses = () => {
+    switch (containerStyle) {
+      case 'fixed':
+        return `markdown-renderer fixed inset-0 w-screen h-screen overflow-auto bg-gray-50 dark:bg-gray-900 ${className}`;
+      case 'embedded':
+        return `markdown-renderer w-full ${className}`;
+      case 'responsive':
+      default:
+        return `markdown-renderer w-full max-w-none ${className}`;
+    }
+  };
+
+  const getContentClasses = () => {
+    const baseMaxWidth = maxWidth === '5xl' ? 'max-w-5xl' : 
+                        maxWidth === '4xl' ? 'max-w-4xl' :
+                        maxWidth === '3xl' ? 'max-w-3xl' :
+                        maxWidth === '2xl' ? 'max-w-2xl' :
+                        maxWidth === 'xl' ? 'max-w-xl' :
+                        maxWidth === 'full' ? 'max-w-none' : 'max-w-5xl';
+    
+    switch (containerStyle) {
+      case 'fixed':
+        return `${baseMaxWidth} mx-auto my-8 px-4`;
+      case 'embedded':
+        return `w-full`;
+      case 'responsive':
+      default:
+        return `${baseMaxWidth} mx-auto px-4 py-6`;
+    }
+  };
+
+  const getCardClasses = () => {
+    switch (containerStyle) {
+      case 'embedded':
+        return '';
+      case 'fixed':
+      case 'responsive':
+      default:
+        return 'bg-white dark:bg-[#0d1117] border border-gray-300 dark:border-gray-700 rounded-md shadow-sm';
+    }
+  };
+
+  const getPaddingClasses = () => {
+    switch (containerStyle) {
+      case 'embedded':
+        return 'prose dark:prose-invert max-w-none prose-lg prose-gray dark:prose-slate';
+      case 'fixed':
+      case 'responsive':
+      default:
+        return 'p-8 prose dark:prose-invert max-w-none prose-lg prose-gray dark:prose-slate';
+    }
+  };
+
+  return (
+    <div className={getContainerClasses()}>
+      <div className={getContentClasses()}>
+        <div className={getCardClasses()}>
+          <div className={getPaddingClasses()}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm, ...(enableMath ? [remarkMath] : [])]}
               rehypePlugins={[
@@ -470,14 +530,25 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                       </div>
                     </div>
                   );
-                },
-
-                a: ({ href, children, ...props }: LinkProps) => {
+                },                a: ({ href, children, ...props }: LinkProps) => {
                   if (!href) return <span>{children}</span>;
                   
                   const isExternal = href.startsWith('http://') || href.startsWith('https://');
                   const isEmail = href.startsWith('mailto:');
-                  const isInternal = href.startsWith('/') || href.startsWith('#');
+                  const isInternal = href.startsWith('/') || href.startsWith('#');                  // Check if this link contains an image (for profile badges, etc.)
+                  const hasImage = React.Children.toArray(children).some(child => {
+                    if (!React.isValidElement(child)) return false;
+                    if (child.type === 'img') return true;
+                    if (typeof child.type === 'function' && child.props && typeof child.props === 'object' && 'src' in child.props) {
+                      return true;
+                    }
+                    return false;
+                  });
+                  
+                  // Base link classes without underline for image links
+                  const baseLinkClasses = hasImage 
+                    ? "inline-block hover:opacity-80 transition-opacity"
+                    : "text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-1 underline-offset-2 transition-colors";
                   
                   if (isExternal || isEmail) {
                     return (
@@ -485,11 +556,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                         href={href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-1 underline-offset-2 transition-colors"
+                        className={baseLinkClasses}
                         {...props}
                       >
                         {children}
-                        {isExternal && (
+                        {isExternal && !githubCompatible && !hasImage && (
                           <span className="inline-block ml-1 text-xs">
                             ↗
                           </span>
@@ -502,7 +573,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
                     return (
                       <Link 
                         href={href}
-                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-1 underline-offset-2 transition-colors"
+                        className={baseLinkClasses}
                         {...props}
                       >
                         {children}

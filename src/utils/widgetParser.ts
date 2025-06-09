@@ -32,15 +32,9 @@ const WIDGET_PATTERNS = {
     /github-readme-stats\.vercel\.app/,
     /api\/github-stats-svg/,
     /github\.com\/anuraghazra\/github-readme-stats/
-  ],
-  'repository-showcase': [
+  ],  'repository-showcase': [
     /api\/repo-showcase/,
     /repository-showcase/
-  ],
-  'typing-animation': [
-    /api\/typing-animation/,
-    /readme-typing-svg/,
-    /typing-animation/
   ],
   'wave-animation': [
     /api\/wave-animation/,
@@ -275,16 +269,7 @@ export function generateWidgetSuggestions(markdown: string): {
       type: 'repository-showcase',
       reason: 'Content mentions projects or repositories',
       confidence: 0.6
-    });
-  }
-  
-  if (content.includes('developer') || content.includes('engineer') || content.includes('coder')) {
-    suggestions.push({
-      type: 'typing-animation',
-      reason: 'Profile suggests developer role',
-      confidence: 0.5
-    });
-  }
+    });  }
   
   return suggestions.sort((a, b) => b.confidence - a.confidence);
 }

@@ -326,7 +326,7 @@ const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
                         config={widgetConfig}
                         onChange={setWidgetConfig}
                         title="Widget Settings"
-                        widgetType={(selectedBlock as WidgetBlock).widgetId as 'github-stats' | 'top-languages' | 'contribution-graph' | 'social-stats' | 'typing-animation' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress'}
+                        widgetType={(selectedBlock as WidgetBlock).widgetId as 'github-stats' | 'top-languages' | 'contribution-graph' | 'social-stats' | 'wave-animation' | 'language-chart' | 'repo-showcase' | 'animated-progress'}
                       />
                     </div>
                   </div>

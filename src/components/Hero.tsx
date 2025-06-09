@@ -12,10 +12,16 @@ import { AvatarWithFallback } from '../utils/avatarGenerator'
 const Hero = () => {
   const router = useRouter()
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [isClient, setIsClient] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const { scrollY } = useScroll()
   const opacity = useTransform(scrollY, [0, 300], [1, 0.8])
   const scale = useTransform(scrollY, [0, 300], [1, 0.98])
+  
+  // Client-side mounting to prevent hydration issues
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
   
   // GitHub repository stats
   const [repoStats, setRepoStats] = useState({
@@ -63,7 +69,18 @@ const Hero = () => {
 
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])    // Enhanced typing animation for the heading
+  }, [])    // Generate deterministic positions for particles to prevent hydration issues
+  const particlePositions = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      initialX: (i * 43 + 23) % 100, // Deterministic pseudo-random
+      initialY: (i * 67 + 17) % 100,
+      animateX: (i * 29 + 41) % 100,
+      animateY: (i * 83 + 13) % 100,
+      duration: 15 + (i % 5) * 2, // Deterministic duration variation
+    }))
+  }, [])
+
+  // Enhanced typing animation for the heading
   const headingTexts = useMemo(() => [
     "GitHub README Generator",
     "Create Beautiful Profiles", 
@@ -129,33 +146,34 @@ const Hero = () => {
           ease: "easeInOut"
         }}
       />
-      
-      {/* Simplified floating particles */}
-      <div className="absolute inset-0 w-full h-full overflow-hidden">
-        {[...Array(12)].map((_, i) => (
-          <motion.div
-            key={i}
-            className={`absolute w-1 h-1 rounded-full ${
-              i % 3 === 0 ? 'bg-blue-400/20' : i % 2 === 0 ? 'bg-purple-400/15' : 'bg-indigo-400/10'
-            }`}
-            initial={{ 
-              x: `${Math.random() * 100}%`, 
-              y: `${Math.random() * 100}%`,
-              opacity: 0.3
-            }}
-            animate={{
-              x: `${Math.random() * 100}%`,
-              y: `${Math.random() * 100}%`,
-              opacity: [0.1, 0.4, 0.1],
-            }}
-            transition={{
-              duration: 15 + Math.random() * 10,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        ))}
-      </div>      {/* Animated code patterns in background */}
+        {/* Simplified floating particles - client-side only to prevent hydration issues */}
+      {isClient && (
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          {particlePositions.map((particle, i) => (
+            <motion.div
+              key={i}
+              className={`absolute w-1 h-1 rounded-full ${
+                i % 3 === 0 ? 'bg-blue-400/20' : i % 2 === 0 ? 'bg-purple-400/15' : 'bg-indigo-400/10'
+              }`}
+              initial={{ 
+                x: `${particle.initialX}%`, 
+                y: `${particle.initialY}%`,
+                opacity: 0.3
+              }}
+              animate={{
+                x: `${particle.animateX}%`,
+                y: `${particle.animateY}%`,
+                opacity: [0.1, 0.4, 0.1],
+              }}
+              transition={{
+                duration: particle.duration,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          ))}
+        </div>
+      )}{/* Animated code patterns in background */}
       <div className="absolute top-1/4 -left-20 opacity-10 dark:opacity-5">
         <motion.div
           className="text-xs md:text-sm font-mono"

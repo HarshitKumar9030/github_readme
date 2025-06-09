@@ -43,17 +43,9 @@ const widgetOptions: WidgetOption[] = [
     name: 'Social Stats',
     description: 'Connect multiple social platforms with unified stats display',
     icon: '🔗',
-    category: 'stats'
-  },
+    category: 'stats'  },
   
   // Animation Category
-  {
-    id: 'typing-animation',
-    name: 'Typing Animation',
-    description: 'Create dynamic typewriter-style text animations',
-    icon: '⌨️',
-    category: 'animation'
-  },
   {
     id: 'wave-animation',
     name: 'Wave Animation',
