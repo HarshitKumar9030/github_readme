@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(request: NextRequest) {
@@ -34,33 +34,20 @@ export async function POST(request: NextRequest) {
     console.log('👤 Username:', username);
     console.log('🔧 Available widgets count:', availableWidgets ? Object.keys(availableWidgets).length : 0);
     console.log('📝 Content length:', content?.length || 0);
-    
-    if (availableWidgets) {
-      console.log('🎯 Widget names available:', Object.keys(availableWidgets));
-      // Log a sample widget to verify structure
-      const firstWidgetKey = Object.keys(availableWidgets)[0];
-      if (firstWidgetKey) {
-        console.log('🔍 Sample widget structure:', {
-          name: firstWidgetKey,
-          description: availableWidgets[firstWidgetKey].description?.substring(0, 100) + '...',
-          hasFeatures: !!availableWidgets[firstWidgetKey].features,
-          hasThemes: !!availableWidgets[firstWidgetKey].themes,
-          hasMarkdownExample: !!availableWidgets[firstWidgetKey].markdownExample
-        });
-      }
-    }
 
     if (!content || typeof content !== 'string') {
       return NextResponse.json(
         { error: 'Content is required and must be a string' },
         { status: 400 }
       );
-    }    // Generate comprehensive widget information text for AI context
+    }
+
+    // Generate comprehensive widget information text for AI context
     const widgetInfo = availableWidgets ? `
 
-**🎯 CRITICAL: USE THESE CUSTOM WIDGETS TO ENHANCE THE README**
+**🎯 AVAILABLE WIDGETS TO ENHANCE README**
 
-You MUST consider and actively suggest these 9 powerful custom widgets when enhancing README content. These widgets provide real-time GitHub data and significantly improve profile visibility:
+You have access to these powerful widgets that provide real-time GitHub data. Choose 2-3 most relevant ones based on the content:
 
 ${Object.entries(availableWidgets).map(([name, info]: [string, any]) => `
 **${name}**: ${info.description}
@@ -68,30 +55,38 @@ Example: \`${info.markdownExample?.replace(/USERNAME/g, username || 'your-userna
 ${info.useCases ? `Best for: ${info.useCases.slice(0, 2).join(', ')}` : ''}
 `).join('')}
 
-**⚠️ IMPORTANT INSTRUCTIONS:**
-- ALWAYS suggest at least 2-3 relevant widgets in your enhancement
-- Replace "USERNAME" with: ${username || '[your-username]'}
-- Place widgets strategically in the README (header, about section, footer)
-- Use widgets that match the README content and purpose
-- Priority widgets: GitHub Stats, Top Languages, Repository Showcase
+**INTEGRATION GUIDELINES:**
+- Use only 2-3 widgets maximum to avoid clutter
+- Replace "USERNAME" with: ${username || 'your-username'}
+- Place widgets logically (stats in about, languages in skills, etc.)
+- Ensure each widget appears only ONCE
+- Avoid duplicate content and headers
 
-**✅ Widget Integration Examples:**
-- Header: GitHub Stats + Wave Animation
-- About section: Top Languages + Animated Progress (for skills)  
-- Projects section: Repository Showcase
-- Footer: Social Stats + Contribution Graph
+**RECOMMENDED PLACEMENTS:**
+- Profile Stats: GitHub Stats Widget in about/header section
+- Skills Section: Top Languages or Animated Progress Widget
+- Projects: Repository Showcase Widget (if applicable)
+- Contact: Social Stats Widget (only if social links provided)
 
-These widgets auto-update and require no maintenance once added.` : '';
+These widgets auto-update and provide real-time data.` : '';
 
-    const prompts = {      structure: `You are an expert GitHub README optimizer. Your task is to improve structure AND integrate custom widgets.
+    const prompts = {
+      structure: `You are an expert GitHub README optimizer. Your task is to improve structure and selectively integrate widgets.
 
 **PRIMARY GOALS:**
-1. Add proper headings hierarchy (H1, H2, H3)
-2. Organize sections logically (About, Installation, Usage, Contributing, etc.)
-3. Improve readability with better spacing and formatting
-4. **MANDATORY: Add 2-3 relevant custom widgets from the list below**
-5. Add missing sections that would be valuable
-6. Ensure proper markdown syntax
+1. Create clear heading hierarchy (# for title, ## for main sections, ### for subsections)
+2. Organize sections logically: About → Installation → Usage → Features → Contributing → License
+3. Improve readability with proper spacing and structure
+4. Add 2 relevant widgets maximum (choose wisely based on content)
+5. Remove duplicate content and redundant sections
+6. Ensure clean, professional markdown
+
+**CRITICAL QUALITY RULES:**
+- NO duplicate headers or sections
+- Use single blank lines between sections
+- NO placeholder content (remove if not provided)
+- Each widget appears only ONCE in the most appropriate location
+- Remove redundant social links or duplicate information
 
 ${widgetInfo}
 
@@ -100,18 +95,28 @@ Current README content:
 ${content}
 \`\`\`
 
-**REQUIRED OUTPUT:** Return ONLY the improved markdown content that INCLUDES relevant custom widgets integrated naturally into the structure. NO explanations or additional text.`,      content: `You are an expert technical writer specializing in GitHub READMEs. Your task is to enhance content AND integrate custom widgets.
+**OUTPUT:** Return ONLY the improved markdown with clean structure and 2 relevant widgets integrated naturally. NO explanations.`,
+
+      content: `You are an expert technical writer. Your task is to enhance content quality while maintaining clean structure.
 
 **PRIMARY GOALS:**
-1. Improve descriptions to be clearer and more compelling
-2. Add helpful details that users would want to know
-3. Make the tone more professional yet approachable
-4. **MANDATORY: Integrate 2-3 relevant custom widgets from the list below**
-5. Add relevant badges, emojis, and visual elements
-6. Follow README best practices
+1. Improve descriptions to be clearer and more engaging
+2. Add helpful details users need to know
+3. Make tone professional yet approachable
+4. Add 2 relevant widgets that complement the content
+5. Include useful badges and visual elements
+6. Follow GitHub README best practices
+
+**QUALITY STANDARDS:**
+- NO duplicate content or repetitive sections
+- Remove placeholder text if actual data not provided
+- Use meaningful examples, not generic ones
+- Ensure all links are valid and functional
+- Maintain consistent formatting throughout
 
 ${widgetInfo}
 
+User Information:
 ${username ? `GitHub Username: ${username}` : ''}
 ${socials?.github ? `GitHub: ${socials.github}` : ''}
 ${socials?.linkedin ? `LinkedIn: ${socials.linkedin}` : ''}
@@ -122,18 +127,24 @@ Current README content:
 ${content}
 \`\`\`
 
-**REQUIRED OUTPUT:** Return ONLY the enhanced markdown content that INCLUDES relevant custom widgets integrated naturally. NO explanations or additional text.`,
+**OUTPUT:** Return ONLY the enhanced markdown with improved content and 2 relevant widgets. NO explanations.`,
 
-formatting: `You are a GitHub markdown formatting expert. Your task is to optimize formatting AND add custom widgets.
+      formatting: `You are a markdown formatting expert. Your task is to optimize visual presentation and add appropriate widgets.
 
 **PRIMARY GOALS:**
-1. Fix any markdown syntax issues
-2. Improve tables, lists, and code blocks
-3. Add proper spacing and alignment
-4. **MANDATORY: Add 2-3 relevant custom widgets for visual enhancement**
-5. Optimize for GitHub's markdown renderer
-6. Add visual elements like horizontal rules and badges
-7. Ensure mobile-friendly formatting
+1. Fix markdown syntax issues and improve formatting
+2. Optimize tables, lists, and code blocks for GitHub
+3. Improve spacing, alignment, and visual hierarchy
+4. Add 2 visual widgets that enhance presentation
+5. Ensure mobile-friendly formatting
+6. Add visual elements like badges and dividers where appropriate
+
+**FORMATTING STANDARDS:**
+- Remove excessive empty lines or duplicate spacing
+- Ensure consistent indentation in lists and code
+- Use proper table formatting with aligned columns
+- NO redundant content or duplicate sections
+- Clean, professional appearance throughout
 
 ${widgetInfo}
 
@@ -142,24 +153,35 @@ Current README content:
 ${content}
 \`\`\`
 
-**REQUIRED OUTPUT:** Return ONLY the formatted markdown content that INCLUDES relevant custom widgets for visual enhancement. NO explanations.`,comprehensive: `You are a GitHub README specialist. Perform a COMPREHENSIVE enhancement that MUST include custom widgets.
+**OUTPUT:** Return ONLY the formatted markdown with visual improvements and 2 relevant widgets. NO explanations.`,
 
-**MANDATORY REQUIREMENTS:**
-1. **INCLUDE 3-4 CUSTOM WIDGETS** from the list below - this is non-negotiable
-2. Improve structure with proper heading hierarchy
-3. Enhance content quality and descriptions
-4. Optimize visual formatting for GitHub
-5. Add missing valuable sections
-6. Follow README best practices
+      comprehensive: `You are a GitHub README specialist. Create a comprehensive, professional README enhancement.
 
-**WIDGET PLACEMENT STRATEGY:**
-- Header: GitHub Stats + Wave Animation
-- About/Skills: Top Languages + Animated Progress  
-- Projects: Repository Showcase
-- Footer: Social Stats + Contribution Graph
+**COMPREHENSIVE ENHANCEMENT GOALS:**
+1. **Structure**: Clear hierarchy with logical section organization
+2. **Content**: Engaging, informative descriptions with helpful details
+3. **Visual**: Professional formatting with 2-3 carefully chosen widgets
+4. **Quality**: Remove redundancy, fix errors, add missing valuable sections
+5. **Standards**: Follow GitHub README best practices
+
+**CRITICAL QUALITY REQUIREMENTS:**
+- NO duplicate sections, headers, or content anywhere
+- Each widget appears only ONCE in the most appropriate location
+- Remove placeholder content if real data not provided
+- Use proper spacing (single blank lines between sections)
+- Ensure all URLs and links are valid and functional
+- Professional, clean appearance throughout
+
+**WIDGET SELECTION STRATEGY:**
+- Choose 2-3 widgets that best complement the content purpose
+- Place GitHub Stats in about/profile section if it's a personal README
+- Use Top Languages widget for showcasing programming skills
+- Use Repository Showcase only if highlighting specific projects
+- Use Social Stats only if valid social links are provided
 
 ${widgetInfo}
 
+User Information:
 ${username ? `GitHub Username: ${username}` : ''}
 ${socials?.github ? `GitHub: ${socials.github}` : ''}
 ${socials?.linkedin ? `LinkedIn: ${socials.linkedin}` : ''}
@@ -170,7 +192,7 @@ Current README content:
 ${content}
 \`\`\`
 
-**REQUIRED OUTPUT:** Return ONLY the comprehensively enhanced markdown content that INCLUDES multiple custom widgets integrated naturally throughout the README. NO explanations, comments, or additional text.`
+**OUTPUT:** Return ONLY the comprehensively enhanced markdown with clean structure, improved content, and 2-3 strategically placed widgets. NO explanations, comments, or additional text. Ensure ZERO duplicate content.`
     };
 
     const selectedPrompt = prompts[enhancementType as keyof typeof prompts] || prompts.comprehensive;
@@ -178,46 +200,31 @@ ${content}
     console.log('📤 Sending prompt to AI...');
     console.log('🎯 Selected enhancement type:', enhancementType);
     console.log('📏 Prompt length:', selectedPrompt.length, 'characters');
-    console.log('🔍 Widget info included:', selectedPrompt.includes('AVAILABLE CUSTOM WIDGETS'));
-      // Log a portion of the prompt to verify widget inclusion
-    const widgetSectionMatch = selectedPrompt.indexOf('**🚀 AVAILABLE CUSTOM WIDGETS');
-    const widgetRecommendationsMatch = selectedPrompt.indexOf('**🎯 WIDGET RECOMMENDATIONS:');
-    if (widgetSectionMatch !== -1 && widgetRecommendationsMatch !== -1) {
-      console.log('✅ Widget section found in prompt (from char', widgetSectionMatch, 'to', widgetRecommendationsMatch, ')');
-    } else {
-      console.log('❌ Widget section NOT found in prompt');
-    }
-
+    
     const result = await model.generateContent(selectedPrompt);
     const response = await result.response;
-    const enhancedContent = response.text();    console.log('📥 Received response from AI');
+    const enhancedContent = response.text();
+
+    console.log('📥 Received response from AI');
     console.log('📊 Response length:', enhancedContent.length, 'characters');
     
     // Check for widget integration in response
     const widgetChecks = {
       'github-stats': enhancedContent.toLowerCase().includes('github-stats'),
-      'top-languages': enhancedContent.toLowerCase().includes('top-languages'),
-      'repository-showcase': enhancedContent.toLowerCase().includes('repository-showcase'),
+      'top-languages': enhancedContent.toLowerCase().includes('top-langs'),
+      'repository-showcase': enhancedContent.toLowerCase().includes('repo-showcase'),
       'contribution-graph': enhancedContent.toLowerCase().includes('contribution-graph'),
       'social-stats': enhancedContent.toLowerCase().includes('social-stats'),
-      'animated-progress': enhancedContent.toLowerCase().includes('animated-progress'),
-      'wave-animation': enhancedContent.toLowerCase().includes('wave-animation'),
-      'language-chart': enhancedContent.toLowerCase().includes('language-chart'),
-      'typing-animation': enhancedContent.toLowerCase().includes('typing-animation'),
-      'widget-mentions': (enhancedContent.match(/widget/gi) || []).length,
-      'readme-generator': enhancedContent.toLowerCase().includes('github-readme-generator.com')
+      'widgets-found': (enhancedContent.match(/vercel\.app|github-readme-stats|skillicons\.dev/gi) || []).length
     };
     
     console.log('🔍 Widget integration check:', widgetChecks);
     
-    const totalWidgetsFound = Object.values(widgetChecks).filter((v, i) => i < 9 && v).length;
-    console.log('📈 Total widgets integrated:', totalWidgetsFound, '/ 9');
-    
-    // Log first 800 chars of response to see structure
-    console.log('📝 Response preview:', enhancedContent.substring(0, 800) + '...');
-
+    // Clean the response to remove any markdown code block wrappers
     const cleanedContent = enhancedContent
       .replace(/^```markdown\s*/i, '')
+      .replace(/```\s*$/i, '')
+      .replace(/^```\s*/i, '')
       .replace(/```\s*$/i, '')
       .trim();
 

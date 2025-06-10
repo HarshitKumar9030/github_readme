@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -77,7 +77,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
 }) => {
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Check for dark mode preference and apply it
   useEffect(() => {
     // Check initial dark mode setting
@@ -88,109 +88,91 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
       setIsDarkTheme(isDark);
       setIsLoading(false);
     };
-    
+
     checkTheme();
-    
+
     // Set up an observer to track theme changes
     const observer = new MutationObserver(() => {
       checkTheme();
     });
-    
+
     observer.observe(document.documentElement, { 
       attributes: true, 
       attributeFilter: ['class'] 
     });
-    
+
     // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleThemeChange = () => checkTheme();
     mediaQuery.addEventListener('change', handleThemeChange);
-    
+
     return () => {
       observer.disconnect();
       mediaQuery.removeEventListener('change', handleThemeChange);
     };
   }, []);
-  // Prepare the content with GitHub-compatible approach
-  const prepareGithubCompatibleContent = useMemo(() => {
-    return (content: string): string => {
-      if (!content) return '';
-      
-      let processedContent = content.trim();
-      
-      try {
-        // Normalize line endings to match GitHub's rendering
-        processedContent = processedContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
-        // Handle HTML elements for GitHub compatibility
-        // Remove dangerous attributes that GitHub sanitizes
-        processedContent = processedContent.replace(/<([a-z][a-z0-9]*)\s+class="[^"]*"/gi, '<$1');
-        processedContent = processedContent.replace(/<([a-z][a-z0-9]*)\s+style="[^"]*"/gi, '<$1');
-        processedContent = processedContent.replace(/<([a-z][a-z0-9]*)\s+id="[^"]*"/gi, '<$1');
-        processedContent = processedContent.replace(/<([a-z][a-z0-9]*)\s+onclick="[^"]*"/gi, '<$1');
-        
-        // Fix div alignment (GitHub specific)
-        processedContent = processedContent.replace(/<div\s+align="([^"]*)">/gi, '<div align="$1">');
-        
-        // Ensure proper spacing around block elements
-        processedContent = processedContent.replace(/(<\/div>)(?!\n)/gi, '$1\n');
-        processedContent = processedContent.replace(/(<div[^>]*>)(?!\n)/gi, '$1\n');
-        processedContent = processedContent.replace(/(<\/p>)(?!\n)/gi, '$1\n');
-        processedContent = processedContent.replace(/(<p[^>]*>)(?!\n)/gi, '$1\n');
-        
-        // Fix badge and image spacing for GitHub compatibility
-        processedContent = processedContent.replace(/(\]\([^)]+\))\s+(\[!\[)/g, '$1 $2');
-        processedContent = processedContent.replace(/(\]\([^)]+\))\n+(\[!\[)/g, '$1\n\n$2');
-        
-        // Ensure proper table formatting with GitHub standards
-        processedContent = processedContent.replace(/\|\s*\|/g, '| |');
-        processedContent = processedContent.replace(/\|([^|\n]+)\|/g, (match, content) => {
-          return `| ${content.trim()} |`;
-        });
-          // Fix heading spacing (GitHub requires blank lines)
-        processedContent = processedContent.replace(/\n(#{1,6}\s[^\n]+)\n(?!\n)/g, '\n$1\n\n');
-        processedContent = processedContent.replace(/(?<!\n\n)(#{1,6}\s[^\n]+)/g, '\n\n$1');
-        
-        // Make sure heading formatting is correct and properly spaced
-        // This regex processes each heading and ensures it has the correct number of # characters
-        processedContent = processedContent.replace(/(^|\n)(#{1,6})(\s+)([^\n]+)/g, (match, start, hashes, space, text) => {
-          // Ensure exactly one space between # and content
-          return `${start}${hashes} ${text.trim()}`;
-        });
-        
-        // Properly format headings by removing any HTML or excess formatting
-        processedContent = processedContent.replace(/(^|\n)(#{1,6}\s)(.+?)(\s*#*\s*)$/gm, (match, start, prefix, content, end) => {
-          return `${start}${prefix}${content.trim()}`;
-        });
-        
-        // Ensure proper list formatting
-        processedContent = processedContent.replace(/\n([*+-]\s)/g, '\n\n$1');
-        processedContent = processedContent.replace(/\n(\d+\.\s)/g, '\n\n$1');
-        
-        // Clean up extra whitespace but preserve intentional spacing
-        processedContent = processedContent.replace(/\n{3,}/g, '\n\n');
-        processedContent = processedContent.replace(/^\n+/, '');
-        processedContent = processedContent.replace(/\n+$/, '\n');
-        
-        // Fix inline code formatting (backticks)
-        processedContent = processedContent.replace(/([^`])`([^`\n]+)`([^`])/g, '$1`$2`$3');
-        
-        // Apply additional GitHub-compatible formatting from utility
-        processedContent = convertToGitHubCompatible(processedContent);
-      } catch (error) {
-        console.warn('Error converting to GitHub compatible format:', error);
-        // Return original content if processing fails
-        return content.trim();
-      }
-      
-      return processedContent;
-    };
-  }, []);
 
-  // Memoize the processed content to avoid unnecessary re-computations
+  // Enhanced widget detection with better pattern matching
+  const detectWidgets = useCallback((content: string) => {
+    if (!enhancedWidgetRendering || !onWidgetDetected) return;
+
+    const widgetPatterns = [
+      {
+        pattern: /!\[([^\]]*)\]\((https:\/\/github-readme-stats\.vercel\.app\/api[^)]+)\)/g,
+        type: 'github-stats'
+      },
+      {
+        pattern: /!\[([^\]]*)\]\((https:\/\/github-readme-stats\.vercel\.app\/api\/top-langs[^)]+)\)/g,
+        type: 'top-languages'
+      },
+      {
+        pattern: /!\[([^\]]*)\]\((https:\/\/skillicons\.dev\/icons[^)]+)\)/g,
+        type: 'animated-progress'
+      },
+      {
+        pattern: /!\[([^\]]*)\]\((https:\/\/github-readme-activity-graph\.vercel\.app[^)]+)\)/g,
+        type: 'contribution-graph'
+      },
+      {
+        pattern: /!\[([^\]]*)\]\((https:\/\/github-profile-trophy\.vercel\.app[^)]+)\)/g,
+        type: 'trophy'
+      },
+      {
+        pattern: /!\[([^\]]*)\]\((https:\/\/github-readme-streak-stats\.herokuapp\.com[^)]+)\)/g,
+        type: 'streak-stats'
+      },
+      {
+        pattern: /<img[^>]+src="([^"]*github-readme-stats\.vercel\.app[^"]*)"[^>]*>/g,
+        type: 'github-stats'
+      },
+      {
+        pattern: /<img[^>]+src="([^"]*skillicons\.dev[^"]*)"[^>]*>/g,
+        type: 'skill-icons'
+      }
+    ];
+
+    widgetPatterns.forEach(({ pattern, type }) => {
+      let match;
+      while ((match = pattern.exec(content)) !== null) {
+        const [fullMatch, altOrSrc, url] = match;
+        onWidgetDetected(type, {
+          url: url || altOrSrc,
+          alt: type === 'github-stats' ? altOrSrc : undefined,
+          fullMatch,
+          type
+        });
+      }
+    });
+  }, [enhancedWidgetRendering, onWidgetDetected]);
+
+
+  const prepareGithubCompatibleContent = (input: string) => {
+    return githubCompatible ? convertToGitHubCompatible(input) : input;
+  };
+
   const processedContent = useMemo(() => {
     return githubCompatible ? prepareGithubCompatibleContent(content) : content;
-  }, [content, githubCompatible, prepareGithubCompatibleContent]);
+  }, [content, githubCompatible]);
 
   // GitHub-compatible sanitization schema
   const sanitizeSchema = useMemo(() => ({
@@ -230,7 +212,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
         </div>
       </div>
     );
-  }  // Generate container classes based on containerStyle
+  }
+
+  // Generate container classes based on containerStyle
   const getContainerClasses = () => {
     switch (containerStyle) {
       case 'fixed':

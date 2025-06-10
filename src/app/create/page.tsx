@@ -161,7 +161,7 @@ export default function CreatePage() {
   const [previewContent, setPreviewContent] = useState<string>("");
   const [markdownCache, setMarkdownCache] = useState<Record<string, string>>(
     {}
-  ); // Function to parse enhanced markdown back into builder blocks
+  );  // Function to parse enhanced markdown back into builder blocks
   const parseMarkdownToBlocks = useCallback((markdown: string): Block[] => {
     const blocks: Block[] = [];
     const lines = markdown.split("\n");
@@ -186,6 +186,51 @@ export default function CreatePage() {
         label,
         content: trimmedContent,
       };
+    };
+
+    // Enhanced widget detection function
+    const detectAndCreateWidget = (content: string): Block | null => {
+      const widgetPatterns = [
+        {
+          pattern: /github-readme-stats\.vercel\.app\/api\?username=([^&"'\s]+)/,
+          type: 'github-stats'
+        },
+        {
+          pattern: /github-readme-stats\.vercel\.app\/api\/top-langs/,
+          type: 'top-languages'
+        },
+        {
+          pattern: /skillicons\.dev\/icons/,
+          type: 'animated-progress'
+        },
+        {
+          pattern: /github-readme-activity-graph\.vercel\.app/,
+          type: 'contribution-graph'
+        },
+        {
+          pattern: /github-profile-trophy\.vercel\.app/,
+          type: 'github-stats'
+        },
+        {
+          pattern: /github-readme-streak-stats\.herokuapp\.com/,
+          type: 'github-stats'
+        }
+      ];
+
+      for (const { pattern, type } of widgetPatterns) {
+        if (pattern.test(content)) {
+          return {
+            id: `widget-${Date.now()}-${Math.random()}`,
+            type: 'widget',
+            label: type.split('-').map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' '),
+            widgetId: type as any
+          };
+        }
+      }
+
+      return null;
     };
 
     for (let i = 0; i < lines.length; i++) {
@@ -215,6 +260,62 @@ export default function CreatePage() {
         continue;
       }
 
+      // Check for widget patterns in the current line
+      const widget = detectAndCreateWidget(line);
+      if (widget) {
+        // Finalize current content if any
+        if (currentContent.trim()) {
+          blocks.push(createContentBlock(currentContent));
+          currentContent = "";
+        }
+        blocks.push(widget);
+        continue;
+      }
+
+      // Handle div tags that might contain widgets
+      if (line.trim().startsWith('<div') && line.includes('align="center"')) {
+        if (currentContent.trim()) {
+          blocks.push(createContentBlock(currentContent));
+          currentContent = "";
+        }
+          // Look ahead to collect div content
+        const divContent = [line];
+        let divDepth = 1;
+        i++;
+        
+        while (i < lines.length && divDepth > 0) {
+          const divLine = lines[i];
+          divContent.push(divLine);
+          
+          if (divLine.trim().startsWith('<div')) {
+            divDepth++;
+          } else if (divLine.trim().startsWith('</div>')) {
+            divDepth--;
+          }
+          i++;
+        }
+        i--; // Adjust for the loop increment
+        
+        // Check if div contains widgets
+        const divContentStr = divContent.join('\n');
+        const divWidget = detectAndCreateWidget(divContentStr);
+        
+        if (divWidget) {
+          blocks.push(divWidget);
+        } else {
+          // Create content block with the div content
+          const cleanContent = divContentStr
+            .replace(/<div[^>]*>/gi, '')
+            .replace(/<\/div>/gi, '')
+            .trim();
+          
+          if (cleanContent) {
+            blocks.push(createContentBlock(cleanContent));
+          }
+        }
+        continue;
+      }
+
       if (line.startsWith("#")) {
         if (currentContent.trim()) {
           blocks.push(createContentBlock(currentContent));
@@ -233,7 +334,24 @@ export default function CreatePage() {
       blocks.push(createContentBlock(currentContent));
     }
 
-    return blocks;
+    // Filter out empty blocks and duplicates
+    const filteredBlocks = blocks.filter((block, index, arr) => {
+      if (block.type === 'content' && !block.content?.trim()) {
+        return false;
+      }
+      
+      // Remove duplicate widgets
+      if (block.type === 'widget') {
+        const firstIndex = arr.findIndex(b => 
+          b.type === 'widget' && b.widgetId === block.widgetId
+        );
+        return firstIndex === index;
+      }
+      
+      return true;
+    });
+
+    return filteredBlocks;
   }, []);
 
   const handleAIEnhancement = useCallback(
